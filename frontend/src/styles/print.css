@@ -1,0 +1,731 @@
+@media print {
+  .first-summary-content {
+    page-break-before: avoid !important;
+    margin-top: 0 !important;
+  }
+  .no-page-break-before {
+    page-break-before: avoid !important;
+  }
+
+  .print-page-break-avoid-inside {
+    page-break-inside: avoid !important;
+  }
+
+  .screen-only {
+    display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  
+
+
+
+
+
+
+
+
+  /* Hide the header, print button, and admin sidebar on print */
+  #non-printable-header,
+  #print-button,
+  #admin-sidebar {
+    display: none !important;
+  }
+
+  /* Force a page break after the charts section */
+  #printable-charts-section {
+    page-break-after: always;
+  }
+
+  /* --- Styles for Charts Section Table --- */
+  #printable-department-pounds-table {
+    display: block !important;
+    flex: 0 0 auto;
+    width: 100%;
+    margin-bottom: 15px; /* Add some space from charts */
+  }
+  
+  #printable-department-pounds-table h2 {
+    font-size: 14pt !important;
+    text-align: center;
+    margin: 0 0 10px 0;
+    color: #000;
+    line-height: 1;
+  }
+
+  #printable-department-pounds-table table {
+    width: 100%;
+    border-collapse: collapse;
+    /* เปลี่ยนเป็น auto เพื่อให้ช่องยืดหดตามความยาวชื่อแผนก */
+    table-layout: auto !important; 
+  }
+
+  #printable-department-pounds-table th,
+  #printable-department-pounds-table td {
+    border: 1.5px solid #000;
+    text-align: center;
+    color: #000;
+    vertical-align: middle;
+    /* ปรับการตัดคำ */
+    word-wrap: break-word;
+    word-break: normal; 
+    padding: 4px 2px;
+  }
+  
+  #printable-department-pounds-table th {
+    background-color: #d0d0d0 !important;
+    /* ลดขนาดฟอนต์ลงเพื่อให้พอดีกับช่อง */
+    font-size: 10pt !important; 
+    white-space: normal !important;
+    height: auto !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  #printable-department-pounds-table td {
+     font-size: 11pt !important;
+     font-weight: 700;
+  }
+
+  /* --- Styles for Team Leaderboard Section --- */
+  #printable-team-leaderboard {
+    zoom: 1;
+  }
+
+  #printable-team-leaderboard > div:last-child {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10mm !important;
+    width: 100% !important;
+  }
+
+  #printable-team-leaderboard > div > h2 {
+    font-size: 15pt !important;
+    text-align: center !important;
+    margin-bottom: 5mm !important;
+    color: #000 !important;
+  }
+
+  #printable-team-leaderboard .mb-8 h3 {
+    font-size: 15pt !important;
+    font-weight: bold !important;
+    margin-bottom: 3mm !important;
+    color: #000 !important;
+  }
+
+  #printable-team-leaderboard table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 15pt !important;
+    table-layout: fixed !important; 
+  }
+
+  #printable-team-leaderboard th,
+  #printable-team-leaderboard td {
+    border: 1px solid #000 !important;
+    padding: 6px 4px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    word-wrap: break-word;
+    word-break: break-word;
+  }
+  
+  #printable-team-leaderboard th {
+    background-color: #f0f0f0 !important;
+    font-weight: bold !important;
+    font-size: 15pt !important;
+    white-space: normal !important;
+    height: auto !important;
+  }
+
+  /* Column widths for team leaderboard */
+  #printable-team-leaderboard th:nth-child(1),
+  #printable-team-leaderboard td:nth-child(1) { width: 6% !important; }
+  #printable-team-leaderboard th:nth-child(2),
+  #printable-team-leaderboard td:nth-child(2) { width: 20% !important; text-align: left !important; padding-left: 8px !important; white-space: normal !important; }
+  #printable-team-leaderboard th:nth-child(3),
+  #printable-team-leaderboard td:nth-child(3) { width: 20% !important; white-space: normal !important; }
+  #printable-team-leaderboard th:nth-child(4),
+  #printable-team-leaderboard td:nth-child(4) { width: 5% !important; }
+  #printable-team-leaderboard th:nth-child(5),
+  #printable-team-leaderboard td:nth-child(5) { width: 8% !important; }
+  #printable-team-leaderboard th:nth-child(6),
+  #printable-team-leaderboard td:nth-child(6) { width: 14% !important; white-space: normal !important; font-size: 9pt !important; }
+  #printable-team-leaderboard th:nth-child(n+7),
+  #printable-team-leaderboard td:nth-child(n+7) { width: 10% !important; white-space: normal !important; }
+
+  /* Hide icons within the team leaderboard when printing */
+  #printable-team-leaderboard svg {
+    display: none !important;
+  }
+
+  /* Reset ShadCN/Tailwind values */
+  #printable-team-leaderboard .rounded-md,
+  #printable-team-leaderboard .border,
+  #printable-team-leaderboard .shadow-sm,
+  #printable-team-leaderboard .shadow {
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important; /* Ensure shadows are also removed */
+  }
+
+  /* Hide SweetAlert2 dialogs when printing */
+  .swal2-container,
+  .swal2-backdrop-show,
+  .swal2-shown {
+    display: none !important;
+  }
+
+  /* Chart.js Datalabels - always show in print */
+  .chartjs-datalabels {
+    display: block !important;
+    visibility: visible !important;
+  }
+
+    /* -----------------------------------------------------------
+
+         GLOBAL HIDE ELEMENTS
+
+         ซ่อน Element ที่ไม่ต้องการพิมพ์ในทุกหน้า
+
+      ----------------------------------------------------------- */
+
+      #non-printable-header,
+
+      #print-button,
+
+      #admin-sidebar,
+
+      #non-printable-classroom-header,
+
+      .print-hide, /* New rule to hide elements with this class */
+
+      .ClassroomsPagination,
+
+      #non-printable-classroom-students-header {
+
+        display: none !important;
+
+      }
+
+    
+
+      /* -----------------------------------------------------------
+
+         LEADERBOARD PAGE STYLES
+
+         หน้าอันดับยอดขาย
+
+      ----------------------------------------------------------- */
+
+  /* Make the leaderboard print page fill the full page */
+  .leaderboard-print-page {
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    height: 100vh !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  /* Force a page break after the charts section */
+  #printable-charts-section {
+    page-break-after: always;
+    width: 100% !important;
+    height: calc(100vh - 200px) !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  /* Hide the Department Cake Quantity Chart (จำนวนชิ้น) when printing */
+  #printable-charts-section > div:nth-child(3) {
+    display: none !important;
+  }
+
+  /* Make the Department Sales Bar Chart (จำนวนปอนด์) larger when printing */
+  #printable-charts-section > div:nth-child(2) {
+    flex: 1 !important;
+    min-height: 100% !important;
+    margin-bottom: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Ensure the chart canvas fills the container */
+  #printable-charts-section canvas {
+    max-height: 100% !important;
+  }
+
+  .print-large-chart canvas {
+    height: 40vh !important; /* Force canvas height */
+    width: 100% !important;
+    min-height: 60vh !important;
+  }
+
+  /* --- Styles for Department Pounds Table --- */
+  #printable-department-pounds-table {
+    display: block !important;
+    flex: 0 0 auto;
+    width: 100%;
+    margin-bottom: 15px;
+  }
+  
+  #printable-department-pounds-table h2 {
+    font-size: 14pt !important;
+    text-align: center;
+    margin: 0 0 10px 0;
+    color: #000;
+    line-height: 1;
+  }
+
+  #printable-department-pounds-table table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto !important; /* ให้ช่องยืดหดตามชื่อแผนก */
+  }
+
+  #printable-department-pounds-table th,
+  #printable-department-pounds-table td {
+    border: 1.5px solid #000;
+    text-align: center;
+    color: #000;
+    vertical-align: middle;
+    word-wrap: break-word;
+    word-break: normal;
+    padding: 4px 2px;
+  }
+  
+  #printable-department-pounds-table th {
+    background-color: #d0d0d0 !important;
+    font-size: 10pt !important;
+    white-space: normal !important;
+    height: auto !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  
+  #printable-department-pounds-table td {
+     font-size: 11pt !important;
+     font-weight: 700;
+  }
+
+  /* --- Styles for Team Leaderboard Section --- */
+  #printable-team-leaderboard {
+    zoom: 1;
+  }
+
+  #printable-team-leaderboard > div:last-child {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10mm !important;
+    width: 100% !important;
+  }
+
+  #printable-team-leaderboard > div > h2 {
+    font-size: 15pt !important;
+    text-align: center !important;
+    margin-bottom: 5mm !important;
+    color: #000 !important;
+  }
+
+  #printable-team-leaderboard .mb-8 h3 {
+    font-size: 10pt !important;
+    font-weight: bold !important;
+    margin-bottom: 3mm !important;
+    color: #000 !important;
+  }
+
+  #printable-team-leaderboard table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 10pt !important;
+    table-layout: fixed !important; 
+  }
+
+  #printable-team-leaderboard th,
+  #printable-team-leaderboard td {
+    border: 1px solid #000 !important;
+    padding: 6px 4px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    word-wrap: break-word;
+    word-break: break-word;
+  }
+  
+  #printable-team-leaderboard th {
+    background-color: #f0f0f0 !important;
+    font-weight: bold !important;
+    font-size: 10pt !important;
+    white-space: normal !important;
+    height: auto !important;
+  }
+
+  /* Column widths for team leaderboard */
+  #printable-team-leaderboard th:nth-child(1),
+  #printable-team-leaderboard td:nth-child(1) { width: 6% !important; }
+  #printable-team-leaderboard th:nth-child(2),
+  #printable-team-leaderboard td:nth-child(2) { width: 20% !important; text-align: left !important; padding-left: 8px !important; white-space: normal !important; }
+  #printable-team-leaderboard th:nth-child(3),
+  #printable-team-leaderboard td:nth-child(3) { width: 20% !important; white-space: normal !important; }
+  #printable-team-leaderboard th:nth-child(4),
+  #printable-team-leaderboard td:nth-child(4) { width: 5% !important; }
+  #printable-team-leaderboard th:nth-child(5),
+  #printable-team-leaderboard td:nth-child(5) { width: 8% !important; }
+  #printable-team-leaderboard th:nth-child(6),
+  #printable-team-leaderboard td:nth-child(6) { width: 14% !important; white-space: normal !important; font-size: 9pt !important; }
+  #printable-team-leaderboard th:nth-child(n+7),
+  #printable-team-leaderboard td:nth-child(n+7) { width: 10% !important; white-space: normal !important; }
+
+  /* Hide icons within the team leaderboard */
+  #printable-team-leaderboard svg {
+    display: none !important;
+  }
+
+  /* Reset ShadCN/Tailwind values */
+  #printable-team-leaderboard .rounded-md,
+  #printable-team-leaderboard .border,
+  #printable-team-leaderboard .shadow-sm,
+  #printable-team-leaderboard .shadow {
+    border-radius: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+
+  /* -----------------------------------------------------------
+     CLASSROOMS PAGE STYLES
+     หน้าข้อมูลห้องเรียน (ที่หัวตารางยาวๆ)
+  ----------------------------------------------------------- */
+
+  /* Ensure the printable classrooms section is visible */
+  #printable-classrooms-section {
+    display: block !important;
+    visibility: visible !important;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    /* leave space for fixed print header so the table doesn't overlap */
+    margin-top: 56px !important;
+  }
+
+  /* Fixed header that repeats on every printed page. Chrome/Edge will repeat fixed elements on each page. */
+  .print-header {
+    /* previously used fixed header (caused overlap); hide it now to rely on per-page titles rendered inside tables */
+    display: none !important;
+    position: static !important;
+    /* align header with @page margins (5mm each side) so it matches table width */
+    left: auto !important;
+    right: auto !important;
+    text-align: center !important;
+    background: #fff !important;
+    padding: 0 !important;
+    border-bottom: none !important;
+    font-size: 12pt !important;
+    line-height: 1.1 !important;
+    z-index: auto !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    box-sizing: border-box !important;
+    height: auto !important;
+  }
+
+  /* Make sure the header doesn't appear in the screen layout (handled by the component using hidden/print:block),
+     but ensure any other global print-header usages are covered. */
+  .print-header ~ * {
+    /* nothing here, kept for future overrides */
+  }
+
+  /* Basic table styling for ClassroomTable */
+  #printable-classrooms-section table {
+    width: 100%;
+    border-collapse: collapse;
+    /* สำคัญ: ใช้ auto เพื่อแก้ปัญหาหัวตารางทับกัน */
+    table-layout: auto !important; 
+    font-size: 10pt;
+  }
+
+  /* Ensure table headers repeat on each printed page and borders are visible */
+  #printable-classrooms-section table thead {
+    display: table-header-group !important;
+  }
+  #printable-classrooms-section table tfoot {
+    display: table-footer-group !important;
+  }
+
+  #printable-classrooms-section th,
+  #printable-classrooms-section td {
+    border: 1px solid #000 !important;
+    padding: 6px 4px !important;
+    color: #000 !important;
+    vertical-align: middle !important;
+    word-wrap: break-word !important;
+    word-break: normal !important;
+    background-clip: padding-box !important;
+  }
+
+  /* Prevent rows from being split across pages */
+  #printable-classrooms-section table tbody tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Use class-based page breaks so the component can insert breaks exactly after N rows */
+  .print-page-break {
+    page-break-after: always !important;
+  }
+
+  /* Header clone inserted by the component when printing */
+  .print-only-header-clone {
+    display: table-header-group !important;
+  }
+
+  /* Print table title styles - displays on every page */
+  .print-table-title {
+    text-align: center !important;
+    font-weight: bold !important;
+    font-size: 12pt !important;
+    margin: 0 !important;
+    padding: 5px 0 !important;
+    color: #000 !important;
+    border-bottom: 1px solid #000 !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    display: block !important;
+  }
+
+  /* Print table caption styles - displays on every page */
+  .print-table-caption {
+    caption-side: top !important;
+    display: table-caption !important;
+    text-align: center !important;
+    font-weight: bold !important;
+    font-size: 12pt !important;
+    margin: 0 !important;
+    padding: 5px 0 !important;
+    color: #000 !important;
+    border-bottom: 1px solid #000 !important;
+  }
+
+  /* Print table wrapper */
+  .print-table-wrapper {
+    page-break-inside: avoid !important;
+  }
+
+  /* Repeat table headers on every page */
+  .print-table-wrapper table thead {
+    display: table-header-group !important;
+  }
+
+  .print-table-wrapper table tbody tr {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Make the page container use full printable width (override Tailwind screen styles) */
+  .classrooms-print-page {
+    width: auto !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  #printable-classrooms-section {
+    display: block !important;
+    visibility: visible !important;
+    width: 100% !important; /* Take full width for printing */
+    margin: 0 auto !important;
+    padding: 0 !important;
+  }
+  #printable-classrooms-section th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    text-align: center !important;
+    white-space: normal !important; /* บังคับให้ข้อความขึ้นบรรทัดใหม่ได้ */
+    height: auto !important;
+    -webkit-print-color-adjust: exact; /* พิมพ์สีพื้นหลัง */
+    print-color-adjust: exact;
+  }
+
+  #printable-classrooms-section td {
+    text-align: center;
+  }
+  
+  /* จัดชิดซ้ายเฉพาะคอลัมน์ชื่อครู (คอลัมน์ที่ 4) */
+  #printable-classrooms-section td:nth-child(4) {
+    text-align: left;
+  }
+
+  /* กำหนดความกว้างคอลัมน์แบบคร่าวๆ (Browser จะปรับให้อัตโนมัติอีกทีจาก table-layout: auto) */
+  #printable-classrooms-section th:nth-child(1), #printable-classrooms-section td:nth-child(1) { width: 10%; } /* สาขา */
+  #printable-classrooms-section th:nth-child(2), #printable-classrooms-section td:nth-child(2) { width: 8%; }  /* ระดับชั้น */
+  #printable-classrooms-section th:nth-child(3), #printable-classrooms-section td:nth-child(3) { width: 5%; }  /* ห้อง */
+  #printable-classrooms-section th:nth-child(4), #printable-classrooms-section td:nth-child(4) { width: 18%; } /* ครู */
+  #printable-classrooms-section th:nth-child(5), #printable-classrooms-section td:nth-child(5) { width: 10%; } /* นร.จอง */
+  #printable-classrooms-section th:nth-child(6), #printable-classrooms-section td:nth-child(6) { width: 8%; }  /* นร.ทั้งหมด */
+  #printable-classrooms-section th:nth-child(7), #printable-classrooms-section td:nth-child(7) { width: 10%; } /* เฉลี่ย */
+  #printable-classrooms-section th:nth-child(8), #printable-classrooms-section td:nth-child(8) { width: 10%; } /* ยอดรวม */
+  #printable-classrooms-section th:nth-child(9), #printable-classrooms-section td:nth-child(9) { width: auto; } /* ร้อยละ */
+
+
+  /* --- Styles for ClassroomStudentsPage --- */
+  /* Ensure the printable classroom students section is visible */
+  #printable-classroom-students-section {
+    display: block !important;
+    visibility: visible !important;
+    width: 100%;
+    margin: 0;
+    padding: 5mm 0 0 0 !important; /* Add top padding */
+  }
+
+  /* Basic table styling for ClassroomStudentsPage table */
+  #printable-classroom-students-section table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: auto; 
+    font-size: 9pt;
+  }
+
+  #printable-classroom-students-section table tbody tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  #printable-classroom-students-section table tbody tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  #printable-classroom-students-section th,
+  #printable-classroom-students-section td {
+    border: 1px solid #000;
+    padding: 4px 2px;
+    text-align: left;
+    vertical-align: top;
+    word-wrap: break-word;
+    word-break: break-word;
+  }
+
+  #printable-classroom-students-section th {
+    background-color: #f0f0f0;
+    font-weight: bold;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  /* Print table footer - appears at end of last table */
+  .print-table-footer {
+    text-align: center !important;
+    background: #fff !important;
+    padding: 10px 0 !important;
+    font-size: 11pt !important;
+    line-height: 1.5 !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    margin-top: 10mm !important;
+  }
+
+  .print-table-footer p {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Print footer overrides: appears at bottom of every page */
+  .print-footer {
+    display: block !important;
+    text-align: center !important;
+    background: #fff !important;
+    padding: 10px 0 !important;
+    font-size: 11pt !important;
+    line-height: 1.5 !important;
+    box-sizing: border-box !important;
+    page-break-inside: avoid !important;
+    margin-top: 10mm !important;
+    border-top: 1px solid #000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+
+
+
+
+  /* Wrapper for each printed table page */
+  .print-table-wrapper {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Ensure break between printed tables (except last) */
+  .print-page-break {
+    page-break-after: always !important;
+  }
+
+  /* Offset subsequent printed tables so their table header isn't covered by the fixed print header */
+  .print-table-wrapper + .print-table-wrapper {
+    padding-top: 6mm !important;
+    box-sizing: border-box !important;
+  }
+
+  /* Style the per-chunk printed title row so it is visible and not collapsed */
+  #printable-classrooms-section table thead tr.print-title-row th.print-title {
+    display: table-cell !important;
+    text-align: center !important;
+    font-size: 12pt !important;
+    font-weight: 700 !important;
+    padding: 4mm 2mm !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    border: none !important;
+  }
+
+  /* Print chunk title above each printed table */
+  #printable-classrooms-section .print-chunk-title {
+    display: block !important;
+    text-align: center !important;
+    font-size: 12pt !important;
+    font-weight: 700 !important;
+    padding: 2mm 0 4mm 0 !important;
+    margin: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background: #fff !important;
+    color: #000 !important;
+    border-bottom: 1px solid #000 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    position: relative !important;
+    z-index: 10 !important;
+  }
+
+}
+@media screen {
+  .screen-only {
+    display: block !important;
+  }
+  .print-only {
+    display: none !important;
+  }
+  /* Hide the department pounds table on screen, show when printing */
+  #printable-department-pounds-table {
+    display: none !important;
+  }
+
+  /* Hide Chart.js Datalabels on screen */
+  .chartjs-datalabels {
+    display: none !important;
+  }
+
+  /* Show the Department Cake Quantity Chart on screen */
+  #printable-charts-section > div:nth-child(3) {
+    display: block !important;
+  }
+
+  /* Ensure Department Sales Bar Chart is normal size on screen */
+  #printable-charts-section > div:nth-child(2) {
+    flex: none !important;
+    min-height: auto !important;
+  }
+} 

@@ -1,0 +1,37 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+    env_file:
+      - .env
+    volumes:
+      - ./backups:/app/backups
+    networks:
+      - db-network
+    restart: always
+
+  app-migrate-deploy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    command: bun x prisma migrate deploy
+    env_file:
+      - .env
+    volumes:
+      - ./backups:/app/backups
+    networks:
+      - db-network
+
+networks:
+  db-network:
+    external: true
+    name: databases_db-network
+
+volumes:
+  backups:

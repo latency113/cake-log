@@ -1,0 +1,3 @@
+api-nvc-cake.duckdns.org {
+        reverse_proxy backend_cake1:3001
+}

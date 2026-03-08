@@ -1,0 +1,249 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider            = "prisma-client"
+  output              = "../src/providers/database/generated"
+  moduleFormat        = "esm"
+  importFileExtension = "ts"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPERADMIN
+  ADMIN
+  OFFICER1
+  OFFICER2
+  USER
+}
+
+enum GradeLevelType {
+  VOCATIONAL // ปวช.
+  HIGHER // ปวส.
+}
+
+enum RequestStatus {
+  pending
+  approved
+  rejected
+}
+
+enum OrderStatus {
+  pending
+  approved
+  complete
+  cancelled
+}
+
+enum TeamType {
+  team
+  person
+}
+
+enum TimeType {
+  morning
+  afternoon
+}
+
+model Department {
+  id   String @id @default(uuid())
+  name String @unique
+
+  classroom   Classroom[]
+  teacher     Teacher[]
+}
+
+model Classroom {
+  id             String   @id @default(uuid())
+  name           String
+  teacher_id     String
+  department_id  String
+  grade_level_id String?
+  students       Json?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  teacher     Teacher     @relation(fields: [teacher_id], references: [id])
+  department  Department  @relation(fields: [department_id], references: [id])
+  grade_level GradeLevel? @relation(fields: [grade_level_id], references: [id])
+
+  isOrderFinalized Boolean @default(false)
+
+  orders     Order[]
+  orderBooks OrderBook[]
+
+  @@unique([name, department_id, grade_level_id])
+  @@index([department_id], name: "idx_classroom_department_id")
+}
+
+model GradeLevel {
+  id    String         @id @default(uuid())
+  level GradeLevelType
+  year  Int
+
+  classroom Classroom[]
+
+  @@unique([level, year])
+}
+
+model User {
+  id        String  @id @default(uuid())
+  firstname String
+  lastname  String
+  username  String  @unique
+  password  String
+  email     String?
+  role      Role
+
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  tokens      Token[]
+  orders      Order[]       @relation("UserOrders") // ผู้สั่ง
+  prepares    Order[]       @relation("OfficerPrepares") // ผู้เตรียม
+  pickups     Order[]       @relation("OfficerPickups") // ผู้ส่งมอบ
+
+  teacher_id String?
+  teacher    Teacher? @relation(fields: [teacher_id], references: [id])
+}
+
+model Team {
+  id                  String   @id @default(uuid())
+  name                String
+  classroom_ids       String[]
+  student_member_name String[] @map("studentMemberName")
+  total_sales_pounds  Float?   @map("totalSalesPounds")
+  total_sales_baht    Float?   @map("totalSalesBaht")
+  team_type           TeamType
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders Order[]
+}
+
+model Product {
+  id    String @id @default(uuid())
+  name  String
+  price Float
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orderItems OrderItem[]
+}
+
+model Order {
+  id String @id @default(uuid())
+
+  user_id            String
+  officer_prepare_id String?
+  officer_pickup_id  String?
+
+  user            User  @relation("UserOrders", fields: [user_id], references: [id])
+  officer_prepare User? @relation("OfficerPrepares", fields: [officer_prepare_id], references: [id])
+  officer_pickup  User? @relation("OfficerPickups", fields: [officer_pickup_id], references: [id])
+
+  customerName String
+  classroom_id String?
+  team_id      String?
+  orderDate    DateTime
+  totalPrice   Float
+  book_id      String
+  number       String
+  phone        String
+  pickup_date  DateTime
+  picked_up_at DateTime?
+  time_type    TimeType
+  deposit      Int
+  advisor      String
+  status       OrderStatus @default(pending)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  order_items  OrderItem[]
+  book         OrderBook   @relation(fields: [book_id], references: [id])
+  team         Team?       @relation(fields: [team_id], references: [id])
+  classroom    Classroom?  @relation(fields: [classroom_id], references: [id])
+
+  @@unique([book_id, number])
+  @@index([classroom_id], name: "idx_order_classroom_id")
+  @@index([team_id], name: "idx_order_team_id")
+  @@index([createdAt])
+  @@index([customerName])
+  @@index([advisor])
+}
+
+model OrderItem {
+  id         String   @id @default(uuid())
+  order_id   String
+  product_id String
+  pound      Int
+  quantity   Int
+  unitPrice  Float
+  subtotal   Float
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  order              Order              @relation(fields: [order_id], references: [id])
+  product            Product            @relation(fields: [product_id], references: [id])
+}
+
+model Teacher {
+  id            String      @id @default(uuid())
+  name          String      @unique
+  department_id String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  classroom     Classroom[]
+  department    Department  @relation(fields: [department_id], references: [id])
+  users         User[]
+}
+
+model Token {
+  id         String   @id @default(uuid())
+  token      String   @unique
+  user_id    String
+  expires_at DateTime
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [id])
+
+  @@index([user_id], name: "idx_token_user_id")
+  @@map("tokens")
+}
+
+model CakeSettings {
+  id              String    @id @default(uuid())
+  academicYear    String?
+  currentYear     String?
+  pickupStartDate DateTime?
+  pickupEndDate   DateTime?
+  pickupStartTime String?
+  pickupEndTime   String?
+  reporterName    String?
+  securityKey     String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model OrderBook {
+  id            String  @id @default(uuid())
+  bookNumber    String  @unique
+  startNumber   String
+  endNumber     String
+  currentNumber Int     @default(0)
+  maxCapacity   Int     @default(50)
+  isClosed      Boolean @default(false)
+
+  classroom_id String?
+  classroom    Classroom? @relation(fields: [classroom_id], references: [id])
+
+  orders Order[]
+}

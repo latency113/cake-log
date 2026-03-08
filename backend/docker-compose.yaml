@@ -1,0 +1,48 @@
+services:
+  # ╭─ postgres ─────────────────────────────────────────────────────────╮
+  postgres:
+    image: postgres
+    container_name: postgres
+    restart: unless-stopped # unless-stopped, on-failure, always, "no"
+    user: postgres
+    volumes:
+      - ./db-data:/var/lib/postgresql
+    environment:
+      - POSTGRES_DB=nvccake
+      - POSTGRES_PASSWORD=mysecretpassword
+      - POSTGRES_USER=postgres
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD", "pg_isready", -U, postgres]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app_net
+
+  # ╰─ postgres ─────────────────────────────────────────────────────────╯
+
+  # ╭─ postgres admin ───────────────────────────────────────────────────╮
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin
+    restart: always
+    ports:
+      - "8888:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@nvccake.com
+      PGADMIN_DEFAULT_PASSWORD: adminadmin1234
+    volumes:
+      - ./pgadmin:/var/lib/pgadmin
+    networks:
+      - app_net
+  # ╰─ postgres admin ───────────────────────────────────────────────────╯
+
+networks:
+  app_net:
+    external: true
+
+volumes:
+  db-data:
+  pgadmin:

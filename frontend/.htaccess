@@ -1,0 +1,20 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /nvc-cake/
+
+  # If file or directory does not exist
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+
+  # Redirect all routes to index.html
+  RewriteRule . /nvc-cake/index.html [L]
+</IfModule>
+
+# <IfModule mod_rewrite.c>
+#   RewriteEngine On
+#   RewriteBase /nvc-cake/
+#   RewriteRule ^index\.html$ - [L]
+#   RewriteCond %{REQUEST_FILENAME} !-f
+#   RewriteCond %{REQUEST_FILENAME} !-d
+#   RewriteRule . /nvc-cake/index.html [L]
+# </IfModule>

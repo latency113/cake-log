@@ -1,0 +1,26 @@
+@keyframes fall {
+  0% {
+    transform: translateY(-100px) rotate(0deg);
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.falling-icon {
+  position: absolute;
+  top: 0;
+  left: var(--left-position); /* Use CSS variable for random left position */
+  animation: fall var(--animation-duration) linear infinite;
+  font-size: var(--icon-size); /* Use CSS variable for random size */
+  color: var(--icon-color); /* Use CSS variable for random color */
+  pointer-events: none; /* Ensure icons don't interfere with clicks */
+  z-index: 0; /* Place behind content */
+  transform: translateX(-50%); /* Center the icon horizontally */
+}
