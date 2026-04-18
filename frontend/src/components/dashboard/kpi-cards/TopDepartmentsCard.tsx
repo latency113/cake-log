@@ -28,7 +28,7 @@ const TopDepartmentsCard: React.FC<TopDepartmentsCardProps> = ({
   ];
 
   return (
-    <div className="bg-white rounded-sm shadow-sm border border-slate-200 flex flex-col h-full overflow-hidden">
+    <div className="bg-white rounded-sm shadow-md border border-slate-200 flex flex-col h-full overflow-hidden">
       {/* Header — matches other card headers in the dashboard */}
       <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
         <h2 className="text-sm font-semibold text-slate-700 flex items-center gap-2">

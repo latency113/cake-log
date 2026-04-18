@@ -33,7 +33,7 @@ interface SalesChartProps {
 }
 
 const SalesChart: React.FC<SalesChartProps> = ({ dailyPounds }) => {
-  const [chartTextColor, setChartTextColor] = useState("#94a3b8");
+  const [chartTextColor] = useState("#94a3b8");
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -188,7 +188,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ dailyPounds }) => {
   };
 
   return (
-    <div className="bg-white rounded-sm shadow-lg border border-border p-8 flex flex-col h-full">
+    <div className="bg-white rounded-sm shadow-md border border-border p-8 flex flex-col h-full">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10">
         <div className="flex items-center gap-4">
           <div className="p-3 bg-blue-50 rounded-xl">
@@ -218,7 +218,7 @@ const SalesChart: React.FC<SalesChartProps> = ({ dailyPounds }) => {
           <Line data={chartData} options={chartOptions as any} />
         ) : (
           <div className="h-full flex flex-col items-center justify-center bg-slate-50/50 rounded-lg border-2 border-dashed border-slate-100">
-            <p className="text-slate-400 font-bold italic text-sm">ยังไม่มีข้อมูลสถิติ</p>
+            <p className="text-slate-400 font-semibold text-sm">ยังไม่มีข้อมูลสถิติ</p>
           </div>
         )}
       </div>

@@ -9,7 +9,7 @@ const TotalOrdersCard: React.FC<TotalOrdersCardProps> = ({
   totalPounds,
 }) => {
   return (
-    <div className="bg-white rounded-sm shadow-lg border border-border p-6 sm:p-8 flex items-center justify-between overflow-hidden relative group hover:border-purple-200 transition-colors">
+    <div className="bg-white rounded-sm shadow-md border border-border p-6 sm:p-8 flex items-center justify-between overflow-hidden relative group hover:border-purple-200 transition-colors">
       <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
         <Cake className="w-24 h-24 -mr-8 -mt-8 text-purple-600" />
       </div>

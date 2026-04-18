@@ -29,7 +29,6 @@ const TeamsPagination: React.FC<TeamsPaginationProps> = ({
   }
 
   const totalPages = Math.ceil(totalTeams / itemsPerPage);
-  const showPageNumbers = totalPages > 1 && itemsPerPage !== totalTeams;
   const startItem = (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalTeams);
 

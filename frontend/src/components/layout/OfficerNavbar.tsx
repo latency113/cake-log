@@ -9,7 +9,7 @@ interface OfficerNavbarProps {
 
 const OfficerNavbar: React.FC<OfficerNavbarProps> = ({ handleLogout }) => {
   return (
-    <div className="bg-background fixed top-0 left-0 right-0 shadow-lg flex justify-between items-center h-16 px-4 border-b z-50">
+    <div className="bg-background fixed top-0 left-0 right-0 shadow-sm flex justify-between items-center h-16 px-4 border-b z-50">
       <div className="flex items-center space-x-4">
         <Link
           to="/officer-prepare"

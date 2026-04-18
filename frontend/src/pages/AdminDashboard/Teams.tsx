@@ -210,7 +210,7 @@ const Teams: React.FC = () => {
       />
       <TeamDeleteConfirmModal
         isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteConfirmModalOpen(false)}
+        onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={handleConfirmDelete}
         teamToDelete={teamToDelete}
       />
