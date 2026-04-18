@@ -9,18 +9,25 @@ const TotalOrdersCard: React.FC<TotalOrdersCardProps> = ({
   totalPounds,
 }) => {
   return (
-    <div className="grid bg-gradient-to-r from-purple-600 to-purple-700 rounded-sm shadow-lg p-8 text-white">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-medium mb-3 text-purple-100">
-            จำนวนปอนด์ทั้งหมด
+    <div className="bg-white rounded-sm shadow-lg border border-border p-6 sm:p-8 flex items-center justify-between overflow-hidden relative group hover:border-purple-200 transition-colors">
+      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+        <Cake className="w-24 h-24 -mr-8 -mt-8 text-purple-600" />
+      </div>
+
+      <div className="relative z-10">
+        <p className="text-md text-purple-600  uppercase tracking-wider mb-1">
+          จำนวนปอนด์ทั้งหมด
+        </p>
+        <div className="flex items-baseline gap-2">
+          <h2 className="text-4xl text-slate-800 tracking-tight">
+            {totalPounds.toLocaleString()}
           </h2>
-          <p className="text-4xl font-bold">{totalPounds}</p>
-          <div className="mt-2 text-purple-200 text-sm">ปอนด์</div>
+          <span className="text-sm font-bold text-purple-600 uppercase">ปอนด์</span>
         </div>
-        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-          <Cake className="w-8 h-8"/>
-        </div>
+      </div>
+      
+      <div className="w-14 h-14 bg-purple-50 rounded-2xl flex items-center justify-center text-purple-600 shrink-0">
+        <Cake className="w-7 h-7" />
       </div>
     </div>
   );

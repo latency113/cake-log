@@ -1,4 +1,5 @@
 import React from "react";
+import { Wallet } from "lucide-react";
 
 interface TotalSalesCardProps {
   totalSalesAmount: number;
@@ -6,27 +7,25 @@ interface TotalSalesCardProps {
 
 const TotalSalesCard: React.FC<TotalSalesCardProps> = ({ totalSalesAmount }) => {
   return (
-    <div className="grid bg-gradient-to-r from-blue-600 to-blue-700 rounded-sm shadow-lg p-8 text-white">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-xl font-medium mb-3 text-blue-100">
-            ยอดขายรวมทั้งหมด
+    <div className="bg-white rounded-sm shadow-lg border border-border p-6 sm:p-8 flex items-center justify-between overflow-hidden relative group hover:border-blue-200 transition-colors">
+      <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
+        <Wallet className="w-24 h-24 -mr-8 -mt-8 text-blue-600" />
+      </div>
+      
+      <div className="relative z-10">
+        <p className="text-md text-blue-600 uppercase tracking-wider mb-1">
+          ยอดขายรวมทั้งหมด
+        </p>
+        <div className="flex items-baseline gap-1">
+          <span className="text-sm text-blue-600">฿</span>
+          <h2 className="text-4xl text-slate-800 tracking-tight">
+            {totalSalesAmount.toLocaleString("th-TH")}
           </h2>
-          <p className="text-4xl font-bold">
-            ฿{totalSalesAmount.toLocaleString("th-TH")}
-          </p>
-          <div className="mt-2 text-blue-200 text-sm">รวมทุกแผนก</div>
         </div>
-        <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center">
-          <svg
-            className="w-8 h-8"
-            fill="currentColor"
-            viewBox="0 0 20 20"
-          >
-            <path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" />
-            <path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" />
-          </svg>
-        </div>
+      </div>
+      
+      <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 shrink-0">
+        <Wallet className="w-7 h-7" />
       </div>
     </div>
   );
