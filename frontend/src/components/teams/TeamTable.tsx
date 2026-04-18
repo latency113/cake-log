@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import {
   Table,
   TableBody,
@@ -9,79 +9,21 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Edit, Trash2 } from "lucide-react";
-import { showToastSuccess, showToastError } from "@/utils/alerts";
-import {
-  getTeams,
-  deleteTeam,
-  updateTeam,
-  createTeam,
-} from "@/utils/api/teams";
-import type {
-  TeamWithRelations,
-  CreateTeamDto,
-  UpdateTeamDto,
-} from "@/types/team"; // Use TeamWithRelations
-import TeamFormModal from "./TeamFormModal";
-import TeamDeleteConfirmModal from "./TeamDeleteConfirmModal";
-import { getDepartments } from "@/utils/api/departments";
-import { getClassrooms } from "@/utils/api/classrooms";
-import type { Department, Classroom } from "@/types";
-import { Input } from "@/components/ui/input";
+import type { TeamWithRelations } from "@/types/team";
+
 interface TeamTableProps {
+  teams: TeamWithRelations[];
   onEditTeam: (team: TeamWithRelations) => void;
   onDeleteTeam: (team: TeamWithRelations) => void;
-  refetchTrigger: boolean;
+  loading?: boolean;
 }
 
 const TeamTable: React.FC<TeamTableProps> = ({
+  teams,
   onEditTeam,
   onDeleteTeam,
-  refetchTrigger,
+  loading,
 }) => {
-  const [teams, setTeams] = useState<TeamWithRelations[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [currentTeam, setCurrentTeam] = useState<TeamWithRelations | undefined>(
-    undefined
-  );
-  const [allClassrooms, setAllClassrooms] = useState<Classroom[]>([]);
-  const [allDepartments, setAllDepartments] = useState<Department[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 10;
-
-  const fetchTeams = async (page: number, search?: string) => {
-    setError(null);
-    try {
-      const response = await getTeams(page, itemsPerPage, search);
-      setTeams(response.data);
-    } catch (err) {
-      setError("Failed to load teams.");
-      showToastError({ title: "Error", text: "Failed to load teams." });
-    }
-  };
-
-  const fetchInitialData = async () => {
-    try {
-      const [classroomsResponse, departmentsResponse] = await Promise.all([
-        getClassrooms(1, 9999),
-        getDepartments(1, 9999),
-      ]);
-      setAllClassrooms(classroomsResponse.data);
-      setAllDepartments(departmentsResponse.data);
-      await fetchTeams(currentPage, searchQuery);
-    } catch (err: any) {
-      console.error("Failed to fetch initial data:", err);
-      setError("Failed to load initial data.");
-      showToastError({ title: "Error", text: "Failed to load initial data." });
-    }
-  };
-
-  useEffect(() => {
-    fetchInitialData();
-  }, [currentPage, searchQuery, refetchTrigger]); // Add refetchTrigger here
-
   const handleEdit = (team: TeamWithRelations) => {
     onEditTeam(team);
   };
@@ -90,73 +32,9 @@ const TeamTable: React.FC<TeamTableProps> = ({
     onDeleteTeam(team);
   };
 
-  const handleSaveTeam = async (
-    teamData: CreateTeamDto | UpdateTeamDto
-  ): Promise<boolean> => {
-    setIsModalOpen(false);
-    try {
-      if (currentTeam) {
-        await updateTeam(currentTeam.id, teamData);
-        showToastSuccess({
-          title: "Success",
-          text: "Team updated successfully!",
-        });
-      } else {
-        await createTeam(teamData as CreateTeamDto);
-        showToastSuccess({
-          title: "Success",
-          text: "Team added successfully!",
-        });
-      }
-      fetchTeams(currentPage, searchQuery);
-      return true;
-    } catch (err) {
-      console.error("Failed to save team:", err);
-      showToastError({ title: "Error", text: "Failed to save team." });
-      return false;
-    }
-  };
-
-  const handleConfirmDelete = async () => {
-    if (currentTeam) {
-      try {
-        await deleteTeam(currentTeam.id);
-        showToastSuccess({
-          title: "Success",
-          text: "Team deleted successfully!",
-        });
-        fetchTeams(currentPage, searchQuery);
-      } catch (err) {
-        console.error("Failed to delete team:", err);
-        showToastError({ title: "Error", text: "Failed to delete team." });
-      } finally {
-        setIsDeleteModalOpen(false);
-        setCurrentTeam(undefined);
-      }
-    }
-  };
-
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to first page on new search
-  };
-
-  if (error) {
-    return <div className="text-red-500 text-center py-4">{error}</div>;
-  }
-
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <Input
-          placeholder="ค้นหาทีม..."
-          value={searchQuery}
-          onChange={handleSearchChange}
-          className="max-w-sm"
-        />
-      </div>
-
-      <div className="rounded-md border">
+      <div className="rounded-md border bg-white">
         <Table>
           <TableHeader>
             <TableRow>
@@ -172,7 +50,13 @@ const TeamTable: React.FC<TeamTableProps> = ({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {teams.length === 0 ? (
+            {loading && teams.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={9} className="h-24 text-center">
+                  กำลังโหลดข้อมูล...
+                </TableCell>
+              </TableRow>
+            ) : teams.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={9} className="h-24 text-center">
                   ไม่พบทีม
@@ -183,7 +67,15 @@ const TeamTable: React.FC<TeamTableProps> = ({
                 <TableRow key={team.id}>
                   <TableCell className="font-medium">{team.name}</TableCell>
                   <TableCell>
-                    {team.team_type === "team" ? "ทีม" : "บุคคล"}
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${
+                        team.team_type === "team"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-green-100 text-green-700"
+                      }`}
+                    >
+                      {team.team_type === "team" ? "ทีม" : "บุคคล"}
+                    </span>
                   </TableCell>
                   <TableCell>
                     {(team.student_member_name ?? []).length > 0 ? (
@@ -248,7 +140,7 @@ const TeamTable: React.FC<TeamTableProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => handleEdit(team)}
-                      className="mr-2"
+                      className="mr-2 hover:bg-purple-50 text-purple-600"
                     >
                       <Edit className="h-4 w-4" />
                     </Button>
@@ -256,8 +148,9 @@ const TeamTable: React.FC<TeamTableProps> = ({
                       variant="ghost"
                       size="sm"
                       onClick={() => handleDelete(team)}
+                      className="hover:bg-red-50 text-red-600"
                     >
-                      <Trash2 className="h-4 w-4 text-red-500" />
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -266,22 +159,6 @@ const TeamTable: React.FC<TeamTableProps> = ({
           </TableBody>
         </Table>
       </div>
-
-
-      <TeamFormModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveTeam}
-        currentTeam={currentTeam}
-        classrooms={allClassrooms}
-        departments={allDepartments}
-      />
-      <TeamDeleteConfirmModal
-        isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
-        onConfirm={handleConfirmDelete}
-        teamToDelete={currentTeam ?? null}
-      />
     </div>
   );
 };

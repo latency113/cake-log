@@ -32,19 +32,21 @@ export namespace TeamService {
   }
 
   export async function findAll(
-    options: { page?: number; itemsPerPage?: number; search?: string } = {}
+    options: { page?: number; itemsPerPage?: number; search?: string; team_type?: "team" | "person" } = {}
   ) {
     const page = options.page ?? 1;
     const itemsPerPage = options.itemsPerPage ?? 10;
     const search = options.search;
+    const team_type = options.team_type;
 
     const { skip, take } = getPaginationParams(page, itemsPerPage);
     const teams = await TeamRepository.findAll({
       skip,
       take,
       search,
+      team_type,
     });
-    const total = await TeamRepository.countAll(search);
+    const total = await TeamRepository.countAll(search, team_type);
 
     const totalPages = Math.ceil(total / itemsPerPage);
     const nextPage = page < totalPages;

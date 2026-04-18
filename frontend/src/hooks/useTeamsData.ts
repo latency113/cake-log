@@ -6,8 +6,9 @@ import { getDepartments } from '@/utils/api/departments';
 import type { TeamWithRelations, CreateTeamDto, UpdateTeamDto } from '@/types/team';
 import type { Classroom, Department } from '@/types';
 
-export const useTeamsData = () => {
+export const useTeamsData = (page: number = 1, itemsPerPage: number = 10, search?: string, team_type?: "team" | "person") => {
   const [teams, setTeams] = useState<TeamWithRelations[]>([]);
+  const [totalCount, setTotalCount] = useState(0);
   const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
@@ -16,20 +17,25 @@ export const useTeamsData = () => {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null); // Clear previous errors
       const [teamsResponse, classroomsResponse, departmentsResponse] = await Promise.all([
-        getTeams(1, 9999),
+        getTeams(page, itemsPerPage, search, team_type),
         getClassrooms(1, 9999),
         getDepartments(1, 9999),
       ]);
       setTeams(teamsResponse.data);
+      setTotalCount(teamsResponse.meta_data.total);
       setClassrooms(classroomsResponse);
       setDepartments(departmentsResponse.data);
     } catch (err) {
+      console.error('Error fetching teams:', err);
+      setTeams([]); // Clear teams on error to show empty state
+      setTotalCount(0);
       setError('Failed to fetch data');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [page, itemsPerPage, search, team_type]);
 
   useEffect(() => {
     fetchData();
@@ -63,6 +69,7 @@ export const useTeamsData = () => {
 
   return {
     teams,
+    totalCount,
     classrooms,
     departments,
     loading,

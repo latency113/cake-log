@@ -1,14 +1,20 @@
 import { api } from "../api";
 import type { Team, CreateTeamDto, UpdateTeamDto, TeamWithRelations } from "../../types/team";
 
-export const getTeams = async (page: number = 1, itemsPerPage: number = 10, search?: string): Promise<{ data: TeamWithRelations[]; meta_data: any }> => {
+export const getTeams = async (
+  page: number = 1,
+  itemsPerPage: number = 10,
+  search?: string,
+  team_type?: "team" | "person"
+): Promise<{ data: TeamWithRelations[]; meta_data: any }> => {
   try {
     const response = await api.get("/teams", {
       params: {
         page,
         itemsPerPage,
         ...(search && { search }),
-      }
+        ...(team_type && { team_type }),
+      },
     });
     return response.data;
   } catch (error) {

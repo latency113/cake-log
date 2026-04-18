@@ -1,4 +1,4 @@
-export const getDbParams = () => {
+export const getDbParams = (year?: string | null) => {
   let dbUser = process.env.POSTGRES_USER;
   let dbPassword = process.env.POSTGRES_PASSWORD;
   let dbName = process.env.POSTGRES_DB;
@@ -21,10 +21,19 @@ export const getDbParams = () => {
     }
   }
 
+  const finalDbName = dbName || 'postgres';
+  
+  // If a year is specified and it's not the default "current" or "2569" (which we know is current in this project)
+  // we append the year to the database name.
+  let targetDbName = finalDbName;
+  if (year && year !== "current" && year !== "2569") {
+    targetDbName = `${finalDbName}_${year}`;
+  }
+
   return {
     user: dbUser || 'postgres',
     password: dbPassword || '',
-    name: dbName || 'postgres',
+    name: targetDbName,
     host: dbHost || 'localhost',
     port: dbPort || '5432',
   };

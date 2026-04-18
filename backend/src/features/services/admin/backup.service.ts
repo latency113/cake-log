@@ -2,6 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import { getDbParams } from '@/shared/utils/db-utils';
+import { getAcademicYear } from '@/providers/database/database.context';
 
 const findPgTool = (toolName: string): string => {
   // 1. Check environment variables for explicit path definition
@@ -34,7 +35,8 @@ const findPgTool = (toolName: string): string => {
 };
 
 export const performBackup = async (tag?: string): Promise<string> => {
-  const { user, password, name, host, port } = getDbParams();
+  const currentYear = getAcademicYear();
+  const { user, password, name, host, port } = getDbParams(currentYear);
 
   const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
   let backupFileName = `${name}_${timestamp}.sql`;

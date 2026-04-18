@@ -206,8 +206,9 @@ const SettingsPage: React.FC = () => {
             revertResult.message +
               (revertResult.data ? ` (${revertResult.data})` : "") ||
             "ย้อนกลับข้อมูลสำเร็จแล้ว!",
-          showConfirmButton: false,
-          timer: 1500,
+          showConfirmButton: true, // Changed to true to allow user to see it
+        }).then(() => {
+          window.location.reload(); // Force reload to see the restored data
         });
         showToastSuccess({
           title: "Success",

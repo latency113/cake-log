@@ -19,6 +19,7 @@ export namespace TeamRepository {
     skip: number;
     take: number;
     search?: string;
+    team_type?: "team" | "person";
   }) {
     const where = {
       ...(options.search && {
@@ -26,9 +27,9 @@ export namespace TeamRepository {
           contains: options.search,
         },
       }),
-      team_type: {
-        in: ["team", "person"], // Ensure team_type is a valid enum value
-      },
+      ...(options.team_type && {
+        team_type: options.team_type,
+      }),
     };
 
     const teams = await prisma.team.findMany({
@@ -157,14 +158,17 @@ export namespace TeamRepository {
     });
   }
 
-  export async function countAll(search?: string) {
-    const where = search
-      ? {
-          name: {
-            contains: search,
-          },
-        }
-      : {};
+  export async function countAll(search?: string, team_type?: "team" | "person") {
+    const where = {
+      ...(search && {
+        name: {
+          contains: search,
+        },
+      }),
+      ...(team_type && {
+        team_type,
+      }),
+    };
 
     return prisma.team.count({
       where,

@@ -1,49 +1,63 @@
 import { useState, useEffect } from "react";
-import { Users, PlusCircle } from "lucide-react";
+import { Users, PlusCircle, Search } from "lucide-react";
 import TeamTable from "@/components/teams/TeamTable";
 import { Button } from "@/components/ui/button";
 import TeamFormModal from "@/components/teams/TeamFormModal";
-import { getClassrooms } from "@/utils/api/data";
-import { getDepartments } from "@/utils/api/departments";
 import { createTeam, updateTeam, deleteTeam } from "@/utils/api/teams";
 import type { CreateTeamDto, UpdateTeamDto, TeamWithRelations, Team } from "@/types/team";
-import type { Classroom, Department } from "@/types";
 import { showToastSuccess, showToastError } from "@/utils/alerts";
 import TeamDeleteConfirmModal from "@/components/teams/TeamDeleteConfirmModal";
 import TeamsSkeleton from "../../components/dashboard/skeletons/TeamsSkeleton";
+import { useTeamsData } from "@/hooks/useTeamsData";
+import TeamsPagination from "@/components/teams/TeamsPagination";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 const Teams: React.FC = () => {
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+  const [teamTypeFilter, setTeamTypeFilter] = useState<"all" | "team" | "person">("all");
+
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
-  const [departments, setDepartments] = useState<Department[]>([]);
-  const [refetch, setRefetch] = useState(false);
   const [currentTeam, setCurrentTeam] = useState<Team | undefined>(undefined);
   const [teamToDelete, setTeamToDelete] = useState<TeamWithRelations | null>(null);
-  const [loading, setLoading] = useState(true);
 
+  // Debounce search term
   useEffect(() => {
-    const fetchInitialData = async () => {
-      try {
-        const [classroomsResponse, departmentsResponse] = await Promise.all([
-          getClassrooms(1, 9999),
-          getDepartments(1, 9999),
-        ]);
-        setClassrooms(Array.isArray(classroomsResponse) ? classroomsResponse : []);
-        setDepartments(departmentsResponse.data);
-      } catch (err) {
-        console.error("Failed to fetch initial data:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchInitialData();
-  }, [refetch]);
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [searchTerm]);
 
-  if (loading) {
-    return <TeamsSkeleton />;
-  }
+  // Reset page when search or filter changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearchTerm, teamTypeFilter]);
 
+  const {
+    teams,
+    totalCount,
+    classrooms,
+    departments,
+    loading,
+    error,
+    refetch,
+  } = useTeamsData(
+    currentPage,
+    itemsPerPage,
+    debouncedSearchTerm,
+    teamTypeFilter === "all" ? undefined : teamTypeFilter
+  );
 
   const handleAddTeam = () => {
     setCurrentTeam(undefined);
@@ -73,7 +87,7 @@ const Teams: React.FC = () => {
           title: "Success",
           text: "ลบทีมสำเร็จ!",
         });
-        setRefetch((prev) => !prev);
+        refetch();
       } catch (err) {
         console.error("Failed to delete team:", err);
         showToastError({ title: "Error", text: "เกิดข้อผิดพลาดในการลบ" });
@@ -99,7 +113,7 @@ const Teams: React.FC = () => {
           text: "สร้างทีมสำเร็จ!",
         });
       }
-      setRefetch((prev) => !prev);
+      refetch();
       handleCloseModal();
       return true;
     } catch (err) {
@@ -109,10 +123,14 @@ const Teams: React.FC = () => {
     }
   };
 
+  if (loading && teams.length === 0) {
+    return <TeamsSkeleton />;
+  }
+
   return (
     <div className="max-w-11/12 mx-auto">
       <div className="bg-gradient-to-r from-purple-400 to-violet-500 rounded-sm shadow-md p-8 mb-8 text-white">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
             <h1 className="text-4xl font-bold mb-2 flex items-center">
               <Users className="w-10 h-10 mr-4 text-white" />
@@ -122,18 +140,66 @@ const Teams: React.FC = () => {
           </div>
           <Button
             onClick={handleAddTeam}
-            className="bg-white text-purple-600 hover:bg-gray-100"
+            className="bg-white text-purple-600 hover:bg-gray-100 self-start md:self-center"
           >
             <PlusCircle className="w-5 h-5 mr-2" />
             เพิ่มทีม
           </Button>
         </div>
       </div>
-      <TeamTable
-        onEditTeam={handleEditTeam}
-        onDeleteTeam={handleDeleteTeam}
-        refetchTrigger={refetch}
+
+      <div className="mb-6 flex flex-col sm:flex-row gap-4 items-center justify-between">
+        <div className="flex flex-1 items-center space-x-2 w-full sm:w-auto">
+          <div className="relative w-full sm:max-w-sm">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder="ค้นหาทีม..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+          <Select
+            value={teamTypeFilter}
+            onValueChange={(value: "all" | "team" | "person") => setTeamTypeFilter(value)}
+          >
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="ประเภททีม" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">ทั้งหมด</SelectItem>
+              <SelectItem value="team">ทีม</SelectItem>
+              <SelectItem value="person">บุคคล</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {error && teams.length === 0 ? (
+        <div className="p-4 text-red-500 text-center bg-white rounded shadow-sm">
+          เกิดข้อผิดพลาดในการโหลดข้อมูล: {error}
+        </div>
+      ) : (
+        <TeamTable
+          teams={teams}
+          onEditTeam={handleEditTeam}
+          onDeleteTeam={handleDeleteTeam}
+          loading={loading}
+        />
+      )}
+
+      <TeamsPagination
+        totalTeams={totalCount}
+        currentPage={currentPage}
+        itemsPerPage={itemsPerPage}
+        onPageChange={setCurrentPage}
+        onItemsPerPageChange={(items) => {
+          setItemsPerPage(items);
+          setCurrentPage(1);
+        }}
+        className="mt-6 rounded-md shadow-sm overflow-hidden border border-border"
       />
+
       <TeamFormModal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
@@ -144,7 +210,7 @@ const Teams: React.FC = () => {
       />
       <TeamDeleteConfirmModal
         isOpen={isDeleteModalOpen}
-        onClose={() => setIsDeleteModalOpen(false)}
+        onClose={() => setIsDeleteConfirmModalOpen(false)}
         onConfirm={handleConfirmDelete}
         teamToDelete={teamToDelete}
       />

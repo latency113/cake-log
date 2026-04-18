@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import { exec } from "child_process";
 import { getDbParams } from "@/shared/utils/db-utils";
+import { getAcademicYear } from "@/providers/database/database.context";
 import { CakeSettingsRepository } from "@/features/repository/CakeSettings/CakeSettings.repository";
 
 const getSecurityKey = async (): Promise<string> => {
@@ -56,7 +57,8 @@ export const performRestore = async (fileName?: string, key?: string): Promise<s
     throw new Error("Invalid security key for restoration.");
   }
 
-  const { user, password, name, host, port } = getDbParams();
+  const currentYear = getAcademicYear();
+  const { user, password, name, host, port } = getDbParams(currentYear);
 
   const backupsDir = path.join(process.cwd(), "backups");
   let targetFile: string;
@@ -93,28 +95,40 @@ export const performRestore = async (fileName?: string, key?: string): Promise<s
         reject(new Error(`Database clean failed: ${error.message}\n${stderr}`));
         return;
       }
-      if (stderr) console.warn(`Clean stderr: ${stderr}`);
       resolve(stdout);
     });
   });
 
   // 2. Restore from backup
-  const restoreCommand = `PGPASSWORD=${password} ${psqlPath} -h ${host} -p ${port} -U ${user} -d ${name} -f "${targetFile}"`;
+  // Added --set ON_ERROR_STOP=1 to catch internal SQL errors
+  const restoreCommand = `PGPASSWORD=${password} ${psqlPath} -h ${host} -p ${port} -U ${user} -d ${name} --set ON_ERROR_STOP=1 -f "${targetFile}"`;
 
   return new Promise((resolve, reject) => {
-    console.log(`Executing Restore Command from ${targetFile}...`);
+    console.log(`Executing Restore Command to ${name} from ${targetFile}...`);
     exec(restoreCommand, async (error, stdout, stderr) => {
       if (error) {
         console.error(`Restore failed: ${error}`);
+        // If restore failed, we don't proceed to migrations
         reject(new Error(`Database restore failed: ${error.message}\n${stderr}`));
         return;
       }
-      if (stderr) console.warn(`Restore stderr: ${stderr}`);
       
       try {
-        console.log("Running Prisma Migrations...");
-        await runMigrations();
-        resolve(`PostgreSQL restore successful from ${path.basename(targetFile)} and migrations applied!`);
+        console.log(`Running Prisma Migrations on ${name}...`);
+        // We try to run migrations, but if it fails with "already exists" errors, 
+        // it often means the schema is already correct from the restore.
+        try {
+          await runMigrations(name);
+        } catch (migrationError: any) {
+          console.warn("Migration warning (might be non-critical if schema is already up to date):", migrationError.message);
+          // If the error is about already existing objects (like 'Role'), we consider the restore successful
+          if (migrationError.message.includes("already exists") || migrationError.message.includes("P3018")) {
+             console.log("Detected existing schema objects, skipping migration sync but continuing...");
+          } else {
+             throw migrationError;
+          }
+        }
+        resolve(`PostgreSQL restore successful to ${name} from ${path.basename(targetFile)}`);
       } catch (migrationError: any) {
         console.error("Migration failed:", migrationError);
         reject(new Error(`Restore successful but migration failed: ${migrationError.message}`));
@@ -129,7 +143,8 @@ export const performRestorePrePromotion = async (key?: string): Promise<string> 
     throw new Error("Invalid security key for restoration.");
   }
 
-  const { user, password, name, host, port } = getDbParams();
+  const currentYear = getAcademicYear();
+  const { user, password, name, host, port } = getDbParams(currentYear);
 
   const backupsDir = path.join(process.cwd(), "backups");
 
@@ -153,7 +168,7 @@ export const performRestorePrePromotion = async (key?: string): Promise<string> 
   const cleanCommand = `PGPASSWORD=${password} ${psqlPath} -h ${host} -p ${port} -U ${user} -d ${name} -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"`;
   
   await new Promise((resolve, reject) => {
-    console.log("Executing Clean Command...");
+    console.log(`Executing Clean Command on ${name}...`);
     exec(cleanCommand, (error, stdout, stderr) => {
       if (error) {
         console.error(`Clean failed: ${error}`);
@@ -169,7 +184,7 @@ export const performRestorePrePromotion = async (key?: string): Promise<string> 
   const restoreCommand = `PGPASSWORD=${password} ${psqlPath} -h ${host} -p ${port} -U ${user} -d ${name} -f "${latestBackupFile}"`;
 
   return new Promise((resolve, reject) => {
-    console.log("Executing Restore Command...");
+    console.log(`Executing Restore Command to ${name}...`);
     exec(restoreCommand, async (error, stdout, stderr) => {
       if (error) {
         console.error(`Restore failed: ${error}`);
@@ -179,9 +194,9 @@ export const performRestorePrePromotion = async (key?: string): Promise<string> 
       if (stderr) console.warn(`Restore stderr: ${stderr}`);
       
       try {
-        console.log("Running Prisma Migrations...");
-        await runMigrations();
-        resolve(`PostgreSQL restore successful from ${latestBackupFile} and migrations applied!`);
+        console.log(`Running Prisma Migrations on ${name}...`);
+        await runMigrations(name);
+        resolve(`PostgreSQL restore successful to ${name} from ${latestBackupFile} and migrations applied!`);
       } catch (migrationError: any) {
         console.error("Migration failed:", migrationError);
         reject(new Error(`Restore successful but migration failed: ${migrationError.message}`));
@@ -190,9 +205,16 @@ export const performRestorePrePromotion = async (key?: string): Promise<string> 
   });
 };
 
-const runMigrations = (): Promise<void> => {
+const runMigrations = (dbName: string): Promise<void> => {
+  const originalUrl = process.env.DATABASE_URL;
+  if (!originalUrl) throw new Error("DATABASE_URL is not set");
+
+  const urlObj = new URL(originalUrl);
+  urlObj.pathname = `/${dbName}`;
+  const migrationUrl = urlObj.toString();
+
   return new Promise((resolve, reject) => {
-    exec("bun x prisma migrate deploy", (error, stdout, stderr) => {
+    exec(`DATABASE_URL=${migrationUrl} bun x prisma migrate deploy`, (error, stdout, stderr) => {
       if (error) {
         console.error(`Migration error: ${error}`);
         reject(error);

@@ -49,19 +49,14 @@ export namespace TeamController {
           ? Number(query.itemsPerPage)
           : 10;
         const search = query.search;
+        const team_type = query.team_type as "team" | "person" | undefined;
 
         const result = await TeamService.findAll({
           page,
           itemsPerPage,
           search,
+          team_type,
         });
-
-        if (result.data.length === 0 && search !== undefined) {
-          set.status = "Not Found";
-          return {
-            message: "No team found matching your search query.",
-          };
-        }
 
         return result;
       },
@@ -70,6 +65,7 @@ export namespace TeamController {
           page: t.Optional(t.Numeric()),
           itemsPerPage: t.Optional(t.Numeric()),
           search: t.Optional(t.String()),
+          team_type: t.Optional(t.Union([t.Literal("team"), t.Literal("person")])),
         }),
         response: {
           200: t.Object({
