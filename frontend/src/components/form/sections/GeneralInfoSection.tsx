@@ -552,7 +552,7 @@ const currentYearAD = new Date().getFullYear();
                 value={formData.book_id || ""}
                 disabled={isBookLocked}
               >
-                <SelectTrigger className="w-36 h-9 px-2 border-2 border-border rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card disabled:bg-muted disabled:text-muted-foreground">
+                <SelectTrigger className="w-36 h-9 px-2 border-2 border-border rounded-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card disabled:bg-muted disabled:text-muted-foreground">
                   <SelectValue placeholder="เลือกเล่มที่" />
                 </SelectTrigger>
                 <SelectContent>
@@ -589,7 +589,7 @@ const currentYearAD = new Date().getFullYear();
                 onChange={handleLocalChange}
                 onBlur={(e) => handleNumberBlur(e.target.value)}
                 className="mb-0"
-                inputClassName={`w-28 h-9 px-2 border-2 border-border rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all ${
+                inputClassName={`w-28 h-9 px-2 border-2 border-border rounded-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all ${
                   numberError ? "border-red-500" : ""
                 }`}
                 labelClassName="hidden"
@@ -628,7 +628,7 @@ const currentYearAD = new Date().getFullYear();
               value={formData.department_id || ""}
               disabled={isDepartmentLocked}
             >
-              <SelectTrigger className="w-full h-9 px-2 border-2 border-border rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card disabled:bg-muted disabled:text-muted-foreground">
+              <SelectTrigger className="w-full h-9 px-2 border-2 border-border rounded-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card disabled:bg-muted disabled:text-muted-foreground">
                 <SelectValue placeholder="เลือกแผนก" />
               </SelectTrigger>
               <SelectContent>
@@ -653,7 +653,7 @@ const currentYearAD = new Date().getFullYear();
               value={formData.year_id || ""}
               disabled={!formData.department_id || isYearLocked}
             >
-              <SelectTrigger className="w-full h-9 px-2 border-2 border-border rounded-lg bg-card disabled:bg-muted disabled:text-muted-foreground">
+              <SelectTrigger className="w-full h-9 px-2 border-2 border-border rounded-sm bg-card disabled:bg-muted disabled:text-muted-foreground">
                 <SelectValue placeholder="เลือกระดับชั้น" />
               </SelectTrigger>
               <SelectContent>
@@ -678,7 +678,7 @@ const currentYearAD = new Date().getFullYear();
               value={formData.classroom_id || ""}
               disabled={!formData.year_id || isClassroomLocked}
             >
-              <SelectTrigger className="w-full h-9 px-2 border-2 border-border rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card disabled:bg-muted disabled:text-muted-foreground">
+              <SelectTrigger className="w-full h-9 px-2 border-2 border-border rounded-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card disabled:bg-muted disabled:text-muted-foreground">
                 <SelectValue placeholder="เลือกห้องเรียน" />
               </SelectTrigger>
               <SelectContent>
@@ -711,7 +711,7 @@ const currentYearAD = new Date().getFullYear();
                 formData.competitionType === "noteam"
               }
             >
-              <SelectTrigger className="w-full h-9 px-2 border-2 border-border rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card disabled:bg-muted disabled:text-muted-foreground">
+              <SelectTrigger className="w-full h-9 px-2 border-2 border-border rounded-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card disabled:bg-muted disabled:text-muted-foreground">
                 <SelectValue
                   placeholder={
                     formData.competitionType === "team"
@@ -754,7 +754,7 @@ const currentYearAD = new Date().getFullYear();
             >
               <SelectTrigger
                 id="customerName"
-                className="w-full h-10 px-3 border-2 border-border rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card disabled:bg-muted disabled:text-muted-foreground"
+                className="w-full h-10 px-3 border-2 border-border rounded-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card disabled:bg-muted disabled:text-muted-foreground"
               >
                 <SelectValue placeholder="เลือกชื่อนักเรียน">
                   {formData.customerName || (
@@ -781,7 +781,7 @@ const currentYearAD = new Date().getFullYear();
                       type="text"
                       placeholder="ค้นหาชื่อนักเรียน..."
                       className="mb-0"
-                      inputClassName="w-full h-10 pl-10 pr-3 border-2 border-border rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-background"
+                      inputClassName="w-full h-10 pl-10 pr-3 border-2 border-border rounded-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-background"
                       labelClassName="sr-only"
                     />
                   </div>
@@ -840,7 +840,7 @@ const currentYearAD = new Date().getFullYear();
               type="tel" // ใช้ type="tel" เพื่อให้เป็น InputField สำหรับตัวเลขที่คล้ายเบอร์โทร
               placeholder="กรุณากรอกเบอร์โทรศัพท์"
               className="mb-0"
-              inputClassName="w-full h-9 px-2 border-2 border-border rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all"
+              inputClassName="w-full h-9 px-2 border-2 border-border rounded-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all"
               labelClassName="hidden"
               required={true}
               maxlength={10}
@@ -864,7 +864,7 @@ const currentYearAD = new Date().getFullYear();
               onBlur={(e) => validateFieldOnBlur("advisor", e.target.value)}
               disabled={(!!formData.classroom_id && !!formData.advisor) || isFullyLocked}
               className="mb-0"
-              inputClassName="w-full h-10 px-3 border-2 border-border rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all disabled:bg-muted disabled:text-muted-foreground"
+              inputClassName="w-full h-10 px-3 border-2 border-border rounded-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all disabled:bg-muted disabled:text-muted-foreground"
               labelClassName="hidden"
             />
           </div>
@@ -885,7 +885,7 @@ const currentYearAD = new Date().getFullYear();
                 type="tel"
                 placeholder="วัน (1-31)"
                 className="mb-0"
-                inputClassName="w-full text-center h-9 px-2 border-2 border-border rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all"
+                inputClassName="w-full text-center h-9 px-2 border-2 border-border rounded-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all"
                 labelClassName="hidden"
                 maxlength={2}
               />
@@ -895,7 +895,7 @@ const currentYearAD = new Date().getFullYear();
                 onValueChange={handleMonthChange}
                 value={selectedMonth}
               >
-                <SelectTrigger className="w-1/3 h-10 px-3 border-2 border-border rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card">
+                <SelectTrigger className="w-1/3 h-10 px-3 border-2 border-border rounded-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card">
                   <SelectValue placeholder="เดือน" />
                 </SelectTrigger>
                 <SelectContent>
@@ -916,7 +916,7 @@ const currentYearAD = new Date().getFullYear();
                 onValueChange={handleYearChange}
                 value={selectedYear}
               >
-                <SelectTrigger className="w-1/3 h-10 px-3 border-2 border-border rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card">
+                <SelectTrigger className="w-1/3 h-10 px-3 border-2 border-border rounded-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card">
                   <SelectValue placeholder="ปี" />
                 </SelectTrigger>
                 <SelectContent>
@@ -943,7 +943,7 @@ const currentYearAD = new Date().getFullYear();
               onValueChange={handlePickupTimeSlotSelectChange}
               value={formData.time_type || ""}
             >
-              <SelectTrigger className="w-full h-10 px-3 border-2 border-border rounded-lg focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card">
+              <SelectTrigger className="w-full h-10 px-3 border-2 border-border rounded-sm focus:border-blue-400 focus:ring-2 focus:ring-blue-50 transition-all bg-card">
                 <SelectValue>
                   {formData.time_type === "morning"
                     ? "เช้า ( 08:00 น. - 12:00 น.)"

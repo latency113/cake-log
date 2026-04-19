@@ -57,7 +57,7 @@ const PrintableOrderSummaryContent: React.FC<PrintableContentProps> = ({
     fetchSettings();
   }, []);
   return (
-    <div className="w-full mx-auto bg-pink-50 p-4 sm:p-6 md:p-8 rounded-lg shadow-lg relative text-black h-screen">
+    <div className="w-full mx-auto bg-pink-50 p-4 sm:p-6 md:p-8 rounded-lg relative text-black h-screen">
       {/* Header ของฟอร์ม */}
       <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-1 mb-4 sm:mb-6 text-xs sm:text-sm">
         <div className="flex justify-between w-full sm:w-auto">

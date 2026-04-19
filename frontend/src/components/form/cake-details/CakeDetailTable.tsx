@@ -1,7 +1,7 @@
 import React from "react";
 import type { CakeItem } from "../../../types";
 import { calculateCakeItemTotals } from "../../../utils/calculations";
-import { Package, Calculator } from "lucide-react";
+import { Package } from "lucide-react";
 import CakeTableHeader from "./CakeTableHeader";
 import CakeTableRow from "./CakeTableRow";
 
@@ -55,7 +55,6 @@ const CakeDetailsTable: React.FC<CakeDetailsTableProps> = ({
                 className="px-4 py-3 text-right border-r border-border"
               >
                 <div className="flex items-center justify-end space-x-2">
-                  <Calculator className="w-4 h-4 text-muted-foreground" />
                   <span className="font-semibold text-foreground ">
                     ยอดรวมทั้งสิ้น
                   </span>

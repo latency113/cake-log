@@ -72,16 +72,16 @@ const Navbar: React.FC<{ className?: string }> = ({ className }) => {
               {token && (
                 <>
                   <Link to="/order-search">
-                    <button className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-lg transition-colors backdrop-blur-sm border border-white/20 hover:border-white/30">
+                    <button className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-4 py-2.5 rounded-md transition-colors backdrop-blur-sm border border-white/20 hover:border-white/30">
                       <ShoppingBag className="w-4 h-4" />
-                      <span className="text-sm font-medium">ค้นหาออเดอร์</span>
+                      <span className="text-md font-medium">ค้นหาออเดอร์</span>
                     </button>
                   </Link>
 
                   <Link to="/classroom-cake-summary">
-                    <button className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-3 py-2 rounded-lg transition-colors backdrop-blur-sm border border-white/20 hover:border-white/30">
+                    <button className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-4 py-2.5 rounded-md transition-colors backdrop-blur-sm border border-white/20 hover:border-white/30">
                       <BookOpen className="w-4 h-4" />
-                      <span className="text-sm font-medium">
+                      <span className="text-md font-medium">
                         สรุปเค้กห้องเรียน
                       </span>
                     </button>
@@ -92,7 +92,7 @@ const Navbar: React.FC<{ className?: string }> = ({ className }) => {
               {/* User Dropdown - Improved */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <button className="flex items-center space-x-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-lg px-4 py-2.5 border border-white/20 hover:border-white/40 transition-all duration-300 hover:shadow-lg group">
+                  <button className="flex items-center space-x-3 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-md px-4 py-3 border border-white/20 hover:border-white/40 transition-all duration-300 hover:shadow-lg group">
                     <div className="w-5 h-5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center font-bold text-white shadow-md group-hover:scale-110 transition-transform duration-300">
                       {loggedInUsername?.charAt(0).toUpperCase() || "U"}
                     </div>
@@ -109,7 +109,7 @@ const Navbar: React.FC<{ className?: string }> = ({ className }) => {
                     onClick={handleLogout}
                     className="cursor-pointer"
                   >
-                    <div className="flex items-center cursor-pointer space-x-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-lg transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/40">
+                    <div className="flex items-center cursor-pointer space-x-2 bg-white/10 hover:bg-white/20 px-4 py-2 rounded-md transition-all duration-300 backdrop-blur-sm border border-white/20 hover:border-white/40">
                       <LogOut className="w-4 h-4" />
                       <span>ออกจากระบบ</span>
                     </div>

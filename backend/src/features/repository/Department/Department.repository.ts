@@ -82,6 +82,16 @@ export namespace DepartmentRepository {
     });
   }
 
+  export async function deleteByIds(ids: string[]) {
+    return prisma.department.deleteMany({
+      where: {
+        id: {
+          in: ids,
+        },
+      },
+    });
+  }
+
   export async function clearAllDepartment() {
     return prisma.department.deleteMany({});
   }

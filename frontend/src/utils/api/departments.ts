@@ -41,3 +41,12 @@ export const deleteDepartment = async (id: string): Promise<void> => {
     throw error;
   }
 };
+
+export const bulkDeleteDepartments = async (ids: string[]): Promise<void> => {
+  try {
+    await api.post("/departments/bulk-delete", { ids });
+  } catch (error) {
+    console.error("Error bulk deleting departments:", error);
+    throw error;
+  }
+};

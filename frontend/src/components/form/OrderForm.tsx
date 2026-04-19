@@ -1,4 +1,4 @@
-import React , { useEffect } from "react";
+import React, { useEffect } from "react";
 import GeneralInfoSection from "./sections/GeneralInfoSection";
 import CakeDetailsTable from "./cake-details/CakeDetailTable";
 import SummarySection from "./sections/SummarySection";
@@ -6,6 +6,7 @@ import OrderFormSkeleton from "./skeletons/OrderFormSkeleton";
 import OrderSummaryModal from "./summary/OrderSummaryModal";
 import useOrderForm from "../../hooks/useOrderForm";
 import type { Order } from "../../types"; // Import Order type
+import { SaveIcon } from "lucide-react";
 
 interface OrderFormProps {
   initialOrder?: Order | null; // Add initialOrder prop
@@ -14,7 +15,12 @@ interface OrderFormProps {
   initialBookId?: string; // New prop
 }
 
-const OrderForm: React.FC<OrderFormProps> = ({ initialOrder, onOrderEdited, onClose, initialBookId }) => {
+const OrderForm: React.FC<OrderFormProps> = ({
+  initialOrder,
+  onOrderEdited,
+  onClose,
+  initialBookId,
+}) => {
   const isBookLocked = !!initialBookId;
   const isTeacherInfoLocked = false; // Let GeneralInfoSection handle locking based on classroom count
 
@@ -43,8 +49,7 @@ const OrderForm: React.FC<OrderFormProps> = ({ initialOrder, onOrderEdited, onCl
     orderBooks,
   } = useOrderForm(initialOrder, onOrderEdited, onClose, initialBookId); // Pass initialBookId to useOrderForm
 
-  useEffect(() => {
-  }, [numberError, isCheckingNumber]);
+  useEffect(() => {}, [numberError, isCheckingNumber]);
 
   if (loading) {
     return <OrderFormSkeleton />;
@@ -87,24 +92,24 @@ const OrderForm: React.FC<OrderFormProps> = ({ initialOrder, onOrderEdited, onCl
           grandTotal={grandTotal}
           discount={formData.discount}
           netPayable={netPayable}
-
           deposit={formData.deposit}
           onDepositAmountChange={handleDepositAmountChange}
         />
 
-        <div className="flex justify-end space-x-4 mt-2">
+        <div className="flex justify-end items-center gap-3 mt-2">
           <button
             type="button"
             onClick={handleCancel}
-            className="px-6 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+            className="px-5 py-2 border rounded-sm text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 transition-colors"
           >
             ยกเลิก
           </button>
           <button
             type="submit"
-            className="px-6 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
             disabled={isCheckingNumber || !!numberError}
+            className="flex items-center gap-1.5 px-7 py-2 rounded-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
+            <SaveIcon className="w-4 h-4" />
             บันทึก
           </button>
         </div>

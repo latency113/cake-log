@@ -26,7 +26,7 @@ const CakeTableRow: React.FC<CakeTableRowProps> = ({ item, index, onQuantityChan
             <span className="text-xs">🎂</span>
           </div>
           <div>
-            <div className="font-medium text-foreground">{item.name}</div>
+            <div className="font-medium text-foreground truncate">{item.name}</div>
             <div className="text-xs text-muted-foreground">
               รายการที่ {index + 1}
             </div>
@@ -51,7 +51,7 @@ const CakeTableRow: React.FC<CakeTableRowProps> = ({ item, index, onQuantityChan
             type="number"
             min="0"
             max="20"
-            className="w-10 h-7 text-center text-muted-foreground text-xs border border-slate-300 rounded-md focus:ring-2 focus:ring-blue-50 transition-all duration-200"
+            className="w-10 h-7 text-center text-muted-foreground text-xs border border-slate-300 rounded-sm focus:ring-2 focus:ring-blue-50 transition-all duration-200"
             value={String(item[`qty${pound}Pound` as keyof CakeItem] || '')}
             onChange={(e) => {
               const value = parseInt(e.target.value);

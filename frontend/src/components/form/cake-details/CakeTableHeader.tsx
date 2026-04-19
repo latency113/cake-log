@@ -1,5 +1,4 @@
 import React from "react";
-import { DollarSign, ShoppingCart, Calculator, Scale } from "lucide-react";
 
 const CakeTableHeader: React.FC = () => {
   return (
@@ -10,7 +9,6 @@ const CakeTableHeader: React.FC = () => {
           className="px-4 py-3 text-left text-sm font-medium text-muted-foreground border-r border-border"
         >
           <div className="flex items-center space-x-2">
-            <ShoppingCart className="w-4 h-4" />
             <span>รายการเค้ก</span>
           </div>
         </th>
@@ -19,8 +17,7 @@ const CakeTableHeader: React.FC = () => {
           className="px-3 py-3 text-center text-sm font-medium text-muted-foreground border-r border-border"
         >
           <div className="flex items-center justify-center space-x-2">
-            <DollarSign className="w-3.5 h-3.5" />
-            <span>ราคา/ปอนด์</span>
+            <span className="truncate">ราคา/ปอนด์</span>
           </div>
         </th>
         <th
@@ -36,7 +33,6 @@ const CakeTableHeader: React.FC = () => {
           className="px-3 py-3 text-center text-sm font-medium text-muted-foreground border-r border-border"
         >
           <div className="flex items-center justify-center space-x-2">
-            <Scale className="w-3.5 h-3.5" />
             <span>รวมปอนด์</span>
           </div>
         </th>
@@ -45,8 +41,7 @@ const CakeTableHeader: React.FC = () => {
           className="px-3 py-3 text-center text-sm font-medium text-muted-foreground"
         >
           <div className="flex items-center justify-center space-x-2">
-            <Calculator className="w-3.5 h-3.5" />
-            <span>รวมเงิน</span>
+            <span className="truncate">รวมเงิน</span>
           </div>
         </th>
       </tr>
@@ -61,7 +56,7 @@ const CakeTableHeader: React.FC = () => {
               <div className="w-3 h-3 bg-muted rounded-full text-xs font-medium text-muted-foreground">
                 {pound}
               </div>
-              <span className="flex items-center justify-center text-xs text-muted-foreground">ปอนด์</span>
+              <span className="flex items-center justify-center text-xs text-muted-foreground truncate">ปอนด์</span>
             </div>
           </th>
         ))}

@@ -217,7 +217,7 @@ function OfficerAllOrdersPage() {
     searchTerm || datePreset !== "all" || customStartDate || customEndDate;
 
   return (
-    <div className="min-h-screen bg-background pb-20 pt-15">
+    <div className="min-h-screen bg-background pb-20">
       <OfficerNavbar handleLogout={handleLogout} />{" "}
       {/* Ensure OfficerNavbar is rendered */}
       <div className="container mx-auto p-4 md:p-6 max-w-7xl">
@@ -256,7 +256,7 @@ function OfficerAllOrdersPage() {
                   setCurrentPage(1); // Reset page directly when search term changes
                 }}
                 placeholder="ค้นหาด้วยเลขที่คำสั่งซื้อ..."
-                className="w-full pl-12 pr-4 py-3.5 bg-background border-2 border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
+                className="w-full pl-12 pr-4 py-3.5 bg-background border-2 border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
                 maxLength={4}
               />
             </div>
@@ -270,7 +270,7 @@ function OfficerAllOrdersPage() {
                   setCurrentPage(1); // Reset page directly when date preset changes
                 }}
               >
-                <SelectTrigger className="w-full pl-12 pr-4 py-3.5 bg-background border-2 border-border rounded-xl text-foreground focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all">
+                <SelectTrigger className="w-full pl-12 pr-4 py-3.5 bg-background border-2 border-border rounded-sm text-foreground focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all">
                   <Calendar className="absolute left-4 w-5 h-5 text-muted-foreground" />
                   <SelectValue placeholder="เลือกช่วงเวลา" />
                 </SelectTrigger>

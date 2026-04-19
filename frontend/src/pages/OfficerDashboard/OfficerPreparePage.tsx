@@ -278,10 +278,10 @@ function OfficerPreparePage() {
             >
               <SelectTrigger
                 id="date-selector"
-                className="w-full h-10 px-3 border-2 border-border rounded-xl focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all bg-background disabled:bg-muted disabled:text-muted-foreground"
+                className="w-full h-10 p-5 border-2 border-border rounded-md focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all bg-background disabled:bg-muted disabled:text-muted-foreground"
               >
                 <Calendar className="w-4 h-4 text-muted-foreground mr-2" />
-                <SelectValue placeholder="เลือกวันที่..." />
+                <SelectValue placeholder="เลือกวันที่" />
               </SelectTrigger>
               <SelectContent>
                 {sortedDatesForPicker.map((date) => (
@@ -304,7 +304,7 @@ function OfficerPreparePage() {
                 setCurrentPage(1); // Reset page directly when search term changes
               }}
               placeholder="ค้นหาเลขที่ออเดอร์..."
-              className="w-full pl-10 pr-10 py-2.5 bg-background border-2 border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
+              className="w-full pl-10 pr-10 py-2.5 bg-background border-2 border-border rounded-md text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
             />
             {searchTerm && (
               <button
@@ -318,12 +318,12 @@ function OfficerPreparePage() {
 
           {/* Stats */}
           <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-full">
-              <Package className="w-4 h-4 text-emerald-400" />
-              <span className="text-sm font-medium text-emerald-400">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/20 rounded-sm">
+              <Package className="w-4 h-4 text-emerald-500" />
+              <span className="text-sm font-semibold text-emerald-600">
                 {currentTotalOrdersCount} รายการ
                 {searchTerm && (
-                  <span className="text-emerald-300"> (กรองแล้ว)</span>
+                  <span className="text-emerald-500 opacity-80"> (กรองแล้ว)</span>
                 )}
               </span>
             </div>
@@ -334,7 +334,7 @@ function OfficerPreparePage() {
       <div className="px-4 py-4">
         {currentTotalOrdersCount === 0 ? (
           <div className="text-center py-16">
-            <div className="w-20 h-20 mx-auto mb-4 bg-muted border border-border rounded-full flex items-center justify-center">
+            <div className="w-20 h-20 mx-auto mb-4 bg-muted border border-border rounded-md flex items-center justify-center">
               {searchTerm ? (
                 <Search className="w-10 h-10 text-muted-foreground" />
               ) : (

@@ -171,6 +171,36 @@ export namespace DepartmentController {
         hasRole: ["SUPERADMIN", "ADMIN"]
       }
     )
+    .post(
+      "/bulk-delete",
+      async ({ body, set }) => {
+        try {
+          await DepartmentService.deleteByIds(body.ids);
+          set.status = "OK";
+          return { message: "Departments have deleted" };
+        } catch (error: any) {
+          set.status = "Internal Server Error";
+          if ("message" in error) {
+            return error.message;
+          }
+          return "Internal Server Error";
+        }
+      },
+      {
+        body: t.Object({
+          ids: t.Array(t.String()),
+        }),
+        response: {
+          200: t.Object({
+            message: t.String(),
+          }),
+          500: t.String(),
+        },
+        tags: ["Departments"],
+        isSignIn: true,
+        hasRole: ["SUPERADMIN", "ADMIN"]
+      }
+    )
       .delete(
           "/clear-all",
           async ({ set }) => {

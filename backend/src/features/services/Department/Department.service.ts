@@ -93,6 +93,10 @@ export namespace DepartmentService {
     return DepartmentRepository.deleteById(DepartmentId);
   }
 
+  export async function deleteByIds(ids: string[]) {
+    return DepartmentRepository.deleteByIds(ids);
+  }
+
   export async function clearAllDepartments() {
     return DepartmentRepository.clearAllDepartment();
   }

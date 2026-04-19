@@ -26,7 +26,7 @@ const PaymentCalculationCard: React.FC<PaymentCalculationCardProps> = ({
           ส่วนลด (10%)
         </label>
         <div className="relative">
-          <div className="w-full p-2 text-right border border-border rounded-md bg-muted text-foreground font-medium">
+          <div className="w-full p-2 text-right border border-border rounded-sm bg-muted text-foreground font-medium">
             - {discount.toLocaleString()} บาท
           </div>
         </div>
@@ -38,7 +38,7 @@ const PaymentCalculationCard: React.FC<PaymentCalculationCardProps> = ({
           จำนวนเงินสุทธิที่ต้องชำระ
         </label>
         <div className="relative">
-          <div className="w-full p-2 text-right border-2 border-input rounded-md bg-muted text-foreground font-bold text-md">
+          <div className="w-full p-2 text-right border-2 border-input rounded-sm bg-muted text-foreground font-bold text-md">
             {netPayable.toLocaleString("th-TH", { minimumFractionDigits: 2 })}{" "}
             บาท
           </div>
@@ -57,7 +57,7 @@ const PaymentCalculationCard: React.FC<PaymentCalculationCardProps> = ({
           onChange={onDepositAmountChange}
           type="number"
           placeholder="0.00"
-          inputClassName="w-full p-2 text-right border border-input rounded-md bg-card text-foreground font-medium focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600 transition-colors"
+          inputClassName="w-full p-2 text-right border border-input rounded-sm bg-card text-foreground font-medium focus:border-blue-600 focus:outline-none focus:ring-1 focus:ring-blue-600 transition-colors"
         />
         <div className="flex-1">
           <p className="text-xs font-medium text-foreground leading-relaxed">

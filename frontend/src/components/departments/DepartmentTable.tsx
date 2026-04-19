@@ -11,14 +11,25 @@ import {
 import { Button } from "@/components/ui/button";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal, Building } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface DepartmentTableProps {
   departments: Department[];
   onEdit: (department: Department) => void;
   onDelete: (department: Department) => void;
+  selectedIds: string[];
+  onSelectChange: (id: string, selected: boolean) => void;
+  onSelectAllChange: (selected: boolean) => void;
 }
 
-const DepartmentTable: React.FC<DepartmentTableProps> = ({ departments, onEdit, onDelete }) => {
+const DepartmentTable: React.FC<DepartmentTableProps> = ({ 
+  departments, 
+  onEdit, 
+  onDelete,
+  selectedIds,
+  onSelectChange,
+  onSelectAllChange
+}) => {
   if (departments.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center rounded-sm border border-dashed py-20 text-center">
@@ -35,11 +46,20 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({ departments, onEdit, 
     );
   }
 
+  const isAllSelected = departments.length > 0 && selectedIds.length === departments.length;
+
   return (
-    <div className="rounded-sm border shadow-md">
+    <div className="rounded-sm border shadow-md bg-white">
       <Table>
         <TableHeader>
           <TableRow>
+            <TableHead className="w-[50px]">
+              <Checkbox 
+                checked={isAllSelected}
+                onCheckedChange={(checked) => onSelectAllChange(!!checked)}
+                aria-label="Select all"
+              />
+            </TableHead>
             <TableHead>ชื่อแผนก</TableHead>
             <TableHead className="text-right">การดำเนินการ</TableHead>
           </TableRow>
@@ -47,6 +67,13 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({ departments, onEdit, 
         <TableBody>
           {departments.map((department) => (
             <TableRow key={department.id}>
+              <TableCell>
+                <Checkbox 
+                  checked={selectedIds.includes(department.id)}
+                  onCheckedChange={(checked) => onSelectChange(department.id, !!checked)}
+                  aria-label={`Select ${department.name}`}
+                />
+              </TableCell>
               <TableCell className="font-medium text-foreground">
                 {department.name}
               </TableCell>

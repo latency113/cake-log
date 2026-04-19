@@ -15,7 +15,7 @@ const PaymentStatusCard: React.FC<PaymentStatusCardProps> = ({
         </label>
         <div className="relative">
           <div
-            className={`w-full p-1 text-right border-2 rounded-md font-bold text-base ${
+            className={`w-full p-1 text-right border-2 rounded-sm font-bold text-base ${
               remainingBalance > 0
                 ? "border-red-400 bg-red-50 text-red-800"
                 : "border-green-400 bg-green-50 text-green-800"
@@ -39,7 +39,7 @@ const PaymentStatusCard: React.FC<PaymentStatusCardProps> = ({
 
         {remainingBalance > 0 && (
           <div className="mt-2 pt-2 border-t border-border">
-            <div className="flex items-center text-red-700 bg-red-50 p-2 rounded-md border border-red-200">
+            <div className="flex items-center text-red-700 bg-red-50 p-2 rounded-sm border border-red-200">
               <svg
                 className="w-3.5 h-3.5 mr-2 flex-shrink-0"
                 fill="currentColor"

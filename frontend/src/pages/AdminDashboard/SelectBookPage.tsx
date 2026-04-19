@@ -174,7 +174,7 @@ const SelectBookPage: React.FC = () => {
       </div>
 
       {filteredBooks.length === 0 ? (
-        <div className="p-12 text-center border-2 border-dashed rounded-xl bg-gray-50/50">
+        <div className="p-12 text-center border-2 border-dashed rounded-xld bg-gray-50/50">
           <Book className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-20" />
           <p className="text-muted-foreground">ไม่พบสมุดจองที่ตรงตามเงื่อนไขการค้นหา</p>
           {searchTerm && (
