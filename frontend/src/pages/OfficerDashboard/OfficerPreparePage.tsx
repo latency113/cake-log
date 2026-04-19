@@ -253,7 +253,7 @@ function OfficerPreparePage() {
     logout();
   };
   return (
-    <div className="min-h-screen bg-background pb-20 pt-17">
+    <div className="min-h-screen bg-background pb-20 ">
       <OfficerNavbar handleLogout={handleLogout} />
 
       {/* Sticky Header */}
@@ -363,10 +363,11 @@ function OfficerPreparePage() {
           <div className="space-y-6">
             {sortedPaginatedAndGroupedDates.map((date) => {
               const ordersForThisDate = paginatedAndGroupedOrders[date];
+              const fullOrdersForThisDate = groupedOrdersForRendering[date];
               const totalOrdersForThisDate =
-                (ordersForThisDate?.pending?.length || 0) +
-                (ordersForThisDate?.approved?.length || 0) +
-                (ordersForThisDate?.complete?.length || 0);
+                (fullOrdersForThisDate?.pending?.length || 0) +
+                (fullOrdersForThisDate?.approved?.length || 0) +
+                (fullOrdersForThisDate?.complete?.length || 0);
 
               if (totalOrdersForThisDate === 0) return null; // Don't render date header if no orders
 
@@ -393,7 +394,7 @@ function OfficerPreparePage() {
                     {ordersForThisDate?.pending?.length > 0 && (
                       <>
                         <h3 className="text-sm font-semibold text-muted-foreground mt-4 mb-2">
-                          รอจัดเตรียม ({ordersForThisDate.pending.length})
+                          รอจัดเตรียม ({fullOrdersForThisDate.pending.length})
                         </h3>
                         {ordersForThisDate.pending.map((order) => (
                           <OrderCard
@@ -408,7 +409,7 @@ function OfficerPreparePage() {
                     {ordersForThisDate?.approved?.length > 0 && (
                       <>
                         <h3 className="text-sm font-semibold text-muted-foreground mt-4 mb-2">
-                          จัดเตรียมแล้ว ({ordersForThisDate.approved.length})
+                          จัดเตรียมแล้ว ({fullOrdersForThisDate.approved.length})
                         </h3>
                         {ordersForThisDate.approved.map((order) => (
                           <OrderCard
@@ -423,7 +424,7 @@ function OfficerPreparePage() {
                     {ordersForThisDate?.complete?.length > 0 && (
                       <>
                         <h3 className="text-sm font-semibold text-muted-foreground mt-4 mb-2">
-                          ส่งมอบเรียบร้อย ({ordersForThisDate.complete.length})
+                          ส่งมอบเรียบร้อย ({fullOrdersForThisDate.complete.length})
                         </h3>
                         {ordersForThisDate.complete.map((order) => (
                           <OrderCard

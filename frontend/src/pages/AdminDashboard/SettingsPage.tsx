@@ -49,15 +49,15 @@ const SettingsPage: React.FC = () => {
       if (settings) {
         setOriginalSecurityKey(settings.securityKey || null);
         setCakeSettings({
-          ...settings,
-          academicYear: settings.academicYear || (new Date().getFullYear() + 543).toString(),
-          currentYear: settings.currentYear || (new Date().getFullYear() + 543).toString(),
-          pickupStartDate: settings.pickupStartDate ? settings.pickupStartDate.split("T")[0] : "",
-          pickupEndDate: settings.pickupEndDate ? settings.pickupEndDate.split("T")[0] : "",
-          pickupStartTime: settings.pickupStartTime || "",
-          pickupEndTime: settings.pickupEndTime || "",
-        });
-      } else {
+        ...settings,
+        academicYear: settings.academicYear || (new Date().getFullYear() + 543).toString(),
+        currentYear: settings.currentYear || (new Date().getFullYear() + 543).toString(),
+        pickupStartDate: settings.pickupStartDate ? settings.pickupStartDate.split("T")[0] : "",
+        pickupEndDate: settings.pickupEndDate ? settings.pickupEndDate.split("T")[0] : "",
+        pickupStartTime: settings.pickupStartTime || "",
+        pickupEndTime: settings.pickupEndTime || "",
+        reporterName: settings.reporterName || "",
+        });      } else {
         // If no settings are returned, initialize with defaults
         setCakeSettings({
           id: "",
@@ -714,6 +714,16 @@ const SettingsPage: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
+                <Label htmlFor="reporterName">ชื่อผู้รายงาน (สำหรับหัวตารางรายงาน)</Label>
+                <Input
+                  type="text"
+                  id="reporterName"
+                  placeholder="เช่น นายสมชาย ใจดี"
+                  value={cakeSettings.reporterName || ""}
+                  onChange={handleSettingsChange}
+                />
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="securityKey">Security Key (สำหรับสำรอง/กู้คืนข้อมูล)</Label>
                 <Input
                   type="password"
@@ -798,6 +808,7 @@ const SettingsPage: React.FC = () => {
       pickupEndDate: cakeSettings.pickupEndDate
         ? new Date(cakeSettings.pickupEndDate).toISOString()
         : undefined,
+      reporterName: cakeSettings.reporterName || "", // Ensure string, never null
     };
 
     try {
