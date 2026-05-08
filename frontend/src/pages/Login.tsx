@@ -15,6 +15,30 @@ const Login: React.FC = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const titleText = "Cake Log System";
+  const descText = "เปลี่ยนการรับออเดอร์แบบเดิม สู่ระบบดิจิทัลที่รวดเร็ว แม่นยำ และใช้งานง่าย";
+
+  const typewriterVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.05,
+      },
+    },
+  };
+
+  const characterVariants = {
+    hidden: { opacity: 0, y: 5 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.1,
+      },
+    },
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -55,162 +79,162 @@ const Login: React.FC = () => {
   };
 
   return (
-    <motion.div
-      className="min-h-screen flex"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      transition={{ duration: 0.5 }}
-    >
+    <div className="min-h-screen flex bg-white overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-2 flex-1">
-        {/* Left Panel - Welcome Section (Hidden on mobile, shown on large screens) */}
-        <div className="hidden lg:flex flex-1 bg-gradient-to-br from-purple-500 via-purple-400 to-pink-400 relative overflow-hidden items-center justify-center p-8 xl:p-12">
-          {/* Animated Decorative Elements */}
+        {/* Left Panel - System Brand Section */}
+        <div className="hidden lg:flex flex-1 bg-blue-600 relative overflow-hidden items-center justify-center p-12">
+          {/* Sharp Patterns */}
           <div className="absolute inset-0 overflow-hidden">
-            {/* Diagonal stripes */}
-            <div className="absolute top-32 -left-8 w-64 h-12 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full transform -rotate-45 opacity-60"></div>
-            <div className="absolute top-48 left-12 w-48 h-8 bg-gradient-to-r from-yellow-300 to-orange-400 rounded-full transform -rotate-45 opacity-50"></div>
-            <div className="absolute top-24 left-32 w-32 h-6 bg-gradient-to-r from-pink-300 to-orange-300 rounded-full transform -rotate-45 opacity-40"></div>
-
-            <div className="absolute bottom-32 left-16 w-56 h-10 bg-gradient-to-r from-orange-400 to-pink-400 rounded-full transform -rotate-45 opacity-60"></div>
-            <div className="absolute bottom-48 left-8 w-40 h-8 bg-gradient-to-r from-yellow-300 to-orange-400 rounded-full transform -rotate-45 opacity-50"></div>
-
-            {/* Circular elements */}
-            <div className="absolute bottom-24 right-32 w-32 h-32 bg-gradient-to-br from-orange-400 to-yellow-400 rounded-full opacity-70"></div>
-            <div className="absolute bottom-36 right-16 w-48 h-48 bg-gradient-to-br from-orange-300 to-pink-300 rounded-full opacity-50"></div>
+            <div className="absolute top-0 right-0 w-full h-full opacity-10">
+              <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[120%] border-r border-white transform rotate-12"></div>
+              <div className="absolute top-[20%] right-[10%] w-[40%] h-[80%] border-r border-white transform rotate-12"></div>
+            </div>
+            {/* System Blue Gradient */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-700 via-transparent to-blue-500 opacity-60"></div>
           </div>
 
-          {/* Welcome Content */}
-          <div className="relative z-10 text-white max-w-lg">
-            {/* ส่วน Heading: ใช้ชื่อโครงการ */}
-            <h1 className="text-4xl xl:text-5xl 2xl:text-6xl font-bold mb-6 truncate">
-              ระบบ Cake Log
-            </h1>
+          <motion.div 
+            className="relative z-10 text-white max-w-md"
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 100, damping: 20 }}
+          >
+            <div className="mb-8">
+              <div className="flex items-center gap-5 mb-8">
+                <img
+                  src="https://nc.ac.th/img/logo.png"
+                  alt="logo"
+                  className="w-20 h-20 object-contain"
+                />
+                <motion.h1 
+                  className="text-3xl font-semibold"
+                  variants={typewriterVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
+                  {titleText.split("").map((char, index) => (
+                    <motion.span key={index} variants={characterVariants}>
+                      {char}
+                    </motion.span>
+                  ))}
+                </motion.h1>
+              </div>
+            </div>
 
-            {/* ส่วน Paragraph เสริม: ใช้ 'จุดมุ่งหมายหลัก' */}
-            <p className="text-base xl:text-md leading-relaxed opacity-70">
-              ระบบนี้จะช่วยเปลี่ยนกระบวนการรับออเดอร์แบบ Manual
-              ไปสู่ระบบดิจิทัลที่รวดเร็วและแม่นยำยิ่งขึ้น
-              เพื่อให้นักศึกษาและคณะกรรมการสามารถมุ่งเน้นไปที่คุณภาพของผลิตภัณฑ์และการแข่งขันได้เต็มที่
-            </p>
-          </div>
+            <motion.p 
+              className="text-lg leading-relaxed text-blue-50/90 font-normal border-l-2 border-white/20 pl-6"
+              variants={typewriterVariants}
+              initial="hidden"
+              animate="visible"
+              transition={{ delayChildren: 0.8 }}
+            >
+              {descText.split("").map((char, index) => (
+                <motion.span key={index} variants={characterVariants}>
+                  {char}
+                </motion.span>
+              ))}
+            </motion.p>
+          </motion.div>
         </div>
 
-        {/* Right Panel - Login Form */}
-        <div className="w-full bg-gradient-to-br from-gray-50 to-purple-50 flex dark:from-gray-900 dark:via-background dark:to-gray-800 items-center justify-center p-4 sm:p-6 lg:p-8">
-          <div className="relative bg-card p-6 sm:p-8 rounded-md shadow-lg w-full max-w-md border border-border">
-            {/* Mobile Header with Gradient */}
-            <div className="lg:hidden mb-6 -mx-6 -mt-6 sm:-mx-8 sm:-mt-8 p-6 sm:p-8 bg-gradient-to-br from-purple-500 via-purple-400 to-pink-400 rounded-t-md">
-              <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                Welcome to Cake Log
-              </h1>
-              <p className="text-white text-sm opacity-90">
-                เข้าสู่ระบบเพื่อเริ่มต้นใช้งาน
-              </p>
+        {/* Right Panel - Minimalist Thai Login Form */}
+        <div className="w-full flex items-center justify-center p-6 sm:p-16 bg-slate-50/50">
+          <motion.div 
+            className="w-full max-w-sm"
+            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            transition={{ type: "spring", stiffness: 120, damping: 20, delay: 0.2 }}
+          >
+            {/* Branding for Mobile */}
+            <div className="lg:hidden mb-12 flex items-center gap-4">
+              <img src="https://nc.ac.th/img/logo.png" alt="logo" className="w-12 h-12" />
+              <h1 className="text-2xl font-semibold text-blue-600 tracking-tight">Cake Log System</h1>
             </div>
 
-            {/* Header */}
-            <div className="text-center mb-6 sm:mb-8">
-              <div className="inline-flex items-center justify-center w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 via-purple-400 to-pink-400 rounded-full mb-3 sm:mb-4 shadow-lg">
-                <svg
-                  className="w-7 h-7 sm:w-8 sm:h-8 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
-              </div>
-              <h2 className="text-2xl sm:text-3xl font-bold text-foreground mb-2">
+            <div className="mb-10">
+              <h2 className="text-3xl font-semibold text-slate-800 mb-2 tracking-tight">
                 เข้าสู่ระบบ
               </h2>
-              <p className="text-gray-500 text-xs sm:text-sm">
-                กรุณาใส่ข้อมูลเพื่อเข้าสู่ระบบ
+              <p className="text-slate-500 text-sm font-normal">
+                กรุณาระบุชื่อผู้ใช้และรหัสผ่านเพื่อเข้าใช้งาน
               </p>
             </div>
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5">
-              <div className="space-y-3 sm:space-y-4">
-                <InputField
-                  label="ชื่อผู้ใช้"
-                  name="username"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  placeholder="ป้อนชื่อผู้ใช้"
-                  type="text"
-                />
-                <div className="relative">
+            <form onSubmit={handleSubmit} className="space-y-6">
+              <div className="space-y-5">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 ml-0.5">
+                    ชื่อผู้ใช้
+                  </label>
                   <InputField
-                    label="รหัสผ่าน"
-                    name="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="ป้อนรหัสผ่าน"
-                    type={showPassword ? "text" : "password"} // Dynamic type
+                    name="username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    placeholder="Username"
+                    type="text"
+                    className="mb-0"
+                    inputClassName="w-full h-12 px-4 rounded-sm border border-slate-200 bg-white focus:border-blue-500 focus:ring-0 transition-all duration-200 text-sm font-normal shadow-sm"
                   />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 p-1 hover:bg-muted rounded-full transition-colors flex justify-center items-center"
-                    aria-label={showPassword ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-4 w-4 text-muted-foreground " />
-                    ) : (
-                      <Eye className="h-4 w-4 text-muted-foreground" />
-                    )}
-                  </button>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 ml-0.5">
+                    รหัสผ่าน
+                  </label>
+                  <div className="relative">
+                    <InputField
+                      name="password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Password"
+                      type={showPassword ? "text" : "password"}
+                      className="mb-0"
+                      inputClassName="w-full h-12 px-4 rounded-sm border border-slate-200 bg-white focus:border-blue-500 focus:ring-0 transition-all duration-200 text-sm font-normal shadow-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:text-blue-600 transition-colors text-slate-300"
+                    >
+                      {showPassword ? (
+                        <EyeOff className="h-4 w-4" />
+                      ) : (
+                        <Eye className="h-4 w-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
               </div>
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full bg-gradient-to-r from-purple-500 via-purple-400 to-pink-400 text-white py-2.5 sm:py-3 px-4 rounded-sm font-medium text-sm sm:text-base
-                     hover:from-purple-700 hover:via-purple-600 hover:to-pink-600 
-                     focus:outline-none focus:ring-4 focus:ring-blue-300 
-                     transform transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]
-                     disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none
-                     shadow-lg hover:shadow-xl"
-              >
-                {isLoading ? (
-                  <span className="flex items-center justify-center">
-                    <svg
-                      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                      xmlns="http://www.w3.org/2000/svg"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
-                    กำลังเข้าสู่ระบบ...
-                  </span>
-                ) : (
-                  "เข้าสู่ระบบ"
-                )}
-              </button>
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-blue-600 text-white h-12 rounded-sm font-medium text-base
+                       hover:bg-blue-700 active:bg-blue-800 transition-all duration-200
+                       disabled:opacity-50 disabled:cursor-not-allowed
+                       flex items-center justify-center gap-2 shadow-md shadow-blue-600/10"
+                >
+                  {isLoading ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                      กำลังประมวลผล...
+                    </span>
+                  ) : (
+                    "เข้าสู่ระบบ"
+                  )}
+                </button>
+              </div>
             </form>
-          </div>
+
+            <div className="mt-16 pt-8 border-t border-slate-100 flex justify-between items-center text-[10px] uppercase tracking-widest text-slate-300 font-medium">
+              <span>© {new Date().getFullYear()} Cake Log System</span>
+              <span>NVC Digital</span>
+            </div>
+          </motion.div>
         </div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 
