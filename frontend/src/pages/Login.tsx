@@ -1,22 +1,39 @@
 import { useNavigate } from "@tanstack/react-router";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import InputField from "../components/common/InputField";
 import { useAuth } from "../contexts/AuthContext";
 import { showAlertSuccess, showAlertError } from "../utils/alerts";
-import { motion } from "framer-motion";
-import { Eye, EyeOff } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Eye, EyeOff, LogIn } from "lucide-react";
 
 const Login: React.FC = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   const { login } = useAuth();
   const navigate = useNavigate();
 
+  const backgroundImages = [
+    "/assets/cake.jpg",
+    "/assets/cake2.jpg",
+    "/assets/cake3.jpg",
+    "/assets/cake4.jpg",
+  ];
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentImageIndex((prevIndex) => (prevIndex + 1) % backgroundImages.length);
+    }, 5000); // Change image every 5 seconds
+
+    return () => clearInterval(timer);
+  }, [backgroundImages.length]);
+
   const titleText = "Cake Log System";
-  const descText = "เปลี่ยนการรับออเดอร์แบบเดิม สู่ระบบดิจิทัลที่รวดเร็ว แม่นยำ และใช้งานง่าย";
+  const descText =
+    "เปลี่ยนการรับออเดอร์แบบเดิม สู่ระบบดิจิทัลที่รวดเร็ว แม่นยำ และใช้งานง่าย";
 
   const typewriterVariants = {
     hidden: { opacity: 0 },
@@ -81,20 +98,45 @@ const Login: React.FC = () => {
   return (
     <div className="min-h-screen flex bg-white overflow-hidden">
       <div className="grid grid-cols-1 lg:grid-cols-2 flex-1">
-        {/* Left Panel - System Brand Section */}
-        <div className="hidden lg:flex flex-1 bg-blue-600 relative overflow-hidden items-center justify-center p-12">
-          {/* Sharp Patterns */}
-          <div className="absolute inset-0 overflow-hidden">
-            <div className="absolute top-0 right-0 w-full h-full opacity-10">
-              <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[120%] border-r border-white transform rotate-12"></div>
-              <div className="absolute top-[20%] right-[10%] w-[40%] h-[80%] border-r border-white transform rotate-12"></div>
-            </div>
-            {/* System Blue Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-700 via-transparent to-blue-500 opacity-60"></div>
+        {/* Left Panel - System Brand Section with Diagonal Split and Rotating Background */}
+        <div className="hidden lg:flex flex-1 bg-blue-900 relative overflow-hidden items-center justify-center p-12">
+          {/* Rotating Background Image Layer with Crossfade */}
+          <div className="absolute inset-0 z-0">
+            <AnimatePresence mode="wait">
+              <motion.img
+                key={currentImageIndex}
+                src={backgroundImages[currentImageIndex]}
+                alt="background"
+                className="w-full h-full object-cover"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 1.5 }} // Smooth 1.5s crossfade
+              />
+            </AnimatePresence>
+            {/* Subtle Overlay */}
+            <div className="absolute inset-0 bg-blue-950/40"></div>
           </div>
 
-          <motion.div 
-            className="relative z-10 text-white max-w-md"
+          {/* Diagonal Split Overlay (System Blue Section) */}
+          <div
+            className="absolute inset-0 bg-blue-600/90 z-10"
+            style={{ clipPath: "polygon(100% 0, 100% 100%, 35% 100%, 65% 0)" }}
+          >
+            {/* Sharp Patterns inside the split */}
+            <div className="absolute inset-0 overflow-hidden opacity-10">
+              <div className="absolute top-0 right-0 w-full h-full">
+                <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[120%] border-r border-white transform rotate-12"></div>
+                <div className="absolute top-[20%] right-[10%] w-[40%] h-[80%] border-r border-white transform rotate-12"></div>
+              </div>
+            </div>
+            {/* System Blue Gradient inside the split */}
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-700 via-transparent to-blue-500 opacity-70"></div>
+          </div>
+
+          {/* Content Overlay */}
+          <motion.div
+            className="relative z-20 text-white max-w-md ml-auto"
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 100, damping: 20 }}
@@ -104,10 +146,10 @@ const Login: React.FC = () => {
                 <img
                   src="https://nc.ac.th/img/logo.png"
                   alt="logo"
-                  className="w-20 h-20 object-contain"
+                  className="w-20 h-20 object-contain drop-shadow-xl"
                 />
-                <motion.h1 
-                  className="text-3xl font-semibold"
+                <motion.h1
+                  className="text-3xl font-semibold drop-shadow-lg"
                   variants={typewriterVariants}
                   initial="hidden"
                   animate="visible"
@@ -121,8 +163,8 @@ const Login: React.FC = () => {
               </div>
             </div>
 
-            <motion.p 
-              className="text-lg leading-relaxed text-blue-50/90 font-normal border-l-2 border-white/20 pl-6"
+            <motion.p
+              className="text-lg leading-relaxed text-blue-50 font-normal border-l-2 border-white/30 pl-6 drop-shadow-md"
               variants={typewriterVariants}
               initial="hidden"
               animate="visible"
@@ -139,16 +181,27 @@ const Login: React.FC = () => {
 
         {/* Right Panel - Minimalist Thai Login Form */}
         <div className="w-full flex items-center justify-center p-6 sm:p-16 bg-slate-50/50">
-          <motion.div 
+          <motion.div
             className="w-full max-w-sm"
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
-            transition={{ type: "spring", stiffness: 120, damping: 20, delay: 0.2 }}
+            transition={{
+              type: "spring",
+              stiffness: 120,
+              damping: 20,
+              delay: 0.2,
+            }}
           >
             {/* Branding for Mobile */}
             <div className="lg:hidden mb-12 flex items-center gap-4">
-              <img src="https://nc.ac.th/img/logo.png" alt="logo" className="w-12 h-12" />
-              <h1 className="text-2xl font-semibold text-blue-600 tracking-tight">Cake Log System</h1>
+              <img
+                src="https://nc.ac.th/img/logo.png"
+                alt="logo"
+                className="w-12 h-12"
+              />
+              <h1 className="text-2xl font-semibold text-blue-600 tracking-tight">
+                Cake Log System
+              </h1>
             </div>
 
             <div className="mb-10">
@@ -215,6 +268,7 @@ const Login: React.FC = () => {
                        disabled:opacity-50 disabled:cursor-not-allowed
                        flex items-center justify-center gap-2 shadow-md shadow-blue-600/10"
                 >
+                  <LogIn className="w-5 h-5" />
                   {isLoading ? (
                     <span className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
