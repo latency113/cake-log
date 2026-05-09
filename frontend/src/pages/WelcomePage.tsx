@@ -3,10 +3,16 @@ import { Button } from "../components/ui/button";
 import bgImage from "../../public/assets/bg.jpg";
 import { LogIn } from "lucide-react";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 function WelcomePage() {
+  const [isSkipped, setIsSkipped] = useState(false);
   const titleText = "ระบบรายงานการสั่งจองเค้ก";
   const subTitleText = "Cake Log Management System";
+
+  const handleSkip = () => {
+    if (!isSkipped) setIsSkipped(true);
+  };
 
   const typewriterVariants = {
     hidden: { opacity: 0 },
@@ -31,8 +37,9 @@ function WelcomePage() {
 
   return (
     <div
-      className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center overflow-hidden"
+      className="relative flex flex-col items-center justify-center min-h-screen bg-cover bg-center overflow-hidden cursor-pointer"
       style={{ backgroundImage: `url(${bgImage})` }}
+      onClick={handleSkip}
     >
       {/* Professional Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-blue-900/80 via-blue-800/60 to-transparent"></div>
@@ -45,10 +52,11 @@ function WelcomePage() {
       </div>
 
       <motion.div 
+        key={isSkipped ? "skipped" : "animated"}
         className="relative z-10 text-center px-4 max-w-4xl"
-        initial={{ scale: 0.9, opacity: 0, y: 30 }}
+        initial={isSkipped ? false : { scale: 0.9, opacity: 0, y: 30 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
-        transition={{ type: "spring", stiffness: 100, damping: 20 }}
+        transition={isSkipped ? { duration: 0 } : { type: "spring", stiffness: 100, damping: 20 }}
       >
         <div className="flex flex-col items-center mb-10">
           <img
@@ -59,11 +67,11 @@ function WelcomePage() {
           
           <motion.h1 
             className="text-4xl md:text-5xl lg:text-6xl font-semibold text-white mb-4 tracking-tight"
-            variants={typewriterVariants}
+            variants={isSkipped ? {} : typewriterVariants}
             initial="hidden"
             animate="visible"
           >
-            {titleText.split("").map((char, index) => (
+            {isSkipped ? titleText : titleText.split("").map((char, index) => (
               <motion.span key={index} variants={characterVariants}>
                 {char}
               </motion.span>
@@ -72,9 +80,9 @@ function WelcomePage() {
           
           <motion.p 
             className="text-xl md:text-2xl font-medium text-blue-200/90 tracking-widest uppercase mb-8"
-            initial={{ opacity: 0 }}
+            initial={isSkipped ? false : { opacity: 0 }}
             animate={{ opacity: 1 }}
-            transition={{ delay: 1.5, duration: 1 }}
+            transition={isSkipped ? { duration: 0 } : { delay: 1.5, duration: 1 }}
           >
             {subTitleText}
           </motion.p>
@@ -89,9 +97,9 @@ function WelcomePage() {
 
         <motion.div 
           className="flex justify-center"
-          initial={{ opacity: 0, y: 20 }}
+          initial={isSkipped ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 2, duration: 0.5 }}
+          transition={isSkipped ? { duration: 0 } : { delay: 2, duration: 0.5 }}
         >
           <Link to="/login">
             <Button className="px-10 py-7 text-lg gap-3 bg-blue-600 hover:bg-blue-700 text-white rounded-sm border border-blue-400/30 transition-all duration-300 shadow-xl shadow-blue-900/40">

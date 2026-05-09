@@ -96,10 +96,10 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex bg-white overflow-hidden">
+    <div className="min-h-screen flex bg-white dark:bg-slate-950 overflow-hidden transition-colors duration-300">
       <div className="grid grid-cols-1 lg:grid-cols-2 flex-1">
         {/* Left Panel - System Brand Section with Diagonal Split and Rotating Background */}
-        <div className="hidden lg:flex flex-1 bg-blue-900 relative overflow-hidden items-center justify-center p-12">
+        <div className="hidden lg:flex flex-1 bg-blue-900 dark:bg-blue-950 relative overflow-hidden items-center justify-center p-12">
           {/* Rotating Background Image Layer with Crossfade */}
           <div className="absolute inset-0 z-0">
             <AnimatePresence mode="wait">
@@ -115,12 +115,12 @@ const Login: React.FC = () => {
               />
             </AnimatePresence>
             {/* Subtle Overlay */}
-            <div className="absolute inset-0 bg-blue-950/40"></div>
+            <div className="absolute inset-0 bg-blue-950/40 dark:bg-slate-950/60"></div>
           </div>
 
           {/* Diagonal Split Overlay (System Blue Section) */}
           <div
-            className="absolute inset-0 bg-blue-600/90 z-10"
+            className="absolute inset-0 bg-blue-600/90 dark:bg-blue-700/80 z-10"
             style={{ clipPath: "polygon(100% 0, 100% 100%, 35% 100%, 65% 0)" }}
           >
             {/* Sharp Patterns inside the split */}
@@ -180,7 +180,7 @@ const Login: React.FC = () => {
         </div>
 
         {/* Right Panel - Minimalist Thai Login Form */}
-        <div className="w-full flex items-center justify-center p-6 sm:p-16 bg-slate-50/50">
+        <div className="w-full flex items-center justify-center p-6 sm:p-16 bg-slate-50/50 dark:bg-slate-900/50">
           <motion.div
             className="w-full max-w-sm"
             initial={{ scale: 0.95, opacity: 0, y: 20 }}
@@ -199,16 +199,16 @@ const Login: React.FC = () => {
                 alt="logo"
                 className="w-12 h-12"
               />
-              <h1 className="text-2xl font-semibold text-blue-600 tracking-tight">
+              <h1 className="text-2xl font-semibold text-blue-600 dark:text-blue-400 tracking-tight">
                 Cake Log System
               </h1>
             </div>
 
             <div className="mb-10">
-              <h2 className="text-3xl font-semibold text-slate-800 mb-2 tracking-tight">
+              <h2 className="text-3xl font-semibold text-slate-800 dark:text-slate-100 mb-2 tracking-tight">
                 เข้าสู่ระบบ
               </h2>
-              <p className="text-slate-500 text-sm font-normal">
+              <p className="text-slate-500 dark:text-slate-400 text-sm font-normal">
                 กรุณาระบุชื่อผู้ใช้และรหัสผ่านเพื่อเข้าใช้งาน
               </p>
             </div>
@@ -216,7 +216,7 @@ const Login: React.FC = () => {
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-5">
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 ml-0.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 ml-0.5">
                     ชื่อผู้ใช้
                   </label>
                   <InputField
@@ -226,12 +226,12 @@ const Login: React.FC = () => {
                     placeholder="Username"
                     type="text"
                     className="mb-0"
-                    inputClassName="w-full h-12 px-4 rounded-sm border border-slate-200 bg-white focus:border-blue-500 focus:ring-0 transition-all duration-200 text-sm font-normal shadow-sm"
+                    inputClassName="w-full h-12 px-4 rounded-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-blue-500 focus:ring-0 transition-all duration-200 text-sm font-normal shadow-sm dark:text-slate-200"
                   />
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 ml-0.5">
+                  <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 ml-0.5">
                     รหัสผ่าน
                   </label>
                   <div className="relative">
@@ -242,12 +242,12 @@ const Login: React.FC = () => {
                       placeholder="Password"
                       type={showPassword ? "text" : "password"}
                       className="mb-0"
-                      inputClassName="w-full h-12 px-4 rounded-sm border border-slate-200 bg-white focus:border-blue-500 focus:ring-0 transition-all duration-200 text-sm font-normal shadow-sm"
+                      inputClassName="w-full h-12 px-4 rounded-sm border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 focus:border-blue-500 focus:ring-0 transition-all duration-200 text-sm font-normal shadow-sm dark:text-slate-200"
                     />
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:text-blue-600 transition-colors text-slate-300"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 p-2 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-slate-300 dark:text-slate-600"
                     >
                       {showPassword ? (
                         <EyeOff className="h-4 w-4" />
@@ -281,7 +281,7 @@ const Login: React.FC = () => {
               </div>
             </form>
 
-            <div className="mt-16 pt-8 border-t border-slate-100 flex justify-between items-center text-[10px] uppercase tracking-widest text-slate-300 font-medium">
+            <div className="mt-16 pt-8 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[10px] uppercase tracking-widest text-slate-300 dark:text-slate-600 font-medium">
               <span>© {new Date().getFullYear()} Cake Log System</span>
               <span>NVC Digital</span>
             </div>
