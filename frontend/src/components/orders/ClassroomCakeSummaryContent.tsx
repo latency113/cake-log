@@ -73,7 +73,9 @@ const ClassroomCakeSummaryContent: React.FC<
             }`}
           >
             <div className="text-center text-xl font-bold">
-              สรุปยอดเค้กของห้องเรียน
+              วิทยาลัยอาชีวศึกษานครปฐม
+              <br />
+              ใบสรุปยอดการสั่งจองเค้ก
             </div>
             <div className="flex justify-between mb-4">
               <div>

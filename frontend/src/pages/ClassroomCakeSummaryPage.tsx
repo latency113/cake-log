@@ -14,7 +14,17 @@ const ClassroomCakeSummaryPage: React.FC = () => {
   const { summaryData, loading, error, refetch } = useClassroomCakeSummaries(true, undefined, user?.id); // Pass user?.id
 
   const handlePrint = () => {
-    window.print();
+    const printContent = document.getElementById(
+      "printable-classroom-cake-summary-section"
+    );
+    const originalContents = document.body.innerHTML;
+
+    if (printContent) {
+      document.body.innerHTML = printContent.innerHTML;
+      window.print();
+      document.body.innerHTML = originalContents;
+      window.location.reload();
+    }
   };
 
   const handleFinalize = async () => {
@@ -57,11 +67,6 @@ const ClassroomCakeSummaryPage: React.FC = () => {
         </Button>
       </div>
 
-      <h1 className="text-2xl font-bold text-center mb-6">
-        วิทยาลัยอาชีวศึกษาศึกษานครปฐม
-        <br />
-        ใบสรุปยอดการสั่งเค้ก
-      </h1>
       <div className="flex justify-end mb-4 print:hidden gap-2">
         {!loading && summaryData && summaryData.length > 0 && (
           <>
@@ -77,11 +82,14 @@ const ClassroomCakeSummaryPage: React.FC = () => {
           </>
         )}
       </div>
-      <ClassroomCakeSummaryContent
-        summaryData={summaryData}
-        loading={loading}
-        error={error}
-      />
+
+      <div id="printable-classroom-cake-summary-section" className="w-full">
+        <ClassroomCakeSummaryContent
+          summaryData={summaryData}
+          loading={loading}
+          error={error}
+        />
+      </div>
     </div>
   );
 };

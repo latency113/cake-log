@@ -161,7 +161,7 @@ const loginRoute = createRoute({
       } else if (userRole === "officer1") {
         throw navigate({ to: "/officer-orders" });
       } else if (userRole === "user") {
-        throw navigate({ to: "/home", search: {} as any });
+        throw navigate({ to: "/select-book", search: {} as any });
       }
     }
   },

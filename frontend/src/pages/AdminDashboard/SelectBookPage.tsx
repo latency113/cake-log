@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { getOrderBooks, updateOrderBook } from "@/utils/api/orderBooks";
+import { getClassrooms } from "@/utils/api/classrooms";
 import { Book, CheckCircle, Lock, Users, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,11 +28,13 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import type { OrderBook } from "@/types/orderBook";
+import type { Classroom } from "@/types/classroom";
 import { useAuth } from "@/contexts/AuthContext";
 import { showToastError, showToastSuccess } from "@/utils/alerts";
 
 const SelectBookPage: React.FC = () => {
   const [orderBooks, setOrderBooks] = useState<OrderBook[]>([]);
+  const [classrooms, setClassrooms] = useState<Classroom[]>([]);
   const [loading, setLoading] = useState(true);
   const [isRoomModalOpen, setIsRoomModalOpen] = useState(false);
   const [selectedBookId, setSelectedBookId] = useState<string | null>(null);
@@ -45,10 +48,14 @@ const SelectBookPage: React.FC = () => {
   const fetchBooks = async () => {
     try {
       setLoading(true);
-      const response = await getOrderBooks(1, 999);
-      setOrderBooks(response.data);
+      const [booksResponse, classroomsResponse] = await Promise.all([
+        getOrderBooks(1, 999),
+        getClassrooms(1, 999)
+      ]);
+      setOrderBooks(booksResponse.data);
+      setClassrooms(classroomsResponse.data);
     } catch (error) {
-      console.error("Failed to fetch order books:", error);
+      console.error("Failed to fetch order books and classrooms:", error);
       showToastError({
         title: "เกิดข้อผิดพลาด",
         text: "ไม่สามารถโหลดข้อมูลสมุดจองได้",
@@ -192,6 +199,9 @@ const SelectBookPage: React.FC = () => {
             const isOwnedByMe = isTaken && myRooms.some((r) => r.id === book.classroom_id);
             const isOwnedByOthers = isTaken && !isOwnedByMe;
 
+            const classroomInfo = book.classroom_id ? classrooms.find(c => c.id === book.classroom_id) : null;
+            const isFinalized = classroomInfo ? !!classroomInfo.isOrderFinalized : false;
+
             // A book is selectable only if it's not taken and the user has rooms left to assign
             const canUserPickMore = unassignedRooms.length > 0;
             const availableForSelection = !isTaken && !isClosed && !isFull && canUserPickMore;
@@ -206,7 +216,7 @@ const SelectBookPage: React.FC = () => {
               <Card
                 key={book.id}
                 className={`relative overflow-hidden transition-all hover:shadow-lg flex flex-col h-full ${
-                  isTaken && !isOwnedByMe
+                  (isTaken && !isOwnedByMe) || isClosed || isFinalized
                     ? "opacity-70 bg-gray-50"
                     : "border-blue-200 bg-white shadow-sm"
                 }`}
@@ -231,6 +241,10 @@ const SelectBookPage: React.FC = () => {
                       <div className="flex items-center text-red-500 text-sm font-medium bg-red-50 px-2 py-1 rounded">
                         <Lock className="w-3 h-3 mr-1" /> ปิดเล่ม
                       </div>
+                    ) : isFinalized ? (
+                      <div className="flex items-center text-amber-600 text-sm font-medium bg-amber-50 px-2 py-1 rounded">
+                        <Lock className="w-3 h-3 mr-1" /> สรุปออเดอร์แล้ว
+                      </div>
                     ) : isOwnedByMe ? (
                       <div className="flex items-center text-blue-600 text-sm font-medium bg-blue-50 px-2 py-1 rounded">
                         <CheckCircle className="w-3 h-3 mr-1" /> กำลังใช้งาน
@@ -254,7 +268,7 @@ const SelectBookPage: React.FC = () => {
                   </CardTitle>
                   <CardDescription className="flex flex-col">
                     {isTaken && (
-                      <span className="font-bold text-blue-600 text-sm mb-1">{roomName}</span>
+                      <span className="font-bold text-blue-600 text-sm mb-1 ">{roomName}</span>
                     )}
                     <span>เลขที่ {book.startNumber} - {book.endNumber}</span>
                   </CardDescription>
@@ -286,7 +300,15 @@ const SelectBookPage: React.FC = () => {
                   </div>
                 </CardContent>
                 <CardFooter className="mt-auto">
-                  {isOwnedByMe && !isClosed ? (
+                  {isFinalized ? (
+                    <Button
+                      className="w-full text-xs font-semibold"
+                      disabled
+                      variant="secondary"
+                    >
+                      เล่มนี้ได้ทำการสรุปออเดอร์ไปแล้ว
+                    </Button>
+                  ) : isOwnedByMe && !isClosed ? (
                     <Button
                       className="w-full bg-blue-600 hover:bg-blue-700 font-bold"
                       onClick={() => handleContinueWithBook(book.id)}
