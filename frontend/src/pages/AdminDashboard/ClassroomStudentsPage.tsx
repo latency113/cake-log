@@ -25,19 +25,22 @@ import ClassroomCakeSummaryContent from "@/components/orders/ClassroomCakeSummar
 import { useClassroomCakeSummaries } from "@/hooks/useClassroomCakeSummaries";
 import { showToastSuccess, showToastError } from "@/utils/alerts";
 import Swal from "sweetalert2";
+import { useAuth } from "@/contexts/AuthContext";
 import "../../styles/print.css";
 
 interface StudentCakeData {
   studentId: string;
   studentName: string;
   totalPounds: number;
+  isManuallyAdded?: boolean;
 }
 
 const ClassroomStudentsPage: React.FC = () => {
   const { classroomId } = useParams({
-    from: "/dashboard/classrooms/$classroomId/students",
-  });
+    strict: false,
+  }) as any;
   const id = classroomId;
+  const { user } = useAuth();
   const [classroom, setClassroom] = useState<Classroom | null>(null);
   const [studentsCakeData, setStudentsCakeData] = useState<{
     students: StudentCakeData[];
@@ -86,6 +89,7 @@ const ClassroomStudentsPage: React.FC = () => {
             studentId: student.number,
             studentName: student.name,
             totalPounds: student.totalPounds,
+            isManuallyAdded: student.number.includes("\u200B"),
           })),
         };
         setStudentsCakeData(transformedCakeData);
@@ -153,7 +157,11 @@ const ClassroomStudentsPage: React.FC = () => {
     try {
       setIsSaving(true);
       const currentStudents = classroom.students || [];
-      const updatedStudents = [...currentStudents, newStudent];
+      const studentToPush = {
+        studentId: newStudent.studentId.trim() + "\u200B",
+        studentName: newStudent.studentName.trim(),
+      };
+      const updatedStudents = [...currentStudents, studentToPush];
 
       await updateClassroom(classroom.id, {
         students: updatedStudents,
@@ -428,7 +436,7 @@ const ClassroomStudentsPage: React.FC = () => {
                         {index + 1}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900 border-b border-r border-gray-300">
-                        {student.studentId}
+                        {student.studentId.replace(/\u200B/g, "")}
                       </td>
                       <td
                         className="px-4 py-3 text-sm text-gray-900 border-b border-r border-gray-300 cursor-pointer hover:bg-slate-50 transition-colors"
@@ -456,14 +464,18 @@ const ClassroomStudentsPage: React.FC = () => {
                         {student.totalPounds}
                       </td>
                       <td className="px-4 py-3 text-sm text-center border-b border-gray-300">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleDeleteStudent(student.studentId)}
-                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                        >
-                          <Trash2 size={16} />
-                        </Button>
+                        {(user?.role === "SUPERADMIN" || student.studentId.includes("\u200B")) ? (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteStudent(student.studentId)}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                          >
+                            <Trash2 size={16} />
+                          </Button>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">-</span>
+                        )}
                       </td>
                     </tr>
                   ))}

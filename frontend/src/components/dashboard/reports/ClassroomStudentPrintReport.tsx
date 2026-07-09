@@ -78,7 +78,7 @@ const ClassroomStudentPrintReport: React.FC<ClassroomStudentPrintReportProps> = 
                   {index + 1}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-900 border-b border-r border-gray-300">
-                  {student.studentId}
+                  {student.studentId.replace(/\u200B/g, "")}
                 </td>
                 <td className="px-4 py-3 text-sm text-gray-900 border-b border-r border-gray-300">
                   {student.studentName}

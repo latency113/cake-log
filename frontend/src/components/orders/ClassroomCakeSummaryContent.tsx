@@ -9,6 +9,9 @@ import {
 } from "@/components/ui/table";
 import type { ClassroomCakeSummary } from "@/types/classroomCakeSummary";
 import SkeletonLoader from "@/components/common/SkeletonLoader";
+import { Link } from "@tanstack/react-router";
+import { Button } from "@/components/ui/button";
+import { Users } from "lucide-react";
 
 interface ClassroomCakeSummaryContentProps {
   summaryData: ClassroomCakeSummary[] | null;
@@ -99,6 +102,13 @@ const ClassroomCakeSummaryContent: React.FC<
                     {classroomSummary.advisor}
                   </span>
                 </p>
+                <div className="mt-3 print:hidden">
+                  <Link to="/my-classroom/$classroomId/students" params={{ classroomId: classroomSummary.classroomId }}>
+                    <Button variant="outline" size="sm" className="gap-2 border-blue-200 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                      <Users className="w-4 h-4" /> ดูรายชื่อนักเรียน
+                    </Button>
+                  </Link>
+                </div>
               </div>
               <div className="border-2 border-gray-800 px-4 py-2">
                 <p className="text-sm">

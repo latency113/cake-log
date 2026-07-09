@@ -82,7 +82,7 @@ const Navbar: React.FC<{ className?: string }> = ({ className }) => {
                     <button className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-4 py-2.5 rounded-md transition-colors backdrop-blur-sm border border-white/20 hover:border-white/30">
                       <BookOpen className="w-4 h-4" />
                       <span className="text-md font-medium">
-                        สรุปเค้กห้องเรียน
+                         สรุปเค้กห้องเรียน
                       </span>
                     </button>
                   </Link>

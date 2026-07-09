@@ -390,6 +390,27 @@ const classroomStudentsRoute = createRoute({
   component: ClassroomStudentsPage,
 });
 
+const userClassroomStudentsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/my-classroom/$classroomId/students",
+  component: ClassroomStudentsPage,
+  beforeLoad: async ({ navigate }) => {
+    const token = localStorage.getItem("access_token");
+    if (!token) {
+      throw navigate({ to: "/login" });
+    }
+    const decodedToken = decodeJwtToken(token);
+    const userRole = decodedToken?.role?.toLowerCase();
+    if (userRole !== "user") {
+      showAlertError({
+        title: "ไม่ได้รับอนุญาต",
+        text: "คุณไม่มีสิทธิ์เข้าถึงหน้านี้",
+      });
+      throw navigate({ to: "/login", search: { unauthorized: true } });
+    }
+  }
+});
+
 const salesRecordsRoute = createRoute({
   getParentRoute: () => dashboardRoute,
   path: "sales-records",
@@ -425,6 +446,7 @@ const routeTree = rootRoute.addChildren([
   userHomeRoute,
   loginRoute,
   orderSearchRoute,
+  userClassroomStudentsRoute,
   dashboardRoute.addChildren([
     dashboardIndexRoute,
     ordersRoute,
