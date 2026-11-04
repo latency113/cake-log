@@ -332,9 +332,10 @@ const OrderSearchPage: React.FC = () => {
       <div className="mb-4">
         <Button
           variant="outline"
-          onClick={() => navigate({ to: "/home" })}
+          onClick={() => navigate({ to: "/home", search: {} })}
           className="flex items-center font-medium"
         >
+
           <ArrowLeft className="mr-2 h-4 w-4" />
           ย้อนกลับ
         </Button>

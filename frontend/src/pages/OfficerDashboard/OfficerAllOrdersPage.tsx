@@ -5,7 +5,7 @@ import OfficerAllOrdersPageSkeleton from "./skeletons/OfficerAllOrdersPageSkelet
 import { useMemo, useState, useEffect } from "react";
 import { Search, Calendar, SlidersHorizontal, Package } from "lucide-react";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th } from "date-fns/locale/th";
 import {
   Select,
   SelectContent,
