@@ -29,8 +29,13 @@ export namespace UserRepository {
 
     return prisma.user.findMany({
       where,
-      include:{
-        orders:true
+      include: {
+        orders: true,
+        teacher: {
+          include: {
+            department: true,
+          },
+        },
       },
       take: options.take,
       skip: options.skip,

@@ -206,64 +206,17 @@ ${error.stderr?.toString() || "(empty)"}
     );
 
     try {
-      // Copy Departments
-      const departments = await sourceClient.department.findMany();
-      console.log(
-        `[InitYearService] Found ${departments.length} departments in source.`,
-      );
-      if (departments.length > 0) {
-        const result = await destClient.department.createMany({
-          data: departments,
-          skipDuplicates: true,
-        });
-        console.log(`[InitYearService] Created ${result.count} departments.`);
-      }
-
-      // Copy Teachers
-      const teachers = await sourceClient.teacher.findMany();
-      console.log(
-        `[InitYearService] Found ${teachers.length} teachers in source.`,
-      );
-      if (teachers.length > 0) {
-        const result = await destClient.teacher.createMany({
-          data: teachers,
-          skipDuplicates: true,
-        });
-        console.log(`[InitYearService] Created ${result.count} teachers.`);
-      }
-
-      // Copy Products
-      const products = await sourceClient.product.findMany();
-      console.log(
-        `[InitYearService] Found ${products.length} products in source.`,
-      );
-      if (products.length > 0) {
-        const result = await destClient.product.createMany({
-          data: products,
-          skipDuplicates: true,
-        });
-        console.log(`[InitYearService] Created ${result.count} products.`);
-      }
-
-      // Copy GradeLevels
-      const gradeLevels = await sourceClient.gradeLevel.findMany();
-      console.log(
-        `[InitYearService] Found ${gradeLevels.length} gradeLevels in source.`,
-      );
-      if (gradeLevels.length > 0) {
-        const result = await destClient.gradeLevel.createMany({
-          data: gradeLevels,
-          skipDuplicates: true,
-        });
-        console.log(`[InitYearService] Created ${result.count} gradeLevels.`);
-      }
-
-      // Copy Users
+      // Copy Users (only user table as requested)
       const users = await sourceClient.user.findMany();
       console.log(`[InitYearService] Found ${users.length} users in source.`);
       if (users.length > 0) {
+        // Teacher table is not copied, so set teacher_id to null to satisfy foreign key constraints
+        const usersToCopy = users.map((user) => ({
+          ...user,
+          teacher_id: null,
+        }));
         const result = await destClient.user.createMany({
-          data: users,
+          data: usersToCopy,
           skipDuplicates: true,
         });
         console.log(`[InitYearService] Created ${result.count} users.`);

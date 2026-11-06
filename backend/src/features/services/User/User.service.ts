@@ -145,7 +145,7 @@ export namespace UserService {
         email: user.email,
         password: hashPassword,
         role: user.role,
-        teacher_id: user.teacher_id,
+        teacher_id: user.teacher_id && user.teacher_id.trim() !== "" ? user.teacher_id : null,
       });
 
       // Synchronize new user to all other year databases
@@ -189,14 +189,14 @@ export namespace UserService {
 
   export async function update(userId: string, user: UpdateUserDto) {
     try {
-      const data = { ...user };
-
-      if (data.role !== undefined) {
-        delete data.role;
-      }
+      const data: any = { ...user };
       
       if (user.password) {
         data.password = await Bun.password.hash(user.password);
+      }
+
+      if (data.teacher_id !== undefined) {
+        data.teacher_id = data.teacher_id && typeof data.teacher_id === "string" && data.teacher_id.trim() !== "" ? data.teacher_id : null;
       }
 
       // Fetch user to know their username for cross-database synchronization

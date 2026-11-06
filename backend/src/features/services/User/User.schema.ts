@@ -25,7 +25,7 @@ export const CreateUserDto = t.Object({
   password: t.String(),
   email: t.Optional(t.Union([t.String(), t.Null()])),
   role: t.UnionEnum(["SUPERADMIN","ADMIN","OFFICER1","USER","OFFICER2"]),
-  teacher_id: t.Optional(t.String()),
+  teacher_id: t.Optional(t.Union([t.String(), t.Null()])),
 });
 export type CreateUserDto = typeof CreateUserDto.static;
 
