@@ -7,15 +7,35 @@ export const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
-  const year = localStorage.getItem("academicYear");
-  if (year) {
-    config.headers["x-academic-year"] = year;
-  }
-
   const token = localStorage.getItem("access_token");
+  let userRole: string | null = null;
+
   if (token) {
+    try {
+      const parts = token.split('.');
+      if (parts.length === 3) {
+        const base64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        const payload = JSON.parse(jsonPayload);
+        userRole = payload.role;
+      }
+    } catch {
+      // Ignore token decode errors
+    }
     config.headers["Authorization"] = `Bearer ${token}`;
   }
+
+  const isAdmin = userRole === "ADMIN" || userRole === "SUPERADMIN";
+  const storedYear = localStorage.getItem("academicYear");
+
+  // Admins can navigate past years; non-admins are locked to the active year (2569)
+  const year = (isAdmin && storedYear) ? storedYear : (storedYear || "2569");
+  config.headers["x-academic-year"] = year;
 
   const refreshToken = localStorage.getItem("refresh_token");
   if (refreshToken) {

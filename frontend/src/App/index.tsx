@@ -9,12 +9,13 @@ function App() {
 
   const isDashboard = location.pathname.startsWith("/dashboard");
   const isLoginPage = location.pathname === "/login";
+  const isRegisterPage = location.pathname === "/register";
   const isWelcomePage = location.pathname === "/";
   const isOfficerOrdersPage = location.pathname.startsWith("/officer-orders");
   const isOfficerOrdersPreparePage = location.pathname.startsWith("/officer-prepare");
   const isExecutivePage = location.pathname.startsWith("/executive-summary");
   
-  if (isLoginPage || isWelcomePage || isNotFoundActive || isOfficerOrdersPage || isOfficerOrdersPreparePage || isExecutivePage) { // Use isNotFoundActive here
+  if (isLoginPage || isRegisterPage || isWelcomePage || isNotFoundActive || isOfficerOrdersPage || isOfficerOrdersPreparePage || isExecutivePage) { // Use isNotFoundActive here
     return <Outlet />;
   }
 

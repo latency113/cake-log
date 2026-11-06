@@ -174,16 +174,36 @@ const OfficerPrepareOrderDetailModal: React.FC<OfficerPrepareOrderDetailModalPro
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
         <style>
           @page {
-            size: A4;
+            size: A4 portrait;
+            margin: 0;
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            box-sizing: border-box;
           }
           body {
-            font-family: 'Noto Sans Thai', sans-serif;
+            font-family: 'Noto Sans Thai', 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
-            padding: 0;
-            -webkit-print-color-adjust: exact; /* For printing background colors */
-            print-color-adjust: exact;
+            padding: 8mm 12mm;
+            background-color: #fdf2f8 !important;
           }
-          /* Add any specific print styles here if needed */
+          .bg-pink-50 {
+            background-color: #fdf2f8 !important;
+          }
+          .bg-pink-100 {
+            background-color: #fce7f3 !important;
+          }
+          .bg-pink-200 {
+            background-color: #fbcfe8 !important;
+          }
+          .border-pink-300 {
+            border-color: #f9a8d4 !important;
+          }
+          .border-pink-400 {
+            border-color: #f472b6 !important;
+          }
         </style>
       </head>
       <body>

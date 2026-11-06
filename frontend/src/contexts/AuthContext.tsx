@@ -59,6 +59,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (response.refresh_token) {
       localStorage.setItem("refresh_token", response.refresh_token);
     }
+    if (!localStorage.getItem("academicYear")) {
+      localStorage.setItem("academicYear", "2569");
+    }
     return response;
   }, []);
 
@@ -98,6 +101,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setAccessToken(null);
         setRefreshToken(null);
         return; // No tokens, so no need to check /auth/me
+      }
+
+      if (!localStorage.getItem("academicYear")) {
+        localStorage.setItem("academicYear", "2569");
       }
 
       const userData = await apiMe();

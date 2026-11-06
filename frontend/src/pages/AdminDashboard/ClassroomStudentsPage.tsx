@@ -26,6 +26,7 @@ import { useClassroomCakeSummaries } from "@/hooks/useClassroomCakeSummaries";
 import { showToastSuccess, showToastError } from "@/utils/alerts";
 import Swal from "sweetalert2";
 import { useAuth } from "@/contexts/AuthContext";
+import { printSection } from "@/utils/printUtils";
 import "../../styles/print.css";
 
 interface StudentCakeData {
@@ -260,17 +261,22 @@ const ClassroomStudentsPage: React.FC = () => {
   };
 
   const handlePrintCakeSummary = () => {
-    const printContent = document.getElementById(
+    printSection(
       "printable-classroom-cake-summary-section",
+      "ใบสรุปยอดการสั่งจองเค้ก",
+      {
+        orientation: "landscape",
+        paperSize: "A5",
+        scale: 0.75,
+        margin: "5mm",
+        customStyles: `
+          .print\\:hidden { display: none !important; }
+          table { width: 100% !important; border-collapse: collapse !important; box-sizing: border-box !important; }
+          th:last-child, td:last-child { border-right: 2px solid #1f2937 !important; }
+          th:first-child, td:first-child { border-left: 2px solid #1f2937 !important; }
+        `,
+      }
     );
-    const originalContents = document.body.innerHTML;
-
-    if (printContent) {
-      document.body.innerHTML = printContent.innerHTML;
-      window.print();
-      document.body.innerHTML = originalContents;
-      window.location.reload();
-    }
   };
 
   if (loading || cakeSummaryLoading) {

@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Home, Lightbulb, Printer, Save } from "lucide-react";
+import { Home, Printer, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { showToastSuccess, showToastError } from "@/utils/alerts";
 import {
@@ -405,11 +405,60 @@ const ClassroomsReport: React.FC = () => {
   }
 
   const handlePrintClassroomSummary = () => {
-    printSection("classroom-summary-print-section", "สรุปยอดเค้กของห้องเรียน");
+    printSection("classroom-summary-print-section", "สรุปยอดเค้กของห้องเรียน", {
+      orientation: "landscape",
+      paperSize: "A5",
+      scale: 0.75,
+      margin: "5mm",
+      customStyles: `
+        @media print {
+          .print\\:hidden, .screen-only {
+            display: none !important;
+          }
+          .space-y-8 {
+            margin-top: 0 !important;
+          }
+          .classroom-summary-card,
+          #classroom-summary-print-section .space-y-8 > div,
+          #printable-classroom-cake-summary-section .space-y-8 > div {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            box-sizing: border-box !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+          }
+          .classroom-summary-card:not(.first-summary-content),
+          #classroom-summary-print-section .space-y-8 > div:not(.first-summary-content),
+          #printable-classroom-cake-summary-section .space-y-8 > div:not(.first-summary-content) {
+            page-break-before: always !important;
+            break-before: page !important;
+            margin-top: 0 !important;
+          }
+          table {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+            width: 100% !important;
+            border-collapse: collapse !important;
+            box-sizing: border-box !important;
+          }
+          th:last-child, td:last-child {
+            border-right: 2px solid #1f2937 !important;
+          }
+          th:first-child, td:first-child {
+            border-left: 2px solid #1f2937 !important;
+          }
+        }
+      `,
+    });
   };
 
   const handlePrintClassroomsReport = () => {
-    printSection("printable-classrooms-section", "รายงานผลการเข้าร่วมกิจกรรม");
+    printSection("printable-classrooms-section", "รายงานผลการเข้าร่วมกิจกรรม", {
+      orientation: "landscape",
+      margin: "8mm 12mm",
+    });
   };
 
   return (
@@ -428,16 +477,9 @@ const ClassroomsReport: React.FC = () => {
             </div>
             <div className="flex space-x-4 print:hidden">
               <Button
-                onClick={() => setIsReadFirstDialogOpen(true)} // onClick handler
-                className="bg-yellow-500 text-white hover:bg-yellow-600 transition-colors duration-200 flex items-center"
-              >
-                <Lightbulb className="w-5 h-5 mr-2" />
-                โปรดอ่านก่อน
-              </Button>
-              <Button
                 onClick={handlePrintClassroomsReport}
                 className="bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200 flex items-center"
-                title="พิมพ์รายงานเฉยๆ ปรับกระดาษเป็นแนวนอนและ scale เป็น 80" // Added title attribute
+                title="พิมพ์รายงาน (จัดแนวนอนและเต็มหน้ากระดาษอัตโนมัติ)"
               >
                 <Printer className="w-5 h-5 mr-2" />
                 พิมพ์รายงาน
@@ -447,6 +489,7 @@ const ClassroomsReport: React.FC = () => {
                 id="print-classroom-summary-button"
                 className="bg-green-500 text-white hover:bg-green-600 transition-colors duration-200 flex items-center"
                 disabled={loadingClassroomSummary} // Disable when summary data is loading
+                title="พิมพ์สรุปยอดเค้กของห้องเรียน (ปรับกระดาษเป็น A5 แนวนอนอัตโนมัติ)"
               >
                 <Printer className="w-5 h-5 mr-2" />
                 พิมพ์สรุปยอดเค้กของห้องเรียน
@@ -585,27 +628,24 @@ const ClassroomsReport: React.FC = () => {
         >
           <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle>โปรดอ่านก่อนพิมพ์รายงาน !!!!</DialogTitle>
+              <DialogTitle>ข้อแนะนำการพิมพ์รายงาน</DialogTitle>
               <DialogDescription>
-                <p className="text-lg text-red-500 truncate">
-                  เพื่อให้รายงานแสดงผลได้อย่างถูกต้อง กรุณาปรับตั้งค่าดังนี้:
+                <p className="text-base text-emerald-600 font-semibold mb-2">
+                  ระบบตั้งค่าแนวนอนและขยายตารางเต็มหน้ากระดาษให้อัตโนมัติแล้ว!
                 </p>
-                <span className="flex mt-2 text-lg">
-                  ถ้าเป็นปุ่ม <p className="text-blue-500">สีน้ำเงิน</p>{" "}
-                  ให้ตั้งค่าดังนี้:
-                </span>
-                <ul className="list-disc list-inside space-y-1 text-md">
-                  <li>ปรับกระดาษเป็นแนวนอน (Orientation: Landscape)</li>
-                  <li>ปรับ Scale เป็น 80% (Scale: 80%)</li>
-                </ul>
-                <span className="flex mt-2 text-lg">
-                  ถ้าเป็นปุ่ม <p className="text-green-500">สีเขียว</p>{" "}
-                  ให้ตั้งค่าดังนี้:
-                </span>
-                <ul className="list-disc list-inside space-y-1 text-md">
-                  <li>ปรับกระดาษเป็นแนวนอน (Orientation: Landscape)</li>
-                  <li>ปรับ Scale เป็น 89% (Scale: 89%)</li>
-                </ul>
+                <div className="bg-slate-50 dark:bg-slate-800/50 p-3 rounded-md space-y-2 text-sm border">
+                  <div>
+                    <span className="font-medium text-blue-600">ปุ่มสีน้ำเงิน (พิมพ์รายงาน):</span>
+                    <p className="text-muted-foreground ml-2">• ปรับเป็นแนวนอน (Landscape) และตารางขยายเต็มหน้ากระดาษพอดี 20 แถวต่อหน้า</p>
+                  </div>
+                  <div>
+                    <span className="font-medium text-green-600">ปุ่มสีเขียว (สรุปยอดเค้กห้องเรียน):</span>
+                    <p className="text-muted-foreground ml-2">• ปรับเป็นแนวนอน (Landscape) และตารางขยายเต็มหน้ากระดาษ</p>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  * ในหน้าต่างพิมพ์ (Print Preview) ท่านสามารถเลือกมาตราส่วน (Scale) เป็น "ค่าเริ่มต้น (Default)" หรือ "100%" ได้ทันที ตารางจะแสดงเต็มหน้ากระดาษสวยงาม
+                </p>
               </DialogDescription>
             </DialogHeader>
             <div className="flex justify-end">

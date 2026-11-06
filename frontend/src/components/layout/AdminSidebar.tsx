@@ -30,7 +30,7 @@ const AdminSidebar: React.FC = () => {
   return (
     <aside
       id="admin-sidebar"
-      className="h-screen w-80 bg-sidebar text-sidebar-foreground flex flex-col border-r-2 border-sidebar-border"
+      className="sticky top-0 h-screen w-80 shrink-0 bg-sidebar text-sidebar-foreground flex flex-col border-r-2 border-sidebar-border z-30"
     >
       {/* Header Section */}
       {/* Header Section */}

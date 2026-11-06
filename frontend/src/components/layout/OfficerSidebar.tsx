@@ -13,7 +13,7 @@ const OfficerSidebar: React.FC = () => {
   };
 
   return (
-    <aside className="w-64 bg-background text-foreground flex flex-col border-r border-border">
+    <aside className="sticky top-0 h-screen w-64 shrink-0 bg-background text-foreground flex flex-col border-r border-border z-30">
       {/* Header Section */}
       <div className="p-6 border-b border-border">
         <div className="flex items-center space-x-3">

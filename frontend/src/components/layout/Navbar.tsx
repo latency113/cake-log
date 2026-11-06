@@ -62,6 +62,9 @@ const Navbar: React.FC<{ className?: string }> = ({ className }) => {
                     <span className="text-xs text-blue-100 font-medium">
                       Version 1.5
                     </span>
+                    <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 rounded-full font-medium border border-white/20">
+                      ปีการศึกษา 2569
+                    </span>
                   </div>
                 </div>
               </a>

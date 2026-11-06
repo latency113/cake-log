@@ -7,6 +7,8 @@ import { useAuth } from "@/contexts/AuthContext"; // Import useAuth
 import { finalizeClassroom } from "@/utils/api/data";
 import { showAlertError, showAlertSuccess, showConfirmDialog } from "@/utils/alerts";
 import { useNavigate } from "@tanstack/react-router";
+import { printSection } from "@/utils/printUtils";
+import "@/styles/print.css";
 
 const ClassroomCakeSummaryPage: React.FC = () => {
   const { user } = useAuth(); // Get current user
@@ -14,17 +16,57 @@ const ClassroomCakeSummaryPage: React.FC = () => {
   const { summaryData, loading, error, refetch } = useClassroomCakeSummaries(true, undefined, user?.id); // Pass user?.id
 
   const handlePrint = () => {
-    const printContent = document.getElementById(
-      "printable-classroom-cake-summary-section"
+    printSection(
+      "classroom-summary-print-section",
+      "สรุปยอดเค้กของห้องเรียน",
+      {
+        orientation: "landscape",
+        paperSize: "A5",
+        scale: 0.75,
+        margin: "5mm",
+        customStyles: `
+          @media print {
+            .print\\:hidden, .screen-only {
+              display: none !important;
+            }
+            .space-y-8 {
+              margin-top: 0 !important;
+            }
+            .classroom-summary-card,
+            #classroom-summary-print-section .space-y-8 > div,
+            #printable-classroom-cake-summary-section .space-y-8 > div {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+              box-sizing: border-box !important;
+              border: none !important;
+              box-shadow: none !important;
+              padding: 0 !important;
+              margin: 0 !important;
+            }
+            .classroom-summary-card:not(.first-summary-content),
+            #classroom-summary-print-section .space-y-8 > div:not(.first-summary-content),
+            #printable-classroom-cake-summary-section .space-y-8 > div:not(.first-summary-content) {
+              page-break-before: always !important;
+              break-before: page !important;
+              margin-top: 0 !important;
+            }
+            table {
+              page-break-inside: avoid !important;
+              break-inside: avoid !important;
+              width: 100% !important;
+              border-collapse: collapse !important;
+              box-sizing: border-box !important;
+            }
+            th:last-child, td:last-child {
+              border-right: 2px solid #1f2937 !important;
+            }
+            th:first-child, td:first-child {
+              border-left: 2px solid #1f2937 !important;
+            }
+          }
+        `,
+      }
     );
-    const originalContents = document.body.innerHTML;
-
-    if (printContent) {
-      document.body.innerHTML = printContent.innerHTML;
-      window.print();
-      document.body.innerHTML = originalContents;
-      window.location.reload();
-    }
   };
 
   const handleFinalize = async () => {
@@ -75,15 +117,20 @@ const ClassroomCakeSummaryPage: React.FC = () => {
                 <Lock className="h-4 w-4" /> สรุปยอดเค้กทั้งหมด
               </Button>
             ) : (
-              <Button onClick={handlePrint} variant="outline" className="gap-2">
-                <Printer className="h-4 w-4" /> พิมพ์รายงาน
+              <Button
+                onClick={handlePrint}
+                id="print-classroom-summary-button"
+                className="bg-green-500 text-white hover:bg-green-600 transition-colors duration-200 flex items-center"
+                title="พิมพ์สรุปยอดเค้กของห้องเรียน (ปรับกระดาษเป็น A5 แนวนอนอัตโนมัติ)"
+              >
+                <Printer className="w-5 h-5 mr-2" /> พิมพ์สรุปยอดเค้กของห้องเรียน
               </Button>
             )}
           </>
         )}
       </div>
 
-      <div id="printable-classroom-cake-summary-section" className="w-full">
+      <div id="classroom-summary-print-section" className="w-full">
         <ClassroomCakeSummaryContent
           summaryData={summaryData}
           loading={loading}

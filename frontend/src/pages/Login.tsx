@@ -82,7 +82,7 @@ const Login: React.FC = () => {
       } else if (userRole === "officer2") {
         navigate({ to: "/officer-prepare" });
       } else if (userRole === "user") {
-        navigate({ to: "/home", search: {} as any });
+        navigate({ to: "/select-book" });
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -277,6 +277,17 @@ const Login: React.FC = () => {
                   ) : (
                     "เข้าสู่ระบบ"
                   )}
+                </button>
+              </div>
+
+              <div className="text-center text-sm text-slate-500 dark:text-slate-400 pt-2">
+                ยังไม่มีบัญชีผู้ใช้งาน?{" "}
+                <button
+                  type="button"
+                  onClick={() => navigate({ to: "/register" })}
+                  className="text-blue-600 dark:text-blue-400 font-semibold hover:underline inline-flex items-center gap-1"
+                >
+                  สมัครสมาชิกที่นี่
                 </button>
               </div>
             </form>

@@ -47,8 +47,7 @@ const ClassroomCakeSummaryContent: React.FC<
   }
 
   return (
-    <div className="space-y-8">
-      {" "}
+    <div className="space-y-8 print:space-y-0">
       {/* Container for multiple classroom summaries */}
       {summaryData.map((classroomSummary, summaryIndex) => {
         // คำนวณยอดรวม
@@ -71,9 +70,21 @@ const ClassroomCakeSummaryContent: React.FC<
         return (
           <div
             key={`summary-block-${summaryIndex}`}
-            className={`mb-4 p-4 border border-gray-200 rounded-lg ${
-              summaryIndex === 0 ? "first-summary-content" : ""
+            className={`classroom-summary-card mb-4 p-4 border border-gray-200 rounded-lg print:border-0 print:border-none print:p-0 print:m-0 print:rounded-none print:shadow-none ${
+              summaryIndex === 0
+                ? "first-summary-content"
+                : "print:break-before-page"
             }`}
+            style={{
+              pageBreakInside: "avoid",
+              breakInside: "avoid",
+              ...(summaryIndex > 0
+                ? {
+                    pageBreakBefore: "always",
+                    breakBefore: "page",
+                  }
+                : {}),
+            }}
           >
             <div className="text-center text-xl font-bold">
               วิทยาลัยอาชีวศึกษานครปฐม
@@ -126,11 +137,11 @@ const ClassroomCakeSummaryContent: React.FC<
               </div>
             </div>
 
-            <Table className="border-2 border-gray-800">
+            <Table className="border-2 border-gray-800 border-collapse">
               <TableHeader>
                 <TableRow className="border-b-2 border-gray-800">
                   <TableHead
-                    className="border-r-2 border-gray-800 text-center font-bold text-black align-middle"
+                    className="border-l-2 border-r-2 border-gray-800 text-center font-bold text-black align-middle"
                     rowSpan={2}
                   >
                     เนื้อเค้ก / ราคา (บาท/ปอนด์)
@@ -148,7 +159,7 @@ const ClassroomCakeSummaryContent: React.FC<
                     รวมปอนด์
                   </TableHead>
                   <TableHead
-                    className="border-l-2 border-gray-800 text-center font-bold text-black align-middle"
+                    className="border-l-2 border-r-2 border-gray-800 text-center font-bold text-black align-middle"
                     rowSpan={2}
                   >
                     รวมเป็นเงิน
@@ -192,7 +203,7 @@ const ClassroomCakeSummaryContent: React.FC<
                       key={`${classroomSummary.departmentName}-${classroomSummary.gradeLevelName}-${classroomSummary.classroomName}-${cake.productName}-${index}`}
                       className="border-b border-gray-800"
                     >
-                      <TableCell className="border-r-2 border-gray-800 font-medium py-6">
+                      <TableCell className="border-l-2 border-r-2 border-gray-800 font-medium py-6">
                         {cake.productName}{" "}
                         {cake.pricePerPound && `${cake.pricePerPound} บาท`}
                       </TableCell>
@@ -214,14 +225,14 @@ const ClassroomCakeSummaryContent: React.FC<
                       <TableCell className="border-r-2 border-gray-800 text-center font-semibold py-6">
                         {cake.totalPounds}
                       </TableCell>
-                      <TableCell className="text-center font-semibold py-6">
+                      <TableCell className="border-r-2 border-gray-800 text-center font-semibold py-6">
                         {cake.totalAmount.toLocaleString()}
                       </TableCell>
                     </TableRow>
                   ))}
                 <TableRow className="border-b-2 border-gray-800 bg-gray-50">
                   <TableCell
-                    className="border-r-2 border-gray-800 text-right font-bold py-4"
+                    className="border-l-2 border-r-2 border-gray-800 text-right font-bold py-4"
                     colSpan={6}
                   >
                     รวม
@@ -229,13 +240,13 @@ const ClassroomCakeSummaryContent: React.FC<
                   <TableCell className="border-r-2 border-gray-800 text-center font-bold py-4">
                     {totalPounds}
                   </TableCell>
-                  <TableCell className="text-center font-bold py-4">
+                  <TableCell className="border-r-2 border-gray-800 text-center font-bold py-4">
                     {totalAmount.toLocaleString()}
                   </TableCell>
                 </TableRow>
                 <TableRow className="border-b-2 border-gray-800">
                   <TableCell
-                    className="border-r-2 border-gray-800 text-right font-medium py-3"
+                    className="border-l-2 border-r-2 border-gray-800 text-right font-medium py-3"
                     colSpan={6}
                   >
                     ส่วนลด (10 บาท x {totalPounds} ปอนด์)
@@ -243,18 +254,18 @@ const ClassroomCakeSummaryContent: React.FC<
                   <TableCell className="border-r-2 border-gray-800 text-center py-3">
                     {totalPounds}
                   </TableCell>
-                  <TableCell className="text-center py-3">
+                  <TableCell className="border-r-2 border-gray-800 text-center py-3">
                     {discountAmount.toLocaleString()}
                   </TableCell>
                 </TableRow>
                 <TableRow className="bg-gray-100">
                   <TableCell
-                    className="border-r-2 border-gray-800 text-right font-bold py-3"
+                    className="border-l-2 border-r-2 border-gray-800 text-right font-bold py-3"
                     colSpan={7}
                   >
                     สุทธิชำระ
                   </TableCell>
-                  <TableCell className="text-center font-bold py-3 text-lg">
+                  <TableCell className="border-r-2 border-gray-800 text-center font-bold py-3 text-lg">
                     {netAmount.toLocaleString()}
                   </TableCell>
                 </TableRow>

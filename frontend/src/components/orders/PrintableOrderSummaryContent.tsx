@@ -7,8 +7,8 @@ import type {
   Department,
 } from "../../types";
 import { calculateCakeItemTotals } from "../../utils/calculations";
-import { getCakeSettings } from "../../utils/api/settings"; // Import getCakeSettings
-import type { ICakeSettings } from "../../types/cake"; // Import ICakeSettings
+import { getCakeSettings } from "../../utils/api/settings";
+import type { ICakeSettings } from "../../types/cake";
 
 const getDisplayName = (id: string, data: { id: string; name: string }[]) => {
   const item = data.find((d) => d.id === id);
@@ -28,7 +28,7 @@ interface PrintableContentProps {
   departmentsData: Department[];
   yearsData: Year[];
   classroomsData: Classroom[];
-  teamsData: Team[];
+  teamsData?: Team[];
 }
 
 const PrintableOrderSummaryContent: React.FC<PrintableContentProps> = ({
@@ -41,7 +41,6 @@ const PrintableOrderSummaryContent: React.FC<PrintableContentProps> = ({
   classroomsData,
 }) => {
   const [cakeSettings, setCakeSettings] = useState<ICakeSettings | null>(null);
-  const [isLoadingCakeSettings, setIsLoadingCakeSettings] = useState(true);
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -50,177 +49,281 @@ const PrintableOrderSummaryContent: React.FC<PrintableContentProps> = ({
         setCakeSettings(settings);
       } catch (error) {
         console.error("Failed to fetch cake settings:", error);
-      } finally {
-        setIsLoadingCakeSettings(false);
       }
     };
     fetchSettings();
   }, []);
+
+  // Resolve Classroom, Grade Level, and Department information cleanly
+  const currentClassroom = classroomsData.find(
+    (c) => c.id === formData.classroom_id
+  );
+
+  const gradeLevelText = (() => {
+    if (currentClassroom?.grade_level) {
+      const lvl =
+        currentClassroom.grade_level.level === "VOCATIONAL"
+          ? "ปวช."
+          : currentClassroom.grade_level.level === "HIGHER"
+          ? "ปวส."
+          : currentClassroom.grade_level.level;
+      return `${lvl} ${currentClassroom.grade_level.year}`;
+    }
+    if (formData.year_id) {
+      const yearObj = yearsData.find((y) => y.id === formData.year_id);
+      if (yearObj) {
+        const lvl = levelMap[yearObj.level] || yearObj.level;
+        return `${lvl} ${yearObj.year}`;
+      }
+    }
+    return "-";
+  })();
+
+  const roomText = currentClassroom
+    ? currentClassroom.name
+    : formData.classroom_id
+    ? getDisplayName(formData.classroom_id, classroomsData)
+    : "-";
+
+  const departmentText = (() => {
+    if (formData.department_id) {
+      const dept = departmentsData.find((d) => d.id === formData.department_id);
+      if (dept) return dept.name;
+    }
+    if (currentClassroom?.department_id) {
+      const dept = departmentsData.find(
+        (d) => d.id === currentClassroom.department_id
+      );
+      if (dept) return dept.name;
+    }
+    if (currentClassroom?.department?.name) {
+      return currentClassroom.department.name;
+    }
+    return (formData as any).departmentName || "-";
+  })();
+
+  // Format pickup date in Thai format
+  const pickupDateText = (() => {
+    if (formData.pickup_date) {
+      const dateObj = new Date(formData.pickup_date);
+      if (!isNaN(dateObj.getTime())) {
+        return dateObj.toLocaleDateString("th-TH", {
+          day: "numeric",
+          month: "long",
+          year: "numeric",
+        });
+      }
+    }
+    return "-";
+  })();
+
+  // Time slot checkbox state
+  const timeSlot = (formData.time_type ?? "").toLowerCase();
+  const isMorning = timeSlot.includes("morning") || timeSlot.includes("เช้า");
+  const isAfternoon =
+    timeSlot.includes("afternoon") || timeSlot.includes("บ่าย");
+
+  // Calculate total pounds
+  const totalPoundsAll = formData.cakeItems.reduce(
+    (sum, item) => calculateCakeItemTotals(item).totalPounds + sum,
+    0
+  );
+
+  const totalPiecesAll = formData.cakeItems.reduce(
+    (sum, item) => calculateCakeItemTotals(item).totalPieces + sum,
+    0
+  );
+
   return (
-    <div className="w-full mx-auto bg-pink-50 p-4 sm:p-6 md:p-8 rounded-lg relative text-black h-screen">
-      {/* Header ของฟอร์ม */}
-      <div className="flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-1 mb-4 sm:mb-6 text-xs sm:text-sm">
-        <div className="flex justify-between w-full sm:w-auto">
-          <span className="font-semibold">เล่มที่:</span>
-          <span className="flex-1 px-2">
-            {formData.book_number || (formData as any).book?.bookNumber || formData.book_id}
+    <div
+      className="w-full max-w-[210mm] mx-auto bg-pink-50 p-6 sm:p-8 text-black print:p-0 print:max-w-none text-sm leading-relaxed font-sans"
+      style={{ backgroundColor: "#fdf2f8" }}
+    >
+      {/* 1. Header ของฟอร์ม */}
+      <div className="flex justify-between items-start mb-6">
+        <div className="w-1/4 text-left">
+          <span className="font-bold text-sm">เล่มที่:</span>{" "}
+          <span className="text-sm font-semibold">
+            {formData.book_number ||
+              (formData as any).book?.bookNumber ||
+              formData.book_id ||
+              "-"}
           </span>
         </div>
-        <div className="text-center flex-1">
-          <p className="text-base sm:text-lg text-gray-700">
+
+        <div className="w-2/4 text-center">
+          <h1 className="text-lg font-bold text-gray-900 tracking-wide">
             วิทยาลัยอาชีวศึกษานครปฐม
-          </p>
-          <p className="text-sm sm:text-md text-gray-600">ใบสั่งจองเค้ก</p>
+          </h1>
+          <h2 className="text-sm font-medium text-gray-700 mt-0.5">
+            ใบสั่งจองเค้ก
+          </h2>
         </div>
-        <div className="flex justify-between w-full sm:w-auto">
-          <span className="font-semibold">เลขที่:</span>
-          <span className="flex-1 px-2">{formData.number}</span>
+
+        <div className="w-1/4 text-right">
+          <span className="font-bold text-sm">เลขที่:</span>{" "}
+          <span className="text-sm font-semibold">{formData.number || "-"}</span>
         </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-12 gap-x-4 gap-y-1 mb-4 sm:mb-6 text-sm items-center">
-        {/* ชื่อ-สกุล (4 ส่วน) */}
-        <div className="flex md:col-span-4">
-          <span className="font-semibold shrink-0">ชื่อ-สกุล:</span>
-          <span className="border-b border-gray-400 flex-1 px-2 truncate">
-            {formData.customerName || "_______"}
+
+      {/* 2. ส่วนข้อมูลผู้สั่งและห้องเรียน (แถวที่ 1) */}
+      <div className="flex items-center gap-3 mb-3 text-sm">
+        <div className="flex items-center flex-[4] min-w-0">
+          <span className="font-bold shrink-0 whitespace-nowrap">ชื่อ-สกุล:</span>
+          <span className="border-b border-gray-400 flex-1 ml-1.5 px-2 truncate font-medium">
+            {formData.customerName || "-"}
           </span>
         </div>
 
-        {/* ระดับชั้น (3 ส่วน) */}
-        <div className="flex md:col-span-2">
-          {" "}
-          {/* เพิ่มจาก 1 เป็น 3 */}
-          <span className="font-semibold shrink-0">ระดับชั้น:</span>
-          <span className="border-b border-gray-400 flex-1 px-2 truncate">
-            {formData.year_id
-              ? getDisplayName(
-                  formData.year_id,
-                  yearsData.map((y) => ({
-                    id: y.id,
-                    name: `${levelMap[y.level]} ${y.year}`,
-                  }))
-                )
-              : "_______"}
+        <div className="flex items-center flex-[2] min-w-0">
+          <span className="font-bold shrink-0 whitespace-nowrap">ระดับชั้น:</span>
+          <span className="border-b border-gray-400 flex-1 ml-1.5 px-1 text-center font-medium truncate">
+            {gradeLevelText}
           </span>
         </div>
 
-        {/* ห้อง (1 ส่วน) */}
-        <div className="flex md:col-span-2">
-          {" "}
-          {/* คงเดิมที่ 1 */}
-          <span className="font-semibold shrink-0">ห้อง:</span>
-          <span className="border-b border-gray-400 flex-1 px-2 truncate">
-            {formData.classroom_id
-              ? getDisplayName(formData.classroom_id, classroomsData)
-              : "_______"}
+        <div className="flex items-center flex-[2] min-w-0">
+          <span className="font-bold shrink-0 whitespace-nowrap">ห้อง:</span>
+          <span className="border-b border-gray-400 flex-1 ml-1.5 px-1 text-center font-medium truncate">
+            {roomText}
           </span>
         </div>
 
-        {/* แผนก (4 ส่วน) */}
-        <div className="flex md:col-span-4">
-          {" "}
-          {/* ลดจาก 5 เป็น 4 */}
-          <span className="font-semibold shrink-0">แผนก:</span>
-          <span className="border-b border-gray-400 flex-1 px-2 truncate">
-            {formData.department_id
-              ? getDisplayName(formData.department_id, departmentsData)
-              : "_______"}
+        <div className="flex items-center flex-[4] min-w-0">
+          <span className="font-bold shrink-0 whitespace-nowrap">แผนก:</span>
+          <span className="border-b border-gray-400 flex-1 ml-1.5 px-2 truncate font-medium">
+            {departmentText}
           </span>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-1 mb-4 sm:mb-6 text-sm">
-        <div className="flex">
-          <span className="font-semibold">เบอร์โทร:</span>
-          <span className="border-b border-gray-400 flex-1 px-2 ">
-            {formData.phone || "_______"}
+      {/* แถวที่ 2: เบอร์โทร และ ครูที่ปรึกษา */}
+      <div className="flex items-center gap-6 mb-3 text-sm">
+        <div className="flex items-center flex-1 min-w-0">
+          <span className="font-bold shrink-0 whitespace-nowrap">เบอร์โทร:</span>
+          <span className="border-b border-gray-400 flex-1 ml-1.5 px-2 font-medium truncate">
+            {formData.phone || "-"}
           </span>
         </div>
-        <div className="flex">
-          <span className="font-semibold">ครูที่ปรึกษา:</span>
-          <span className="border-b border-gray-400 flex-1 px-2">
-            {formData.advisor || "_______"}
-          </span>
-        </div>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-1 mb-4 sm:mb-6 text-sm">
-        <div className="flex">
-          <span className="font-semibold ">วันที่รับเค้ก:</span>
-          <span className="border-b border-gray-400 flex-1 px-2">
-            {(() => {
-              if (formData.pickup_date) {
-                const dateObj = new Date(formData.pickup_date);
-                if (!isNaN(dateObj.getTime())) {
-                  return dateObj.toLocaleDateString("th-TH", {
-                    day: "2-digit",
-                    month: "long",
-                    year: "numeric",
-                  });
-                }
-              }
-              return "_______";
-            })()}
-          </span>{" "}
-        </div>
-        <div className="flex">
-          <span className="font-semibold">ช่วงเวลา:</span>
-          <span className="border-b border-gray-400 flex-1 px-2 text-xs">
-            {(formData.time_type ?? "").toLowerCase().includes("morning")
-              ? "☑ เช้า (08.00-12.00)"
-              : "☐ เช้า (08.00-12.00)"}{" "}
-            {(formData.time_type ?? "").toLowerCase().includes("afternoon")
-              ? "☑ บ่าย (13.00-18.00)"
-              : "☐ บ่าย (13.00-18.00)"}
+
+        <div className="flex items-center flex-1 min-w-0">
+          <span className="font-bold shrink-0 whitespace-nowrap">ครูที่ปรึกษา:</span>
+          <span className="border-b border-gray-400 flex-1 ml-1.5 px-2 font-medium truncate">
+            {formData.advisor || "-"}
           </span>
         </div>
       </div>
 
-      {/* ตารางรายการเค้ก */}
-      <div className="mb-6 overflow-x-auto">
-        <table className="w-full border-2 border-pink-300 text-xs">
+      {/* แถวที่ 3: วันที่รับเค้ก และ ช่วงเวลา */}
+      <div className="flex items-center gap-6 mb-5 text-sm">
+        <div className="flex items-center flex-1 min-w-0">
+          <span className="font-bold shrink-0 whitespace-nowrap">วันที่รับเค้ก:</span>
+          <span className="border-b border-gray-400 flex-1 ml-1.5 px-2 font-medium truncate">
+            {pickupDateText}
+          </span>
+        </div>
+
+        <div className="flex items-center flex-1 min-w-0">
+          <span className="font-bold shrink-0 whitespace-nowrap mr-2">ช่วงเวลา:</span>
+          <span className="font-medium flex items-center gap-3">
+            <span>
+              {isMorning ? "☑" : "☐"} เช้า (08.00-12.00)
+            </span>
+            <span>
+              {isAfternoon ? "☑" : "☐"} บ่าย (13.00-18.00)
+            </span>
+          </span>
+        </div>
+      </div>
+
+      {/* 3. ตารางรายการเค้ก (โทนสีชมพูตามต้นฉบับ) */}
+      <div className="mb-4 overflow-x-auto">
+        <table
+          className="w-full border-2 border-pink-300 text-xs border-collapse"
+          style={{ borderColor: "#f9a8d4", border: "2px solid #f9a8d4" }}
+        >
           <thead>
-            <tr className="bg-pink-200">
-              <th className="border border-pink-300 p-2 text-center whitespace-nowrap">
+            <tr
+              className="bg-pink-200"
+              style={{ backgroundColor: "#fbcfe8" }}
+            >
+              <th
+                rowSpan={2}
+                className="border border-pink-300 p-2 text-center font-bold text-gray-900"
+                style={{ width: "26%", borderColor: "#f9a8d4" }}
+              >
                 เนื้อเค้ก
                 <br />
                 ราคา/ปอนด์
               </th>
               <th
-                className="border border-pink-300 p-2 text-center"
                 colSpan={5}
+                className="border border-pink-300 p-2 text-center font-bold text-gray-900"
+                style={{ width: "44%", borderColor: "#f9a8d4" }}
               >
                 จำนวนชิ้น/ขนาดปอนด์
               </th>
               <th
-                className="border border-pink-300 p-2 text-center"
                 colSpan={2}
+                className="border border-pink-300 p-2 text-center font-bold text-gray-900"
+                style={{ width: "16%", borderColor: "#f9a8d4" }}
               >
                 จำนวนรวม
               </th>
-              <th className="border border-pink-300 p-2 text-center">
+              <th
+                rowSpan={2}
+                className="border border-pink-300 p-2 text-center font-bold text-gray-900"
+                style={{ width: "14%", borderColor: "#f9a8d4" }}
+              >
                 รวมเงิน
               </th>
             </tr>
-            <tr className="bg-pink-100">
-              <th className="border border-pink-300 p-1"></th>
-              <th className="border border-pink-300 p-1 text-center">
+            <tr
+              className="bg-pink-100"
+              style={{ backgroundColor: "#fce7f3" }}
+            >
+              <th
+                className="border border-pink-300 p-1.5 text-center font-semibold text-gray-800"
+                style={{ borderColor: "#f9a8d4" }}
+              >
                 1 ปอนด์
               </th>
-              <th className="border border-pink-300 p-1 text-center">
+              <th
+                className="border border-pink-300 p-1.5 text-center font-semibold text-gray-800"
+                style={{ borderColor: "#f9a8d4" }}
+              >
                 2 ปอนด์
               </th>
-              <th className="border border-pink-300 p-1 text-center">
+              <th
+                className="border border-pink-300 p-1.5 text-center font-semibold text-gray-800"
+                style={{ borderColor: "#f9a8d4" }}
+              >
                 3 ปอนด์
               </th>
-              <th className="border border-pink-300 p-1 text-center">
+              <th
+                className="border border-pink-300 p-1.5 text-center font-semibold text-gray-800"
+                style={{ borderColor: "#f9a8d4" }}
+              >
                 4 ปอนด์
               </th>
-              <th className="border border-pink-300 p-1 text-center">
+              <th
+                className="border border-pink-300 p-1.5 text-center font-semibold text-gray-800"
+                style={{ borderColor: "#f9a8d4" }}
+              >
                 5 ปอนด์
               </th>
-              <th className="border border-pink-300 p-1 text-center">ชิ้น</th>
-              <th className="border border-pink-300 p-1 text-center">ปอนด์</th>
-              <th className="border border-pink-300 p-1"></th>
+              <th
+                className="border border-pink-300 p-1.5 text-center font-semibold text-gray-800"
+                style={{ borderColor: "#f9a8d4" }}
+              >
+                ชิ้น
+              </th>
+              <th
+                className="border border-pink-300 p-1.5 text-center font-semibold text-gray-800"
+                style={{ borderColor: "#f9a8d4" }}
+              >
+                ปอนด์
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -228,57 +331,92 @@ const PrintableOrderSummaryContent: React.FC<PrintableContentProps> = ({
               const calculated = calculateCakeItemTotals(item);
               return (
                 <tr key={item.id} className="bg-white">
-                  <td className="border border-pink-300 p-2 whitespace-nowrap">
-                    {item.name}{" "}
-                    <span className="text-xs">{item.pricePerPound} บาท</span>
+                  <td
+                    className="border border-pink-300 px-3 py-2 text-left font-medium text-gray-800 whitespace-nowrap"
+                    style={{ borderColor: "#f9a8d4" }}
+                  >
+                    {item.name} {item.pricePerPound} บาท
                   </td>
-                  <td className="border border-pink-300 p-2 text-center">
+                  <td
+                    className="border border-pink-300 p-2 text-center text-gray-700"
+                    style={{ borderColor: "#f9a8d4" }}
+                  >
                     {item.qty1Pound || "-"}
                   </td>
-                  <td className="border border-pink-300 p-2 text-center">
+                  <td
+                    className="border border-pink-300 p-2 text-center text-gray-700"
+                    style={{ borderColor: "#f9a8d4" }}
+                  >
                     {item.qty2Pound || "-"}
                   </td>
-                  <td className="border border-pink-300 p-2 text-center">
+                  <td
+                    className="border border-pink-300 p-2 text-center text-gray-700"
+                    style={{ borderColor: "#f9a8d4" }}
+                  >
                     {item.qty3Pound || "-"}
                   </td>
-                  <td className="border border-pink-300 p-2 text-center">
+                  <td
+                    className="border border-pink-300 p-2 text-center text-gray-700"
+                    style={{ borderColor: "#f9a8d4" }}
+                  >
                     {item.qty4Pound || "-"}
                   </td>
-                  <td className="border border-pink-300 p-2 text-center">
+                  <td
+                    className="border border-pink-300 p-2 text-center text-gray-700"
+                    style={{ borderColor: "#f9a8d4" }}
+                  >
                     {item.qty5Pound || "-"}
                   </td>
-                  <td className="border border-pink-300 p-2 text-center font-semibold">
+                  <td
+                    className="border border-pink-300 p-2 text-center font-bold text-gray-900"
+                    style={{ borderColor: "#f9a8d4" }}
+                  >
                     {calculated.totalPieces}
                   </td>
-                  <td className="border border-pink-300 p-2 text-center font-semibold">
+                  <td
+                    className="border border-pink-300 p-2 text-center font-bold text-gray-900"
+                    style={{ borderColor: "#f9a8d4" }}
+                  >
                     {calculated.totalPounds}
                   </td>
-                  <td className="border border-pink-300 p-2 text-right font-semibold whitespace-nowrap">
+                  <td
+                    className="border border-pink-300 px-3 py-2 text-right font-bold text-gray-900 whitespace-nowrap"
+                    style={{ borderColor: "#f9a8d4" }}
+                  >
                     {calculated.totalAmount.toLocaleString()}
                   </td>
                 </tr>
               );
             })}
-            {/* แถวรวม */}
-            <tr className="bg-pink-100 font-bold">
-              <td colSpan={6} className="border border-pink-300 p-2 text-right">
+
+            {/* แถวสรุปรวมท้ายตาราง */}
+            <tr
+              className="bg-pink-100 font-bold text-gray-900"
+              style={{ backgroundColor: "#fce7f3" }}
+            >
+              <td
+                colSpan={6}
+                className="border border-pink-300 px-4 py-2 text-right font-bold"
+                style={{ borderColor: "#f9a8d4" }}
+              >
                 รวม
               </td>
-              <td className="border border-pink-300 p-2 text-center">
-                {formData.cakeItems.reduce(
-                  (sum, item) =>
-                    calculateCakeItemTotals(item).totalPieces + sum,
-                  0
-                )}
+              <td
+                className="border border-pink-300 p-2 text-center font-bold"
+                style={{ borderColor: "#f9a8d4" }}
+              >
+                {totalPiecesAll}
               </td>
-              <td className="border border-pink-300 p-2 text-center">
-                {formData.cakeItems.reduce(
-                  (sum, item) =>
-                    calculateCakeItemTotals(item).totalPounds + sum,
-                  0
-                )}
+              <td
+                className="border border-pink-300 p-2 text-center font-bold"
+                style={{ borderColor: "#f9a8d4" }}
+              >
+                {totalPoundsAll}
               </td>
-              <td className="border border-pink-300 p-2 text-right">
+              <td
+                className="border border-pink-300 px-3 py-2 text-right font-bold whitespace-nowrap"
+                style={{ borderColor: "#f9a8d4" }}
+              >
                 {grandTotal.toLocaleString()}
               </td>
             </tr>
@@ -286,101 +424,84 @@ const PrintableOrderSummaryContent: React.FC<PrintableContentProps> = ({
         </table>
       </div>
 
-      {/* สรุปยอดเงิน */}
-      <div className="grid gap-8 grid-cols-2">
-        <div></div>
-        <div className="space-y-2 text-sm">
-          <div className="flex justify-between">
-            <span>
-              ส่วนลด (10 บาท x {(formData.discount / 10).toFixed(0)} ปอนด์):
-            </span>
-            <span className="font-semibold">
-              {formData.discount.toLocaleString()}
-            </span>
+      {/* 4. สรุปยอดเงิน (ชิดขวา) */}
+      <div className="flex flex-col items-end gap-1 mb-5 text-sm">
+        <div className="flex justify-between w-64">
+          <span className="text-gray-700">
+            ส่วนลด (10 บาท x {totalPoundsAll} ปอนด์):
+          </span>
+          <span className="font-bold text-gray-900">
+            {formData.discount.toLocaleString()}
+          </span>
+        </div>
+        <div className="flex justify-between w-64 items-baseline pt-1">
+          <span className="font-bold text-base text-gray-900">
+            สุทธิที่ต้องชำระ:
+          </span>
+          <span className="font-bold text-xl text-gray-900">
+            {netPayable.toLocaleString()}
+          </span>
+        </div>
+      </div>
+
+      {/* 5. ยอดเงินมัดจำ & ยอดค้างชำระ (แนวนอน บรรทัดเดียวกัน) */}
+      <div className="flex items-center justify-between gap-8 mb-8 text-sm">
+        <div className="flex items-center flex-1 min-w-0">
+          <span className="font-bold shrink-0">ยอดเงินมัดจำ:</span>
+          <span className="border-b border-gray-400 flex-1 mx-3 text-center font-bold text-base">
+            {formData.deposit.toLocaleString()}
+          </span>
+          <span className="font-bold shrink-0">บาท</span>
+        </div>
+
+        <div className="flex items-center flex-1 min-w-0">
+          <span className="font-bold shrink-0">ยอดค้างชำระ:</span>
+          <span className="border-b border-gray-400 flex-1 mx-3 text-center font-bold text-base">
+            {remainingBalance.toLocaleString()}
+          </span>
+          <span className="font-bold shrink-0">บาท</span>
+        </div>
+      </div>
+
+      {/* 6. ลายเซ็น 2 ฝั่ง (ครูที่ปรึกษา และ ผู้รับเงิน) */}
+      <div className="grid grid-cols-2 gap-8 mb-8 text-sm">
+        <div className="flex flex-col items-center text-center">
+          <div className="border-b border-gray-400 w-56 h-8"></div>
+          <div className="text-xs mt-2 font-medium text-gray-800">
+            ({formData.advisor || "...................................................."})
           </div>
-          <div className="flex justify-between border-t pt-2">
-            <span className="font-bold">สุทธิที่ต้องชำระ:</span>
-            <span className="font-bold text-lg">
-              {netPayable.toLocaleString()}
-            </span>
+          <div className="text-xs mt-0.5 text-gray-600">(ครูที่ปรึกษา)</div>
+        </div>
+
+        <div className="flex flex-col items-center text-center">
+          <div className="border-b border-gray-400 w-56 h-8"></div>
+          <div className="text-xs mt-2 font-medium text-gray-800">
+            (ผู้รับเงินค่าจำหน่าย/การเงิน)
           </div>
         </div>
       </div>
 
-      {/* ลายเซ็น */}
-      <div className="grid grid-cols-2 gap-8 text-sm">
-        <div className="text-center">
-          <div className="h-5 mb-2"></div>
-          <div className=" border-gray-400 pt-1">
-            <div className="flex justify-between mb-4">
-              <span className="">ยอดเงินมัดจำ:</span>
-              <span className="font-semibold border-b border-gray-400 flex-1 px-2">
-                {formData.deposit.toLocaleString()}
-              </span>
-              <span>บาท</span>
-            </div>
-            <br />
-            <div className="flex flex-col items-center">
-              <span className="block border-b border-gray-400 w-40 h-6"></span>
-              <span className="text-xs mt-2">({formData.advisor})</span>
-              <span className="text-xs mt-2">(ครูที่ปรึกษา)</span>
-            </div>
-          </div>
-        </div>
-        <div className="text-center">
-          <div className="h-5 mb-2"></div>
-          <div className=" border-gray-400 pt-1">
-            <div className="flex justify-between mb-4">
-              <span>ยอดค้างชำระ:</span>
-              <span className="font-semibold border-b border-gray-400 flex-1 px-2">
-                {remainingBalance.toLocaleString()}
-              </span>
-              <span>บาท</span>
-            </div>
-            <br />
-            <div className="flex flex-col items-center">
-              <span className="block border-b border-gray-400 w-40 h-6"></span>
-              <span className="text-xs mt-2">
-                (ผู้รับเงินค่าจำหน่าย/การเงิน)
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* หมายเหตุ */}
-      <div className="mt-6 text-xs space-y-1 text-gray-700">
-        <p className="font-semibold">*หมายเหตุ:</p>
+      {/* 7. ส่วนหมายเหตุ ด้านล่างซ้าย */}
+      <div className="text-xs text-gray-700 space-y-1 mt-6 text-left">
+        <p className="font-bold text-gray-900">*หมายเหตุ:</p>
         <p>1. ชำระเงินมัดจำ อย่างน้อย ปอนด์ละ 100 บาท ในวันที่สั่งจองเค้ก</p>
         <p>
-          2. การรับเค้กที่สั่งจอง ขอให้นักเรียน
-          นักศึกษามารับเค้กในวันและเวลาที่นักเรียน นักศึกษา
+          2. การรับเค้กที่สั่งจอง ขอให้นักเรียน นักศึกษามารับเค้กในวันและเวลาที่นักเรียน นักศึกษา
         </p>
         <p className="pl-4">ระบุไว้ในใบสั่งจองเค้ก</p>
-        {!isLoadingCakeSettings && cakeSettings ? (
-          <p className="pl-4">
-            - วันที่{" "}
-            {cakeSettings.pickupStartDate
-              ? new Date(cakeSettings.pickupStartDate).getDate()
-              : ""}
-            -
-            {cakeSettings.pickupEndDate
-              ? new Date(cakeSettings.pickupEndDate).getDate()
-              : ""}{" "}
-            {cakeSettings.pickupEndDate
-              ? new Date(cakeSettings.pickupEndDate).toLocaleDateString(
-                  "th-TH",
-                  { month: "long", year: "numeric" }
-                )
-              : ""}{" "}
-            รับเค้กได้ตั้งแต่เวลา {cakeSettings.pickupStartTime || ""} -{" "}
-            {cakeSettings.pickupEndTime || ""} น.
-          </p>
-        ) : (
-          <p className="pl-4">
-            - วันที่ 25-30 ธันวาคม 2568 รับเค้กได้ตั้งแต่เวลา 08.00 - 18.00 น.
-          </p>
-        )}
+        <p className="pl-4">
+          - วันที่{" "}
+          {cakeSettings?.pickupStartDate && cakeSettings?.pickupEndDate
+            ? `${new Date(cakeSettings.pickupStartDate).getDate()}-${new Date(
+                cakeSettings.pickupEndDate
+              ).getDate()} ${new Date(
+                cakeSettings.pickupEndDate
+              ).toLocaleDateString("th-TH", {
+                month: "long",
+                year: "numeric",
+              })} รับเค้กได้ตั้งแต่เวลา ${cakeSettings.pickupStartTime || "09:00"} - ${cakeSettings.pickupEndTime || "18:00"} น.`
+            : "25-31 ธันวาคม 2568 รับเค้กได้ตั้งแต่เวลา 09:00 - 18:00 น."}
+        </p>
         <p>3. การสั่งจองเค้กของนักเรียน นักศึกษาได้ส่วนลดปอนด์ละ 10 บาท</p>
       </div>
     </div>

@@ -65,7 +65,6 @@
   #printable-department-pounds-table td {
     border: 1.5px solid #000;
     text-align: center;
-    color: #000;
     vertical-align: middle;
     /* ปรับการตัดคำ */
     word-wrap: break-word;
@@ -74,23 +73,25 @@
   }
   
   #printable-department-pounds-table th {
-    background-color: #d0d0d0 !important;
-    /* ลดขนาดฟอนต์ลงเพื่อให้พอดีกับช่อง */
-    font-size: 10pt !important; 
+    font-size: 9.5pt !important; 
     white-space: normal !important;
     height: auto !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   #printable-department-pounds-table td {
+     background-color: #ffffff !important;
+     color: #000000 !important;
      font-size: 11pt !important;
-     font-weight: 700;
+     font-weight: 700 !important;
+     -webkit-print-color-adjust: exact !important;
+     print-color-adjust: exact !important;
   }
 
   /* --- Styles for Team Leaderboard Section --- */
   #printable-team-leaderboard {
-    zoom: 1;
+    width: 100% !important;
   }
 
   #printable-team-leaderboard > div:last-child {
@@ -291,7 +292,6 @@
   #printable-department-pounds-table td {
     border: 1.5px solid #000;
     text-align: center;
-    color: #000;
     vertical-align: middle;
     word-wrap: break-word;
     word-break: normal;
@@ -299,22 +299,25 @@
   }
   
   #printable-department-pounds-table th {
-    background-color: #d0d0d0 !important;
-    font-size: 10pt !important;
+    font-size: 9.5pt !important;
     white-space: normal !important;
     height: auto !important;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   
   #printable-department-pounds-table td {
+     background-color: #ffffff !important;
+     color: #000000 !important;
      font-size: 11pt !important;
-     font-weight: 700;
+     font-weight: 700 !important;
+     -webkit-print-color-adjust: exact !important;
+     print-color-adjust: exact !important;
   }
 
   /* --- Styles for Team Leaderboard Section --- */
   #printable-team-leaderboard {
-    zoom: 1;
+    width: 100% !important;
   }
 
   #printable-team-leaderboard > div:last-child {
@@ -397,18 +400,24 @@
 
   /* -----------------------------------------------------------
      CLASSROOMS PAGE STYLES
-     หน้าข้อมูลห้องเรียน (ที่หัวตารางยาวๆ)
+     หน้ารายงานผลข้อมูลห้องเรียน
   ----------------------------------------------------------- */
 
-  /* Ensure the printable classrooms section is visible */
+  /* Ensure the printable classrooms section is visible and full width */
   #printable-classrooms-section {
     display: block !important;
     visibility: visible !important;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-    /* leave space for fixed print header so the table doesn't overlap */
-    margin-top: 56px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  #printable-classrooms-section [data-slot="table-container"],
+  .print-table-wrapper [data-slot="table-container"] {
+    overflow: visible !important;
+    width: 100% !important;
   }
 
   /* Fixed header that repeats on every printed page. Chrome/Edge will repeat fixed elements on each page. */
@@ -416,7 +425,6 @@
     /* previously used fixed header (caused overlap); hide it now to rely on per-page titles rendered inside tables */
     display: none !important;
     position: static !important;
-    /* align header with @page margins (5mm each side) so it matches table width */
     left: auto !important;
     right: auto !important;
     text-align: center !important;
@@ -432,19 +440,44 @@
     height: auto !important;
   }
 
-  /* Make sure the header doesn't appear in the screen layout (handled by the component using hidden/print:block),
-     but ensure any other global print-header usages are covered. */
-  .print-header ~ * {
-    /* nothing here, kept for future overrides */
+  /* Wrapper for each printed table page */
+  .print-table-wrapper {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    border: 1px solid #000 !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    margin: 0 auto !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Print table title styles - displays on every page */
+  .print-table-title {
+    text-align: center !important;
+    font-weight: bold !important;
+    font-size: 11pt !important;
+    margin: 0 !important;
+    padding: 6px 4px !important;
+    color: #000 !important;
+    background-color: #fff !important;
+    border: none !important;
+    border-bottom: 1px solid #000 !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
+    display: block !important;
+    box-sizing: border-box !important;
   }
 
   /* Basic table styling for ClassroomTable */
   #printable-classrooms-section table {
-    width: 100%;
-    border-collapse: collapse;
-    /* สำคัญ: ใช้ auto เพื่อแก้ปัญหาหัวตารางทับกัน */
-    table-layout: auto !important; 
-    font-size: 10pt;
+    width: 100% !important;
+    border-collapse: collapse !important;
+    border-spacing: 0 !important;
+    table-layout: fixed !important;
+    font-size: 9.5pt !important;
+    margin: 0 !important;
+    border: none !important;
   }
 
   /* Ensure table headers repeat on each printed page and borders are visible */
@@ -455,16 +488,52 @@
     display: table-footer-group !important;
   }
 
-  #printable-classrooms-section th,
+  #printable-classrooms-section th {
+    background-color: #f0f0f0 !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    color: #000 !important;
+    border: 1px solid #000 !important;
+    padding: 5px 2px !important;
+    font-size: 9.5pt !important;
+    line-height: 1.25 !important;
+    white-space: normal !important;
+    word-wrap: break-word !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    background-clip: padding-box !important;
+  }
+
   #printable-classrooms-section td {
     border: 1px solid #000 !important;
-    padding: 6px 4px !important;
+    padding: 3.5px 3px !important;
     color: #000 !important;
+    text-align: center !important;
     vertical-align: middle !important;
+    font-size: 9pt !important;
+    line-height: 1.25 !important;
     word-wrap: break-word !important;
     word-break: normal !important;
     background-clip: padding-box !important;
   }
+
+  /* จัดชิดซ้ายเฉพาะคอลัมน์ชื่อครูที่ปรึกษา (คอลัมน์ที่ 4) */
+  #printable-classrooms-section td:nth-child(4) {
+    text-align: left !important;
+    padding-left: 6px !important;
+  }
+
+  /* กำหนดสัดส่วนความกว้างคอลัมน์เต็ม 100% (ตรงตามตัวอย่างรายงาน) */
+  #printable-classrooms-section th:nth-child(1), #printable-classrooms-section td:nth-child(1) { width: 19% !important; } /* สาขา */
+  #printable-classrooms-section th:nth-child(2), #printable-classrooms-section td:nth-child(2) { width: 7% !important; }  /* ระดับชั้น */
+  #printable-classrooms-section th:nth-child(3), #printable-classrooms-section td:nth-child(3) { width: 5% !important; }  /* ห้อง */
+  #printable-classrooms-section th:nth-child(4), #printable-classrooms-section td:nth-child(4) { width: 17% !important; } /* ครูที่ปรึกษา */
+  #printable-classrooms-section th:nth-child(5), #printable-classrooms-section td:nth-child(5) { width: 9% !important; }  /* นร.สั่งจองเค้ก */
+  #printable-classrooms-section th:nth-child(6), #printable-classrooms-section td:nth-child(6) { width: 7% !important; }  /* นร.ทั้งหมด */
+  #printable-classrooms-section th:nth-child(7), #printable-classrooms-section td:nth-child(7) { width: 9% !important; }  /* ร้อยละนร.ที่สั่งจอง */
+  #printable-classrooms-section th:nth-child(8), #printable-classrooms-section td:nth-child(8) { width: 9% !important; }  /* ยอดสั่งจอง (ปอนด์) */
+  #printable-classrooms-section th:nth-child(9), #printable-classrooms-section td:nth-child(9) { width: 18% !important; } /* คิดเป็นร้อยละยอดรวม */
 
   /* Prevent rows from being split across pages */
   #printable-classrooms-section table tbody tr {
@@ -482,20 +551,6 @@
     display: table-header-group !important;
   }
 
-  /* Print table title styles - displays on every page */
-  .print-table-title {
-    text-align: center !important;
-    font-weight: bold !important;
-    font-size: 12pt !important;
-    margin: 0 !important;
-    padding: 5px 0 !important;
-    color: #000 !important;
-    border-bottom: 1px solid #000 !important;
-    page-break-after: avoid !important;
-    break-after: avoid !important;
-    display: block !important;
-  }
-
   /* Print table caption styles - displays on every page */
   .print-table-caption {
     caption-side: top !important;
@@ -507,11 +562,6 @@
     padding: 5px 0 !important;
     color: #000 !important;
     border-bottom: 1px solid #000 !important;
-  }
-
-  /* Print table wrapper */
-  .print-table-wrapper {
-    page-break-inside: avoid !important;
   }
 
   /* Repeat table headers on every page */
@@ -526,49 +576,69 @@
 
   /* Make the page container use full printable width (override Tailwind screen styles) */
   .classrooms-print-page {
-    width: auto !important;
+    width: 100% !important;
     max-width: none !important;
     margin: 0 !important;
     padding: 0 !important;
   }
-
-  #printable-classrooms-section {
+  /* -----------------------------------------------------------
+     CLASSROOM CAKE SUMMARY PRINT STYLES
+     หน้ารายงานสรุปยอดเค้กของห้องเรียน (ปุ่มสีเขียว)
+  ----------------------------------------------------------- */
+  #classroom-summary-print-section,
+  #printable-classroom-cake-summary-section {
     display: block !important;
     visibility: visible !important;
-    width: 100% !important; /* Take full width for printing */
-    margin: 0 auto !important;
+    width: 100% !important;
+    margin: 0 !important;
     padding: 0 !important;
   }
-  #printable-classrooms-section th {
-    background-color: #f0f0f0;
-    font-weight: bold;
-    text-align: center !important;
-    white-space: normal !important; /* บังคับให้ข้อความขึ้นบรรทัดใหม่ได้ */
-    height: auto !important;
-    -webkit-print-color-adjust: exact; /* พิมพ์สีพื้นหลัง */
-    print-color-adjust: exact;
+
+  #classroom-summary-print-section [data-slot="table-container"],
+  #printable-classroom-cake-summary-section [data-slot="table-container"] {
+    overflow: visible !important;
   }
 
-  #printable-classrooms-section td {
-    text-align: center;
-  }
-  
-  /* จัดชิดซ้ายเฉพาะคอลัมน์ชื่อครู (คอลัมน์ที่ 4) */
-  #printable-classrooms-section td:nth-child(4) {
-    text-align: left;
+  #classroom-summary-print-section table,
+  #printable-classroom-cake-summary-section table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    box-sizing: border-box !important;
   }
 
-  /* กำหนดความกว้างคอลัมน์แบบคร่าวๆ (Browser จะปรับให้อัตโนมัติอีกทีจาก table-layout: auto) */
-  #printable-classrooms-section th:nth-child(1), #printable-classrooms-section td:nth-child(1) { width: 10%; } /* สาขา */
-  #printable-classrooms-section th:nth-child(2), #printable-classrooms-section td:nth-child(2) { width: 8%; }  /* ระดับชั้น */
-  #printable-classrooms-section th:nth-child(3), #printable-classrooms-section td:nth-child(3) { width: 5%; }  /* ห้อง */
-  #printable-classrooms-section th:nth-child(4), #printable-classrooms-section td:nth-child(4) { width: 18%; } /* ครู */
-  #printable-classrooms-section th:nth-child(5), #printable-classrooms-section td:nth-child(5) { width: 10%; } /* นร.จอง */
-  #printable-classrooms-section th:nth-child(6), #printable-classrooms-section td:nth-child(6) { width: 8%; }  /* นร.ทั้งหมด */
-  #printable-classrooms-section th:nth-child(7), #printable-classrooms-section td:nth-child(7) { width: 10%; } /* เฉลี่ย */
-  #printable-classrooms-section th:nth-child(8), #printable-classrooms-section td:nth-child(8) { width: 10%; } /* ยอดรวม */
-  #printable-classrooms-section th:nth-child(9), #printable-classrooms-section td:nth-child(9) { width: auto; } /* ร้อยละ */
+  #classroom-summary-print-section th:last-child,
+  #classroom-summary-print-section td:last-child,
+  #printable-classroom-cake-summary-section th:last-child,
+  #printable-classroom-cake-summary-section td:last-child {
+    border-right: 2px solid #1f2937 !important;
+  }
 
+  #classroom-summary-print-section th:first-child,
+  #classroom-summary-print-section td:first-child,
+  #printable-classroom-cake-summary-section th:first-child,
+  #printable-classroom-cake-summary-section td:first-child {
+    border-left: 2px solid #1f2937 !important;
+  }
+
+  .classroom-summary-card,
+  #classroom-summary-print-section .space-y-8 > div,
+  #printable-classroom-cake-summary-section .space-y-8 > div {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    box-sizing: border-box !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .classroom-summary-card:not(.first-summary-content),
+  #classroom-summary-print-section .space-y-8 > div:not(.first-summary-content),
+  #printable-classroom-cake-summary-section .space-y-8 > div:not(.first-summary-content) {
+    page-break-before: always !important;
+    break-before: page !important;
+    margin-top: 0 !important;
+  }
 
   /* --- Styles for ClassroomStudentsPage --- */
   /* Ensure the printable classroom students section is visible */

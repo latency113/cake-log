@@ -298,8 +298,8 @@ const SettingsPage: React.FC = () => {
 
   const handleClearAllData = async () => {
     const result = await Swal.fire({
-      title: "ยืนยันการเคลียร์ข้อมูลทั้งหมด",
-      html: `คุณกำลังจะลบข้อมูล <b>ห้องเรียน และ ออเดอร์ทั้งหมด</b> ของปีนี้!<br/>
+      title: "ยืนยันการล้างข้อมูลทั้งหมด",
+      html: `คุณกำลังจะลบข้อมูลทั้งหมดในระบบของปีนี้ <b>(ยกเว้นข้อมูลผู้ใช้งาน User)</b>!<br/>
              การดำเนินการนี้ไม่สามารถย้อนกลับได้<br/><br/>
              กรุณากรอก Security Key เพื่อยืนยัน`,
       input: 'password',
@@ -345,7 +345,7 @@ const SettingsPage: React.FC = () => {
         Swal.fire({
           icon: "success",
           title: "สำเร็จ!",
-          text: "ลบข้อมูลห้องเรียนและออเดอร์ทั้งหมดเรียบร้อยแล้ว",
+          text: "ล้างข้อมูลทั้งหมดของปีนี้เรียบร้อยแล้ว (เก็บข้อมูลผู้ใช้งาน User ไว้)",
           showConfirmButton: true,
         }).then(() => {
           window.location.reload();
@@ -493,11 +493,9 @@ const SettingsPage: React.FC = () => {
         <p className="text-gray-600 mb-6">
           เลือกปีการศึกษาที่ต้องการเรียกดูหรือจัดการข้อมูล ระบบจะสลับไปยังฐานข้อมูลของปีที่เลือกโดยอัตโนมัติ
         </p>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-[150px]">
-              <YearSelector />
-            </div>
+        <div className="flex items-center justify-between flex-wrap gap-4">
+          <div className="flex items-center gap-3">
+            <YearSelector />
             <span className="text-sm text-muted-foreground italic">
               * การเปลี่ยนปีจะมีผลกับข้อมูลทั้งหมดในระบบ
             </span>
@@ -510,7 +508,7 @@ const SettingsPage: React.FC = () => {
               className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
             >
               <RefreshCcw className="w-4 h-4" />
-              ล้างข้อมูลห้อง/ออเดอร์
+              ล้างข้อมูลทั้งหมด (ยกเว้นผู้ใช้)
             </Button>
             <Button 
               variant="destructive" 

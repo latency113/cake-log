@@ -116,11 +116,6 @@ export const getAvailableYears = async (): Promise<string[]> => {
 export const getCakeSettings = async (): Promise<ICakeSettings | null> => {
   try {
     const response = await api.get("/admin/cake-settings", {
-      headers: {
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
-      },
       params: {
         _t: Date.now(), // Cache-busting timestamp
       },

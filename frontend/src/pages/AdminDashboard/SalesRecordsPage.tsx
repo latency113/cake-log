@@ -38,11 +38,23 @@ const SalesRecordsPage: React.FC = () => {
         <style>
           @page {
             size: A4 landscape;
+            margin: 5mm;
+          }
+          @media print {
+            html, body {
+              width: 100% !important;
+              margin: 0 !important;
+              padding: 0 !important;
+              zoom: 0.8 !important;
+              -webkit-print-color-adjust: exact !important;
+              print-color-adjust: exact !important;
+            }
           }
           body {
             font-family: 'Noto Sans Thai', sans-serif;
             margin: 0;
             padding: 0;
+            zoom: 0.8;
             -webkit-print-color-adjust: exact;
             print-color-adjust: exact;
           }
@@ -68,13 +80,26 @@ const SalesRecordsPage: React.FC = () => {
         />
       );
 
-      iframe.onload = () => {
-        setTimeout(() => {
+      const triggerPrint = () => {
+        try {
           iframe.contentWindow?.focus();
           iframe.contentWindow?.print();
-          document.body.removeChild(iframe);
-        }, 600);
+        } catch (e) {
+          console.error("Print error:", e);
+        } finally {
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+          }, 1000);
+        }
       };
+
+      iframe.onload = () => {
+        setTimeout(triggerPrint, 300);
+      };
+      // Fallback in case iframe.onload already fired
+      setTimeout(triggerPrint, 700);
     }
   };
 
@@ -104,11 +129,11 @@ const SalesRecordsPage: React.FC = () => {
         <button
           onClick={handlePrint}
           className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
+          title="พิมพ์ (ปรับกระดาษเป็นแนวนอนและ Scale 80% อัตโนมัติ)"
         >
           <Printer className="w-4 h-4" />
-          พิมพ์
+          พิมพ์ยอดการสั่งจอง
         </button>
-        <p className="cursor-pointer hover:text-blue-500" onClick={() => setShowScaleInstruction(true)}>*หมายเหตุ : ก่อนปริ้นปรับให้ปรับ Scale เหลือ 80 ตามภาพ</p>
       </div>
       <SalesRecordsTable
         salesRecords={consolidatedSalesRecords}
@@ -121,7 +146,7 @@ const SalesRecordsPage: React.FC = () => {
           <DialogHeader>
             <DialogTitle>คำแนะนำการปรับ Scale การพิมพ์</DialogTitle>
             <DialogDescription>
-              โปรดปรับ Scale ของการพิมพ์เป็น 80% เพื่อให้เอกสารพอดีกับหน้ากระดาษ
+              ระบบได้ตั้งค่ากระดาษเป็นแนวนอนและปรับ Scale เป็น 80% ให้โดยอัตโนมัติแล้ว ในหน้าต่างพิมพ์ (Print Preview) ท่านสามารถเลือก Scale เป็น "ค่าเริ่มต้น (Default)" หรือ 100% ได้ทันที
             </DialogDescription>
           </DialogHeader>
           <img src={printScaleInstructionImg} alt="Print Scale Instruction" className="w-full h-auto" />

@@ -25,6 +25,86 @@ import {
   ChevronRight,
 } from "lucide-react"; // Import Edit, ChevronLeft, ChevronRight icons
 
+const defaultProducts = [
+  { id: "1", name: "เค้กเนยสด", price: 190 },
+  { id: "2", name: "เค้กแยม", price: 200 },
+  { id: "3", name: "เค้กกาแฟ", price: 200 },
+  { id: "4", name: "เค้กช็อกโกแลต", price: 250 },
+];
+
+const buildCakeItemsForOrder = (
+  orderItems: OrderItem[] | undefined,
+  products: Product[]
+) => {
+  const cakeItemsMap = new Map<string, any>();
+  const productsToUse = products.length > 0 ? products : defaultProducts;
+
+  productsToUse.forEach((product) => {
+    cakeItemsMap.set(product.id, {
+      id: product.id,
+      name: product.name,
+      pricePerPound: Math.round(product.price),
+      qty1Pound: 0,
+      qty2Pound: 0,
+      qty3Pound: 0,
+      qty4Pound: 0,
+      qty5Pound: 0,
+      totalPounds: 0,
+      totalAmount: 0,
+    });
+  });
+
+  (orderItems ?? []).forEach((item: OrderItem) => {
+    let existingCakeItem = cakeItemsMap.get(item.product_id);
+    if (!existingCakeItem && item.productName) {
+      const pName = item.productName;
+      existingCakeItem = Array.from(cakeItemsMap.values()).find(
+        (c) => c.name === pName || pName.includes(c.name)
+      );
+    }
+
+    if (existingCakeItem) {
+      const pound = Number(item.pound);
+      switch (pound) {
+        case 1:
+          existingCakeItem.qty1Pound += item.quantity;
+          break;
+        case 2:
+          existingCakeItem.qty2Pound += item.quantity;
+          break;
+        case 3:
+          existingCakeItem.qty3Pound += item.quantity;
+          break;
+        case 4:
+          existingCakeItem.qty4Pound += item.quantity;
+          break;
+        case 5:
+          existingCakeItem.qty5Pound += item.quantity;
+          break;
+      }
+    }
+  });
+
+  return Array.from(cakeItemsMap.values()).map((cakeItem) => {
+    const calculatedTotals = calculateCakeItemTotals({
+      id: cakeItem.id,
+      name: cakeItem.name,
+      pricePerPound: cakeItem.pricePerPound,
+      qty1Pound: cakeItem.qty1Pound,
+      qty2Pound: cakeItem.qty2Pound,
+      qty3Pound: cakeItem.qty3Pound,
+      qty4Pound: cakeItem.qty4Pound,
+      qty5Pound: cakeItem.qty5Pound,
+    });
+
+    return {
+      ...cakeItem,
+      totalPounds: calculatedTotals.totalPounds,
+      totalAmount: calculatedTotals.totalAmount,
+    };
+  });
+};
+
 interface OrderDetailModalProps {
   order: (Order & { departmentName?: string; time_type?: string }) | null;
   onClose: () => void;
@@ -169,17 +249,17 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   };
 
   const handlePrint = () => {
-    if (!displayedOrder || loadingData) return; // Don't print if no order or data is loading
+    if (!displayedOrder || loadingData) return;
 
     // Calculate props for PrintableOrderSummary
     const discount = (displayedOrder.order_items ?? []).reduce(
       (total: number, item: OrderItem) =>
         total + item.pound * item.quantity * 10,
       0
-    ); // Fix: order_items
+    );
     const grandTotal = displayedOrder.totalPrice;
     const netPayable = grandTotal - discount;
-    const remainingBalance = netPayable - displayedOrder.deposit;
+    const remainingBalance = Math.max(0, netPayable - displayedOrder.deposit);
 
     const formData: OrderFormState = {
       ...displayedOrder,
@@ -187,153 +267,82 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
       pickup_date: displayedOrder.pickup_date
         ? new Date(displayedOrder.pickup_date).toISOString().split("T")[0]
         : "",
-      time_type: displayedOrder.time_type, // Explicitly assign time_type
+      time_type: displayedOrder.time_type,
       book_number: displayedOrder.book?.bookNumber,
-      cakeItems: (() => {
-        const cakeItemsMap = new Map<string, any>();
-
-        // Initialize with all products
-
-        productsData.forEach((product) => {
-          cakeItemsMap.set(product.id, {
-            id: product.id,
-
-            name: product.name,
-
-            pricePerPound: Math.round(product.price),
-
-            qty1Pound: 0,
-
-            qty2Pound: 0,
-
-            qty3Pound: 0,
-
-            qty4Pound: 0,
-
-            qty5Pound: 0,
-
-            totalPounds: 0,
-
-            totalAmount: 0,
-          });
-        });
-
-        // Overlay with order items
-
-        (displayedOrder.order_items ?? []).forEach((item: OrderItem) => {
-          const existingCakeItem = cakeItemsMap.get(item.product_id);
-
-          if (existingCakeItem) {
-            const pound = Number(item.pound);
-
-            switch (pound) {
-              case 1:
-                existingCakeItem.qty1Pound += item.quantity;
-                break;
-
-              case 2:
-                existingCakeItem.qty2Pound += item.quantity;
-                break;
-
-              case 3:
-                existingCakeItem.qty3Pound += item.quantity;
-                break;
-
-              case 4:
-                existingCakeItem.qty4Pound += item.quantity;
-                break;
-
-              case 5:
-                existingCakeItem.qty5Pound += item.quantity;
-                break;
-            }
-          }
-        });
-
-        return Array.from(cakeItemsMap.values()).map((cakeItem) => {
-          const calculatedTotals = calculateCakeItemTotals({
-            id: cakeItem.id,
-
-            name: cakeItem.name,
-
-            pricePerPound: cakeItem.pricePerPound,
-
-            qty1Pound: cakeItem.qty1Pound,
-
-            qty2Pound: cakeItem.qty2Pound,
-
-            qty3Pound: cakeItem.qty3Pound,
-
-            qty4Pound: cakeItem.qty4Pound,
-
-            qty5Pound: cakeItem.qty5Pound,
-          });
-
-          return {
-            ...cakeItem,
-
-            totalPounds: calculatedTotals.totalPounds,
-
-            totalAmount: calculatedTotals.totalAmount,
-          };
-        });
-      })(),
-
+      cakeItems: buildCakeItemsForOrder(
+        displayedOrder.order_items,
+        productsData
+      ),
       discount: discount,
-
-      seller: displayedOrder.advisor, // Assuming advisor is the seller
-
-      competitionType: displayedOrder.team_id ? "team" : "noteam", // Infer based on team_id presence
-
-      totalPrice: displayedOrder.totalPrice, // Add totalPrice
-
+      seller: displayedOrder.advisor,
+      competitionType: displayedOrder.team_id ? "team" : "noteam",
+      totalPrice: displayedOrder.totalPrice,
       status: displayedOrder.status,
-
       createdAt: displayedOrder.createdAt,
-
       updatedAt: displayedOrder.updatedAt,
-
       department_id:
         classroomsData.find((c) => c.id === displayedOrder.classroom_id)
           ?.department_id || "",
-
       year_id:
         classroomsData.find((c) => c.id === displayedOrder.classroom_id)
           ?.grade_level_id || "",
-
       user_id: displayedOrder.user_id,
     };
+
     const iframe = document.createElement("iframe");
-    iframe.style.display = "none";
+    iframe.style.position = "absolute";
+    iframe.style.width = "0";
+    iframe.style.height = "0";
+    iframe.style.border = "none";
+    iframe.style.left = "-9999px";
     document.body.appendChild(iframe);
 
     const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
     if (!iframeDoc) {
       console.error("Could not get iframe document.");
+      document.body.removeChild(iframe);
       return;
     }
-
-    console.log("Cake Items:", formData.cakeItems);
 
     iframeDoc.open();
     iframeDoc.write(`
       <!DOCTYPE html>
       <html>
       <head>
-        <title>ใบสั่งซื้อเค้ก</title>
+        <title>ใบสั่งจองเค้ก - ${formData.customerName || ""}</title>
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
         <style>
           @page {
-            size: A4;
+            size: A4 portrait;
+            margin: 0;
+          }
+          * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+            color-adjust: exact !important;
+            box-sizing: border-box;
           }
           body {
-            font-family: 'Noto Sans Thai', sans-serif;
+            font-family: 'Noto Sans Thai', 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
-            padding: 0;
-            -webkit-print-color-adjust: exact; /* For printing background colors */
-            print-color-adjust: exact;
+            padding: 8mm 12mm;
+            background-color: #fdf2f8 !important;
           }
-          /* Add any specific print styles here if needed */
+          .bg-pink-50 {
+            background-color: #fdf2f8 !important;
+          }
+          .bg-pink-100 {
+            background-color: #fce7f3 !important;
+          }
+          .bg-pink-200 {
+            background-color: #fbcfe8 !important;
+          }
+          .border-pink-300 {
+            border-color: #f9a8d4 !important;
+          }
+          .border-pink-400 {
+            border-color: #f472b6 !important;
+          }
         </style>
       </head>
       <body>
@@ -361,13 +370,20 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         />
       );
 
-      iframe.onload = () => {
-        setTimeout(() => {
+      setTimeout(() => {
+        try {
           iframe.contentWindow?.focus();
           iframe.contentWindow?.print();
-          document.body.removeChild(iframe);
-        }, 500);
-      };
+        } catch (e) {
+          console.error("Print error:", e);
+        } finally {
+          setTimeout(() => {
+            if (document.body.contains(iframe)) {
+              document.body.removeChild(iframe);
+            }
+          }, 1500);
+        }
+      }, 500);
     }
   };
 
@@ -455,6 +471,7 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               onClick={handlePrint}
               className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
               disabled={loadingData || !displayedOrder}
+              title="พิมพ์ใบสั่งจองเค้ก (กระดาษแนวตั้ง Margins: None)"
             >
               <Printer className="w-4 h-4" />
               พิมพ์
@@ -531,75 +548,10 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                       )?.grade_level_id || "",
                     classroom_id: displayedOrder.classroom_id,
                     team_id: displayedOrder.team_id,
-                    cakeItems: (() => {
-                      const cakeItemsMap = new Map<string, any>();
-
-                      // Initialize with all products
-                      productsData.forEach((product) => {
-                        cakeItemsMap.set(product.id, {
-                          id: product.id,
-                          name: product.name,
-                          pricePerPound: Math.round(product.price),
-                          qty1Pound: 0,
-                          qty2Pound: 0,
-                          qty3Pound: 0,
-                          qty4Pound: 0,
-                          qty5Pound: 0,
-                          totalPounds: 0,
-                          totalAmount: 0,
-                        });
-                      });
-
-                      // Overlay with order items
-                      (displayedOrder.order_items ?? []).forEach(
-                        (item: OrderItem) => {
-                          // Fix: order_items
-                          const existingCakeItem = cakeItemsMap.get(
-                            item.product_id
-                          );
-                          if (existingCakeItem) {
-                            const pound = Number(item.pound);
-                            switch (pound) {
-                              case 1:
-                                existingCakeItem.qty1Pound += item.quantity;
-                                break;
-                              case 2:
-                                existingCakeItem.qty2Pound += item.quantity;
-                                break;
-                              case 3:
-                                existingCakeItem.qty3Pound += item.quantity;
-                                break;
-                              case 4:
-                                existingCakeItem.qty4Pound += item.quantity;
-                                break;
-                              case 5:
-                                existingCakeItem.qty5Pound += item.quantity;
-                                break;
-                            }
-                          }
-                        }
-                      );
-
-                      return Array.from(cakeItemsMap.values()).map(
-                        (cakeItem) => {
-                          const calculatedTotals = calculateCakeItemTotals({
-                            id: cakeItem.id,
-                            name: cakeItem.name,
-                            pricePerPound: cakeItem.pricePerPound,
-                            qty1Pound: cakeItem.qty1Pound,
-                            qty2Pound: cakeItem.qty2Pound,
-                            qty3Pound: cakeItem.qty3Pound,
-                            qty4Pound: cakeItem.qty4Pound,
-                            qty5Pound: cakeItem.qty5Pound,
-                          });
-                          return {
-                            ...cakeItem,
-                            totalPounds: calculatedTotals.totalPounds,
-                            totalAmount: calculatedTotals.totalAmount,
-                          };
-                        }
-                      );
-                    })(),
+                    cakeItems: buildCakeItemsForOrder(
+                      displayedOrder.order_items,
+                      productsData
+                    ),
                     deposit: displayedOrder.deposit,
                     discount: discount,
                     seller: displayedOrder.advisor, // Assuming advisor is the seller

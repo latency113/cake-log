@@ -60,7 +60,62 @@ const LeaderboardPage: React.FC = () => {
     fetchTeamsData();
   }, []);
 
+  useEffect(() => {
+    // Inject print styles specifically for this leaderboard page
+    const styleId = "leaderboard-print-page-style";
+    let printStyle = document.getElementById(styleId) as HTMLStyleElement | null;
+    if (!printStyle) {
+      printStyle = document.createElement("style");
+      printStyle.id = styleId;
+      document.head.appendChild(printStyle);
+    }
+    printStyle.innerHTML = `
+      @page {
+        size: landscape;
+        margin: 5mm;
+      }
+      @media print {
+        html, body {
+          width: 100% !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          zoom: 0.97 !important;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+        }
+      }
+    `;
+
+    return () => {
+      const el = document.getElementById(styleId);
+      if (el) el.remove();
+    };
+  }, []);
+
   const handlePrint = () => {
+    // Ensure styles are present before triggering print
+    const styleId = "leaderboard-print-page-style";
+    if (!document.getElementById(styleId)) {
+      const printStyle = document.createElement("style");
+      printStyle.id = styleId;
+      printStyle.innerHTML = `
+        @page {
+          size: landscape;
+          margin: 5mm;
+        }
+        @media print {
+          html, body {
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            zoom: 0.97 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        }
+      `;
+      document.head.appendChild(printStyle);
+    }
     window.print();
   };
 
@@ -103,6 +158,16 @@ const LeaderboardPage: React.FC = () => {
     departmentColorMap[dept.name] = colors[index % colors.length];
   });
 
+  const getContrastColor = (hexColor: string): string => {
+    if (!hexColor) return "#000000";
+    const hex = hexColor.replace("#", "");
+    const r = parseInt(hex.substring(0, 2), 16) || 0;
+    const g = parseInt(hex.substring(2, 4), 16) || 0;
+    const b = parseInt(hex.substring(4, 6), 16) || 0;
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq >= 150 ? "#000000" : "#ffffff";
+  };
+
   return (
     <>
       <div className="leaderboard-print-page max-w-11/12 mx-auto">
@@ -117,7 +182,13 @@ const LeaderboardPage: React.FC = () => {
                 รายการแสดงจำนวนปอนด์ของแต่ละแผนก
               </p>
             </div>
-            <Button id="print-button" onClick={handlePrint} variant="secondary" className="mt-4 sm:mt-0">
+            <Button
+              id="print-button"
+              onClick={handlePrint}
+              variant="secondary"
+              className="mt-4 sm:mt-0"
+              title="พิมพ์หน้านี้ (ปรับกระดาษเป็นแนวนอนและ Scale 97% อัตโนมัติ)"
+            >
               <Printer className="w-4 h-4 mr-2" />
               พิมพ์หน้านี้
             </Button>
@@ -131,18 +202,25 @@ const LeaderboardPage: React.FC = () => {
             <table>
               <thead>
                 <tr>
-                  {departmentPoundsSorted.map((dept) => (
-                    <th
-                      key={dept.name}
-                      className="p-2 border border-gray-300"
-                      style={{ backgroundColor: departmentColorMap[dept.name], color: "black" }}
-                    >
-                      <div>
-                        {dept.name}
-                      </div>
-                    </th>
-                  ))}
-                  <th>รวม ปอนด์</th>
+                  {departmentPoundsSorted.map((dept) => {
+                    const bg = departmentColorMap[dept.name];
+                    const textColor = getContrastColor(bg);
+                    return (
+                      <th
+                        key={dept.name}
+                        className="p-2 border border-gray-300 font-bold"
+                        style={{ backgroundColor: bg, color: textColor }}
+                      >
+                        <div>{dept.name}</div>
+                      </th>
+                    );
+                  })}
+                  <th
+                    className="p-2 border border-gray-300 font-bold"
+                    style={{ backgroundColor: "#f0f0f0", color: "#000000" }}
+                  >
+                    รวม ปอนด์
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -150,15 +228,21 @@ const LeaderboardPage: React.FC = () => {
                   {departmentPoundsSorted.map((dept) => (
                     <td
                       key={dept.name}
-                      className="p-2 border border-gray-300 text-center"
+                      className="p-2 border border-gray-300 text-center font-bold"
                       style={{
-                        backgroundColor: departmentColorMap[dept.name],
+                        backgroundColor: "#ffffff",
+                        color: "#000000",
                       }}
                     >
                       {dept.totalPounds}
                     </td>
                   ))}
-                  <td>{departmentPoundsSorted.reduce((sum, dept) => sum + dept.totalPounds, 0)}</td>
+                  <td
+                    className="p-2 border border-gray-300 text-center font-bold"
+                    style={{ backgroundColor: "#f9fafb", color: "#000000" }}
+                  >
+                    {departmentPoundsSorted.reduce((sum, dept) => sum + dept.totalPounds, 0)}
+                  </td>
                 </tr>
               </tbody>
             </table>

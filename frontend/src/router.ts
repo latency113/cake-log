@@ -75,6 +75,30 @@ const loginRoute = createRoute({
   },
 });
 
+const registerRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/register",
+  component: lazyRouteComponent(() => import("./pages/Register")),
+  beforeLoad: () => {
+    const token = localStorage.getItem("access_token");
+    if (token) {
+      const decodedToken = decodeJwtToken(token);
+      const userRole = decodedToken?.role?.toLowerCase();
+      switch (userRole) {
+        case "superadmin":
+          throw redirect({ to: "/dashboard" });
+        case "admin":
+          throw redirect({ to: "/executive-summary" });
+        case "officer1":
+        case "officer2":
+          throw redirect({ to: "/officer-orders" });
+        case "user":
+          throw redirect({ to: "/select-book" });
+      }
+    }
+  },
+});
+
 
 const creditsRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -287,6 +311,7 @@ const routeTree = rootRoute.addChildren([
   orderPickupConfirmationRoute,
   userHomeRoute,
   loginRoute,
+  registerRoute,
   orderSearchRoute,
   userClassroomStudentsRoute,
   dashboardRoute.addChildren([
