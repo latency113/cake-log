@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { MoreHorizontal, UserPlus } from "lucide-react"; // Or any other icon library
+import { MoreHorizontal, UserPlus, GraduationCap } from "lucide-react";
 
 interface UsersTableProps {
   users: User[];
@@ -73,39 +73,63 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDelete }) => {
               </TableCell>
               <TableCell className="font-medium">
                 <div className="flex flex-col">
-                  <span className="text-foreground">
-                    {user.firstname} {user.lastname}
-                  </span>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-foreground font-semibold">
+                      {user.firstname} {user.lastname}
+                    </span>
+                    {user.teacher_id && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-amber-100 text-amber-900 border border-amber-200">
+                        <GraduationCap className="w-3 h-3 mr-0.5 text-amber-700" />
+                        ครูสั่งเค้ก
+                      </span>
+                    )}
+                  </div>
                   <span className="text-xs text-muted-foreground">
                     @{user.username}
                   </span>
+                  {user.teacher && (
+                    <span className="text-xs text-amber-700 font-medium mt-0.5">
+                      ครู: {user.teacher.name}{" "}
+                      {user.teacher.department ? `(${user.teacher.department.name})` : ""}
+                    </span>
+                  )}
                 </div>
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {user.email || "N/A"}
               </TableCell>
               <TableCell>
-                <Badge
-                  variant={
-                    user.role === "SUPERADMIN"
-                      ? "destructive"
+                {user.teacher_id ? (
+                  <Badge
+                    variant="outline"
+                    className="border-amber-400 bg-amber-50 text-amber-900 font-medium flex items-center gap-1 w-fit"
+                  >
+                    <GraduationCap className="w-3.5 h-3.5 text-amber-600" />
+                    ครูที่ต้องกรอกข้อมูลเค้ก
+                  </Badge>
+                ) : (
+                  <Badge
+                    variant={
+                      user.role === "SUPERADMIN"
+                        ? "destructive"
+                        : user.role === "OFFICER1"
+                        ? "default"
+                        : user.role === "OFFICER2"
+                        ? "secondary"
+                        : "outline"
+                    }
+                  >
+                    {user.role === "SUPERADMIN"
+                      ? "ผู้ดูแลระบบ"
                       : user.role === "OFFICER1"
-                      ? "default"
+                      ? "เจ้าหน้าที่จ่ายเค้ก"
                       : user.role === "OFFICER2"
-                      ? "secondary"
-                      : "outline"
-                  }
-                >
-                  {user.role === "SUPERADMIN"
-                    ? "ผู้ดูแลระบบ"
-                    : user.role === "OFFICER1"
-                    ? "เจ้าหน้าที่จ่ายเค้ก"
-                    : user.role === "OFFICER2"
-                    ? "เจ้าหน้าที่จัดเตรียมเค้ก"
-                    : user.role === "ADMIN"
-                    ? "ผู้บริหาร"
-                    : "ผู้ใช้งานทั่วไป"}
-                </Badge>
+                      ? "เจ้าหน้าที่จัดเตรียมเค้ก"
+                      : user.role === "ADMIN"
+                      ? "ผู้บริหาร"
+                      : "ผู้ใช้งานทั่วไป"}
+                  </Badge>
+                )}
               </TableCell>
               <TableCell className="text-muted-foreground">
                 {new Date(user.createdAt ?? "").toLocaleDateString("th-TH", {

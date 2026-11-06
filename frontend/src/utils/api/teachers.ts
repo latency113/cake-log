@@ -13,7 +13,7 @@ export const getTeachers = async (): Promise<Teacher[]> => {
   }
 };
 
-export const createTeacher = async (teacherData: Omit<Teacher, 'id'>): Promise<Teacher> => {
+export const createTeacher = async (teacherData: { name: string; department_id: string } | Omit<Teacher, 'id' | 'createdAt' | 'updatedAt'>): Promise<Teacher> => {
   try {
     const response = await api.post("/teachers", teacherData);
     return response.data.data;

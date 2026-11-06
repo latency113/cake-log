@@ -12,9 +12,13 @@ export interface User {
   role: Role;
   createdAt?: string;
   updatedAt?: string;
-  teacher_id?: string;
-  teacher?: Teacher & {
-    classroom?: any[]; // Simplified
-  };
+  teacher_id?: string | null;
+  teacher?: (Teacher & {
+    department?: {
+      id: string;
+      name: string;
+    };
+    classroom?: any[];
+  }) | null;
   ownedBooks?: OrderBook[];
 }

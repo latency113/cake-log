@@ -4,4 +4,8 @@ export interface Teacher {
   department_id: string;
   createdAt: string;
   updatedAt: string;
+  department?: {
+    id: string;
+    name: string;
+  };
 }

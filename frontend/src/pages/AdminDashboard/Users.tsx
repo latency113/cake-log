@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import useUsersData from "../../hooks/useUsersData";
 import UsersTable from "../../components/users/UsersTable";
 import UsersTableSkeleton from "../../components/users/skeletons/UsersTableSkeleton";
 import UserFormModal from "../../components/users/UserFormModal";
 import UserDeleteConfirmModal from "../../components/users/UserDeleteConfirmModal";
-import { UserCog, PlusCircle, Search } from "lucide-react";
+import { UserCog, PlusCircle, Search, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { User } from "../../types";
 import { showToastSuccess, showToastError } from "@/utils/alerts";
@@ -35,6 +35,26 @@ const Users: React.FC = () => {
 
   const { users, totalCount, loading, error, addUser, editUser, removeUser } =
     useUsersData(currentPage, itemsPerPage, debouncedSearchTerm);
+
+  const [filterType, setFilterType] = useState<
+    "all" | "teachers" | "regular" | "staff"
+  >("all");
+
+  const filteredUsers = useMemo(() => {
+    if (filterType === "all") return users;
+    if (filterType === "teachers") {
+      return users.filter((u) => Boolean(u.teacher_id || u.teacher));
+    }
+    if (filterType === "regular") {
+      return users.filter(
+        (u) => !u.teacher_id && !u.teacher && u.role === "USER"
+      );
+    }
+    if (filterType === "staff") {
+      return users.filter((u) => u.role !== "USER");
+    }
+    return users;
+  }, [users, filterType]);
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteConfirmModalOpen, setIsDeleteConfirmModalOpen] =
@@ -162,33 +182,92 @@ const Users: React.FC = () => {
 
   return (
     <div className="max-w-11/12 mx-auto">
-      <div className="bg-gradient-to-r from-purple-400 to-violet-500 rounded-sm shadow-md p-8 mb-8 text-white">
-        <div className="flex items-center justify-between mb-4">
-          {" "}
-          {/* Added mb-4 for spacing */}
+      <div className="bg-gradient-to-r from-purple-500 to-violet-600 rounded-sm shadow-md p-8 mb-8 text-white">
+        <div className="flex items-center justify-between mb-4 flex-wrap gap-4">
           <div>
             <h1 className="text-4xl font-bold mb-2 flex items-center">
               <UserCog className="w-10 h-10 mr-4 text-white" />
               จัดการผู้ใช้งาน
             </h1>
-            <p className="text-white text-lg">รายการแสดงชื่อผู้ใช้งานทั้งหมด</p>
+            <p className="text-white text-base opacity-90">
+              จัดการบัญชีผู้ใช้งานระบบ ทั้งผู้ใช้งานทั่วไปและครูประจำชั้นสำหรับกรอกข้อมูลเค้ก
+            </p>
           </div>
           <Button
             onClick={handleAddUserClick}
-            className="bg-white text-purple-600 hover:bg-purple-50 hover:text-purple-700 transition-colors duration-200 flex items-center"
+            className="bg-white text-purple-700 hover:bg-purple-50 hover:text-purple-800 transition-colors duration-200 flex items-center font-medium shadow-sm cursor-pointer"
           >
             <PlusCircle className="w-5 h-5 mr-2" />
             เพิ่มผู้ใช้ใหม่
           </Button>
         </div>
-        <div className="flex justify-between items-center">
-          {/* Modified this section for search input */}
-          <div className="relative">
+
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pt-2">
+          {/* Filter Pills */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setFilterType("all")}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                filterType === "all"
+                  ? "bg-white text-purple-700 font-semibold shadow-xs"
+                  : "bg-white/20 text-white hover:bg-white/30"
+              }`}
+            >
+              ทั้งหมด ({users.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterType("teachers")}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer flex items-center gap-1.5 ${
+                filterType === "teachers"
+                  ? "bg-amber-400 text-amber-950 font-bold shadow-xs"
+                  : "bg-white/20 text-white hover:bg-white/30"
+              }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              ครูที่ต้องกรอกข้อมูลเค้ก (
+              {users.filter((u) => Boolean(u.teacher_id || u.teacher)).length}
+              )
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterType("regular")}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                filterType === "regular"
+                  ? "bg-white text-purple-700 font-semibold shadow-xs"
+                  : "bg-white/20 text-white hover:bg-white/30"
+              }`}
+            >
+              ผู้ใช้งานทั่วไป (
+              {
+                users.filter(
+                  (u) => !u.teacher_id && !u.teacher && u.role === "USER"
+                ).length
+              }
+              )
+            </button>
+            <button
+              type="button"
+              onClick={() => setFilterType("staff")}
+              className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors cursor-pointer ${
+                filterType === "staff"
+                  ? "bg-white text-purple-700 font-semibold shadow-xs"
+                  : "bg-white/20 text-white hover:bg-white/30"
+              }`}
+            >
+              เจ้าหน้าที่ / ผู้บริหาร (
+              {users.filter((u) => u.role !== "USER").length})
+            </button>
+          </div>
+
+          {/* Search input */}
+          <div className="relative w-full md:w-auto">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="ค้นหาผู้ใช้งาน..."
-              className="pl-10 bg-white/90 text-gray-900 border-none rounded-md w-full py-2 sm:w-64 focus:ring-2 focus:ring-white"
+              className="pl-10 bg-white/95 text-gray-900 border-none rounded-md w-full py-2 sm:w-64 focus:ring-2 focus:ring-white text-sm"
               value={searchTerm}
               onChange={handleSearchChange}
             />
@@ -204,7 +283,7 @@ const Users: React.FC = () => {
         </div>
       ) : (
         <UsersTable
-          users={users}
+          users={filteredUsers}
           onEdit={handleEditUser}
           onDelete={handleDeleteClick}
         />
