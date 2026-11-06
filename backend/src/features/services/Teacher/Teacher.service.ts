@@ -1,6 +1,6 @@
 import { TeacherRepository } from "@/features/repository/Teacher/Teacher.repository"
 import { CreateTeacherDto, TeacherSchema, UpdateTeacherDto } from "./Teacher.schema";
-import { getPaginationParams } from "@/shared/utils/pagination";
+import { getPaginationParams, buildPaginatedResponse } from "@/shared/utils/pagination";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export namespace TeacherService {
@@ -38,28 +38,12 @@ export namespace TeacherService {
     const search = options.search;
 
     const { skip, take } = getPaginationParams(page, itemsPerPage);
-    const Teachers = await TeacherRepository.findAll({
-      skip,
-      take,
-      search,
-    });
-    const total = await TeacherRepository.countAll(search);
+    const [teachers, total] = await Promise.all([
+      TeacherRepository.findAll({ skip, take, search }),
+      TeacherRepository.countAll(search),
+    ]);
 
-    const totalPages = ((total + itemsPerPage - 1) / itemsPerPage) >> 0;
-    const nextPage = page < totalPages;
-    const previousPage = page > 1;
-
-    return {
-      data: Teachers,
-      meta_data: {
-        page,
-        itemsPerPage,
-        total,
-        totalPages,
-        nextPage,
-        previousPage,
-      },
-    };
+    return buildPaginatedResponse(teachers, total, page, itemsPerPage);
   }
 
   export async function findById(TeacherId: string) {

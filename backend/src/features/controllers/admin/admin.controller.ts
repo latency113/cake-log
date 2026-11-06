@@ -7,6 +7,7 @@ import { InitYearService } from "@/features/services/admin/init-year.service";
 import { auth } from "@/shared/middleware/auth";
 import { OrderService } from "../../services/Order/Order.service";
 import { ClassroomService } from "../../services/Classroom/Classroom.service";
+import prisma from "@/providers/database/database.provider";
 
 export const adminController = new Elysia()
   .use(auth)
@@ -309,10 +310,40 @@ export const adminController = new Elysia()
     "/clear-data",
     async ({ set }) => {
       try {
-        await OrderService.deleteAll();
-        await ClassroomService.clearAllClassrooms();
+        await prisma.$transaction(async (tx) => {
+          // 1. Unlink foreign key from User to Teacher
+          await tx.user.updateMany({
+            data: { teacher_id: null },
+          });
+
+          // 2. Delete Order Items and Orders
+          await tx.orderItem.deleteMany({});
+          await tx.order.deleteMany({});
+
+          // 3. Delete OrderBooks
+          await tx.orderBook.deleteMany({});
+
+          // 4. Delete Teams
+          await tx.team.deleteMany({});
+
+          // 5. Delete Classrooms
+          await tx.classroom.deleteMany({});
+
+          // 6. Delete Teachers
+          await tx.teacher.deleteMany({});
+
+          // 7. Delete Departments
+          await tx.department.deleteMany({});
+
+          // 8. Delete GradeLevels
+          await tx.gradeLevel.deleteMany({});
+
+          // 9. Delete Products
+          await tx.product.deleteMany({});
+        });
+
         set.status = 200;
-        return { message: "Successfully cleared all classrooms and orders" };
+        return { message: "Successfully cleared all data except users" };
       } catch (error: any) {
         console.error("Failed to clear data:", error);
         set.status = 500;

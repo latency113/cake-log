@@ -1,6 +1,8 @@
 import { Elysia, t } from "elysia";
 import { UserService } from "../../services/User/User.service";
 import { TokenService } from "../../services/Token/Token.service";
+import { UserRepository } from "../../repository/User/user.repository";
+import prisma from "@/providers/database/database.provider";
 import { auth } from "@/shared/middleware/auth";
 
 export namespace AuthController {
@@ -43,126 +45,268 @@ export namespace AuthController {
         tags: ["Authentication"],
       }
     )
-    .guard(
-      {
-        beforeHandle: ({ user, set }) => {
+    .get(
+      "/me",
+      async ({ jwt: jwtHandler, set, headers, user }) => {
+        try {
+          const refreshToken = headers["x-refresh-token"];
+
+          // If no valid access token, attempt refresh token recovery
           if (!user) {
+            if (refreshToken) {
+              const tokenRecord = await TokenService.verifyToken(refreshToken);
+              if (tokenRecord) {
+                const newPayload = {
+                  role: tokenRecord.user.role,
+                  username: tokenRecord.user.username,
+                  sub: tokenRecord.user_id,
+                };
+                const newToken = await jwtHandler.sign(newPayload);
+                set.status = 200;
+                set.headers["x-user-role"] = tokenRecord.user.role;
+                set.headers["x-username"] = tokenRecord.user.username;
+                return {
+                  ...tokenRecord.user,
+                  access_token: newToken,
+                };
+              }
+            }
             set.status = 401;
             return { message: "Unauthorized" };
           }
-        },
-        detail: {
-          security: [{ bearerAuth: [] }],
-        },
+
+          const userId = (user as { sub?: string }).sub;
+          if (!userId) {
+            set.status = 401;
+            return { message: "Unauthorized" };
+          }
+
+          const fullUser = await UserService.findById(userId);
+          if (!fullUser) {
+            set.status = 401;
+            return { message: "User not found" };
+          }
+
+          set.status = 200;
+          set.headers["x-user-role"] = fullUser.role;
+          set.headers["x-username"] = fullUser.username;
+          return {
+            id: fullUser.id,
+            username: fullUser.username,
+            role: fullUser.role,
+            firstname: fullUser.firstname,
+            lastname: fullUser.lastname,
+            email: fullUser.email,
+            teacher_id: fullUser.teacher_id,
+            teacher: (fullUser as { teacher?: unknown }).teacher,
+          };
+        } catch (error) {
+          console.error(error);
+          set.status = "Internal Server Error";
+          return "Failed";
+        }
       },
-      (protectedAuth) =>
-        protectedAuth
-          .get(
-            "/me",
-            async ({ jwt: jwtHandler, set, headers, user }) => {
-            try {
-              const refreshToken = headers["x-refresh-token"];
-
-              if (!user) {
-                if (refreshToken) {
-                  const tokenRecord = await TokenService.verifyToken(refreshToken);
-                  if (tokenRecord) {
-                    const newPayload = {
-                      role: tokenRecord.user.role,
-                      username: tokenRecord.user.username,
-                      sub: tokenRecord.user_id
-                    };
-                    const newToken = await jwtHandler.sign(newPayload);
-                    set.status = 200;
-                    set.headers["x-user-role"] = tokenRecord.user.role;
-                    set.headers["x-username"] = tokenRecord.user.username;
-                    return {
-                      ...tokenRecord.user,
-                      access_token: newToken
-                    };
-                  }
-                }
-                set.status = 401;
-                return { message: "Unauthorized" };
-              }
-
-              const fullUser = await UserService.findById((user as any).sub as string);
-              if (!fullUser) {
-                set.status = 401;
-                return { message: "User not found" };
-              }
-
-              set.status = 200;
-              set.headers["x-user-role"] = fullUser.role;
-              set.headers["x-username"] = fullUser.username;
-              return {
-                id: fullUser.id,
-                username: fullUser.username,
-                role: fullUser.role,
-                firstname: fullUser.firstname,
-                lastname: fullUser.lastname,
-                email: fullUser.email,
-                teacher_id: fullUser.teacher_id,
-                teacher: (fullUser as any).teacher,
-              };
-            } catch (error) {
-              console.error(error);
-              set.status = "Internal Server Error";
-              return "Failed";
-            }
-          },
-          {
-            response: {
-              200: t.Object({
-                id: t.String(),
-                username: t.String(),
-                role: t.String(),
-                firstname: t.String(),
-                lastname: t.String(),
-                email: t.Optional(t.Union([t.String(), t.Null()])),
-                teacher: t.Optional(t.Any()),
-                ownedBooks: t.Optional(t.Array(t.Any())),
-                access_token: t.Optional(t.String()),
-              }),
-              401: t.Object({
-                message: t.String()
-              }),
-              500: t.String()
-            },
-            tags: ["Authentication"],
+      {
+        response: {
+          200: t.Object({
+            id: t.String(),
+            username: t.String(),
+            role: t.String(),
+            firstname: t.String(),
+            lastname: t.String(),
+            email: t.Optional(t.Union([t.String(), t.Null()])),
+            teacher: t.Optional(t.Any()),
+            ownedBooks: t.Optional(t.Array(t.Any())),
+            access_token: t.Optional(t.String()),
+          }),
+          401: t.Object({
+            message: t.String(),
+          }),
+          500: t.String(),
+        },
+        tags: ["Authentication"],
+      }
+    )
+    .post(
+      "/logout",
+      async ({ headers, set }) => {
+        try {
+          const refreshToken = headers["x-refresh-token"];
+          if (!refreshToken) {
+            set.status = 400;
+            return { message: "Refresh token missing" };
           }
-        )
-        .post(
-          "/logout",
-          async ({ headers, set }) => {
-            try {
-              const refreshToken = headers["x-refresh-token"];
-              if (!refreshToken) {
-                set.status = 400;
-                return { message: "Refresh token missing" };
-              }
 
-              await TokenService.revokeToken(refreshToken);
-              set.status = 200;
-              return { message: "Logged out successfully" };
-            } catch (error) {
-              console.error(error);
-              set.status = "Internal Server Error";
-              return { message: "Failed to logout" };
-            }
-          },
-          {
-            response: {
-              200: t.Object({
-                message: t.String()
-              }),
-              400: t.Object({
-                message: t.String()
-              }),
-              500: t.Union([t.String(), t.Object({ message: t.String() })])
+          await TokenService.revokeToken(refreshToken);
+          set.status = 200;
+          return { message: "Logged out successfully" };
+        } catch (error) {
+          console.error(error);
+          set.status = "Internal Server Error";
+          return { message: "Failed to logout" };
+        }
+      },
+      {
+        response: {
+          200: t.Object({
+            message: t.String(),
+          }),
+          400: t.Object({
+            message: t.String(),
+          }),
+          500: t.Union([t.String(), t.Object({ message: t.String() })]),
+        },
+        tags: ["Authentication"],
+      }
+    )
+    .get(
+      "/classrooms",
+      async ({ set }) => {
+        try {
+          const classrooms = await prisma.classroom.findMany({
+            include: {
+              department: true,
+              grade_level: true,
+              teacher: true,
             },
-            tags: ["Authentication"],
+            orderBy: [
+              {
+                department: {
+                  name: "asc",
+                },
+              },
+              {
+                grade_level: {
+                  level: "desc",
+                },
+              },
+              {
+                grade_level: {
+                  year: "asc",
+                },
+              },
+              {
+                name: "asc",
+              },
+            ],
+          });
+          return classrooms;
+        } catch (error) {
+          console.error("Error fetching classrooms for register:", error);
+          set.status = 500;
+          return { message: "Failed to fetch classrooms" };
+        }
+      },
+      {
+        tags: ["Authentication"],
+      }
+    )
+    .get(
+      "/check-username/:username",
+      async ({ params, set }) => {
+        try {
+          const existing = await UserService.findByUsername(params.username);
+          return { available: !existing };
+        } catch (error) {
+          console.error("Error checking username:", error);
+          set.status = 500;
+          return { available: false, message: "Error checking username" };
+        }
+      },
+      {
+        params: t.Object({
+          username: t.String(),
+        }),
+        tags: ["Authentication"],
+      }
+    )
+    .post(
+      "/register",
+      async ({ body, set }) => {
+        try {
+          const { firstname, lastname, username, password, email, classroom_id } = body;
+
+          // Verify classroom exists and retrieve its teacher_id
+          const classroom = await prisma.classroom.findUnique({
+            where: { id: classroom_id },
+            include: { teacher: true },
+          });
+
+          if (!classroom) {
+            set.status = 400;
+            return { message: "ไม่พบห้องเรียนที่เลือก" };
           }
-        )
+
+          if (!classroom.teacher_id) {
+            set.status = 400;
+            return { message: "ห้องเรียนนี้ยังไม่ได้กำหนดครูประจำชั้นในระบบ" };
+          }
+
+          const existingUser = await UserRepository.findUserByUsername(username);
+          if (existingUser) {
+            set.status = 409;
+            return { message: "ชื่อผู้ใช้นี้ถูกใช้งานแล้ว" };
+          }
+
+          const newUser = await UserService.create({
+            firstname: firstname.trim(),
+            lastname: lastname.trim(),
+            username: username.trim(),
+            password: password,
+            email: email ? email.trim() : null,
+            role: "USER",
+            teacher_id: classroom.teacher_id,
+          });
+
+          set.status = 201;
+          return {
+            message: "ลงทะเบียนผู้ใช้งานสำเร็จ",
+            user: {
+              id: newUser.id,
+              username: newUser.username,
+              firstname: newUser.firstname,
+              lastname: newUser.lastname,
+              role: newUser.role,
+              teacher_id: newUser.teacher_id,
+            },
+          };
+        } catch (error: any) {
+          console.error("Registration error:", error);
+          if (error.message === "Username already exists") {
+            set.status = 409;
+            return { message: "ชื่อผู้ใช้นี้ถูกใช้งานแล้ว" };
+          }
+          set.status = 500;
+          return { message: error.message || "การลงทะเบียนล้มเหลว" };
+        }
+      },
+      {
+        body: t.Object({
+          firstname: t.String(),
+          lastname: t.String(),
+          username: t.String(),
+          password: t.String(),
+          email: t.Optional(t.Union([t.String(), t.Null()])),
+          classroom_id: t.String(),
+        }),
+        response: {
+          201: t.Object({
+            message: t.String(),
+            user: t.Object({
+              id: t.String(),
+              username: t.String(),
+              firstname: t.String(),
+              lastname: t.String(),
+              role: t.String(),
+              teacher_id: t.Optional(t.Union([t.String(), t.Null()])),
+            }),
+          }),
+          400: t.Object({ message: t.String() }),
+          409: t.Object({ message: t.String() }),
+          500: t.Object({ message: t.String() }),
+        },
+        tags: ["Authentication"],
+      }
     );
+
 }

@@ -1,6 +1,6 @@
 import { ClassroomRepository } from "@/features/repository/Classroom/Classroom.repository";
 import { CreateClassroomDto, UpdateClassroomDto } from "./Classroom.schema";
-import { getPaginationParams } from "@/shared/utils/pagination";
+import { getPaginationParams, buildPaginatedResponse } from "@/shared/utils/pagination";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import * as ExcelJS from "exceljs"; // ใช้ตัวนี้ตัวเดียวพอครับ เลิกใช้ xlsx
 import { StudentService } from "../student/student.service";
@@ -187,12 +187,15 @@ export namespace ClassroomService {
     const itemsPerPage = options.itemsPerPage ?? 10;
     const { skip, take } = getPaginationParams(page, itemsPerPage);
 
-    const Classrooms = await ClassroomRepository.findAll({
-      skip,
-      take,
-      search: options.search,
-      department_id: options.department_id
-    });
+    const [Classrooms, total] = await Promise.all([
+      ClassroomRepository.findAll({
+        skip,
+        take,
+        search: options.search,
+        department_id: options.department_id,
+      }),
+      ClassroomRepository.countAll(options.search, options.department_id),
+    ]);
 
     const sanitizedClassrooms = Classrooms.map((classroom) => {
       if (classroom.students && Array.isArray(classroom.students)) {
@@ -203,20 +206,7 @@ export namespace ClassroomService {
       return classroom;
     });
 
-    const total = await ClassroomRepository.countAll(options.search, options.department_id);
-    const totalPages = Math.ceil(total / itemsPerPage);
-
-    return {
-      data: sanitizedClassrooms,
-      meta_data: {
-        page,
-        itemsPerPage,
-        total,
-        totalPages,
-        nextPage: page < totalPages,
-        previousPage: page > 1,
-      },
-    };
+    return buildPaginatedResponse(sanitizedClassrooms, total, page, itemsPerPage);
   }
 
   export async function findById(ClassroomId: string) {

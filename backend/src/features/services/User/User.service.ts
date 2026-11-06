@@ -1,12 +1,126 @@
 import { UserRepository } from "@/features/repository/User/user.repository";
 import { CreateUserDto, UserSchema, UpdateUserDto } from "./User.schema";
-import { getPaginationParams } from "@/shared/utils/pagination";
+import { getPaginationParams, buildPaginatedResponse } from "@/shared/utils/pagination";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { TokenService } from "../Token/Token.service";
+import { getAllDatabaseClients } from "@/providers/database/connection-manager";
+import prisma from "@/providers/database/database.provider";
 
 type JWTInstance = {
   sign: (payload: Record<string, unknown>) => Promise<string>;
 };
+
+async function syncUpdateAcrossAllDatabases(
+  username: string,
+  data: {
+    firstname?: string;
+    lastname?: string;
+    password?: string;
+    email?: string | null;
+  }
+) {
+  try {
+    const clients = await getAllDatabaseClients();
+    const updatePayload: Record<string, any> = {};
+    if (data.password) updatePayload.password = data.password;
+    if (data.firstname) updatePayload.firstname = data.firstname;
+    if (data.lastname) updatePayload.lastname = data.lastname;
+    if (data.email !== undefined) updatePayload.email = data.email;
+
+    if (Object.keys(updatePayload).length === 0) return;
+
+    for (const client of clients) {
+      try {
+        await client.user.updateMany({
+          where: { username },
+          data: updatePayload,
+        });
+      } catch (err) {
+        console.error(`[UserService] Error syncing user update for ${username}:`, err);
+      }
+    }
+  } catch (error) {
+    console.error(`[UserService] Failed to sync user update across databases:`, error);
+  }
+}
+
+async function syncCreateAcrossAllDatabases(
+  user: {
+    id: string;
+    firstname: string;
+    lastname: string;
+    username: string;
+    email?: string | null;
+    role: any;
+    teacher_id?: string | null;
+  },
+  hashPassword: string
+) {
+  try {
+    const clients = await getAllDatabaseClients();
+    for (const client of clients) {
+      try {
+        const existing = await client.user.findUnique({
+          where: { username: user.username },
+        });
+        if (!existing) {
+          let teacherId: string | null = null;
+          if (user.teacher_id) {
+            const teacherExists = await client.teacher.findUnique({
+              where: { id: user.teacher_id },
+            });
+            if (teacherExists) {
+              teacherId = user.teacher_id;
+            }
+          }
+
+          await client.user.create({
+            data: {
+              id: user.id,
+              firstname: user.firstname,
+              lastname: user.lastname,
+              username: user.username,
+              password: hashPassword,
+              email: user.email,
+              role: user.role,
+              teacher_id: teacherId,
+            },
+          });
+        }
+      } catch (err) {
+        console.error(`[UserService] Error syncing user create for ${user.username}:`, err);
+      }
+    }
+  } catch (error) {
+    console.error(`[UserService] Failed to sync user create across databases:`, error);
+  }
+}
+
+async function syncDeleteAcrossAllDatabases(username: string) {
+  try {
+    const clients = await getAllDatabaseClients();
+    for (const client of clients) {
+      try {
+        const u = await client.user.findUnique({
+          where: { username },
+          select: { id: true },
+        });
+        if (u) {
+          await client.token.deleteMany({
+            where: { user_id: u.id },
+          });
+          await client.user.deleteMany({
+            where: { username },
+          });
+        }
+      } catch (err) {
+        console.error(`[UserService] Error syncing user delete for ${username}:`, err);
+      }
+    }
+  } catch (error) {
+    console.error(`[UserService] Failed to sync user delete across databases:`, error);
+  }
+}
 
 export namespace UserService {
   export async function create(user: CreateUserDto) {
@@ -33,6 +147,10 @@ export namespace UserService {
         role: user.role,
         teacher_id: user.teacher_id,
       });
+
+      // Synchronize new user to all other year databases
+      await syncCreateAcrossAllDatabases(newUser, hashPassword);
+
       return newUser;
     } catch (error) {
       if (
@@ -53,28 +171,20 @@ export namespace UserService {
     const search = options.search;
 
     const { skip, take } = getPaginationParams(page, itemsPerPage);
-    const users = await UserRepository.findAll({ skip, take, search });
-    const total = await UserRepository.countAll(search);
+    const [users, total] = await Promise.all([
+      UserRepository.findAll({ skip, take, search }),
+      UserRepository.countAll(search),
+    ]);
 
-    const totalPages = ((total + itemsPerPage - 1) / itemsPerPage) >> 0;
-    const nextPage = page < totalPages;
-    const previousPage = page > 1;
-
-    return {
-      data: users,
-      meta_data: {
-        page,
-        itemsPerPage,
-        total,
-        totalPages,
-        nextPage,
-        previousPage,
-      },
-    };
+    return buildPaginatedResponse(users, total, page, itemsPerPage);
   }
 
   export async function findById(userId: string) {
     return UserRepository.findById(userId);
+  }
+
+  export async function findByUsername(username: string) {
+    return UserRepository.findUserByUsername(username);
   }
 
   export async function update(userId: string, user: UpdateUserDto) {
@@ -89,7 +199,17 @@ export namespace UserService {
         data.password = await Bun.password.hash(user.password);
       }
 
-      return await UserRepository.update(userId, data);
+      // Fetch user to know their username for cross-database synchronization
+      const currentUser = await UserRepository.findById(userId);
+      const targetUsername = currentUser?.username;
+
+      const updatedUser = await UserRepository.update(userId, data);
+
+      if (targetUsername) {
+        await syncUpdateAcrossAllDatabases(targetUsername, data);
+      }
+
+      return updatedUser;
     } catch (error) {
       if (
         error instanceof PrismaClientKnownRequestError &&
@@ -102,7 +222,41 @@ export namespace UserService {
   }
 
   export async function deleteById(userId: string) {
-    return UserRepository.deleteById(userId);
+    const currentUser = await UserRepository.findById(userId);
+    if (!currentUser) {
+      throw new Error("ไม่พบผู้ใช้งานนี้ในระบบ");
+    }
+    const targetUsername = currentUser.username;
+
+    // Check if user has associated orders
+    const ordersCount = await prisma.order.count({
+      where: {
+        OR: [
+          { user_id: userId },
+          { officer_prepare_id: userId },
+          { officer_pickup_id: userId },
+        ],
+      },
+    });
+
+    if (ordersCount > 0) {
+      throw new Error(
+        `ไม่สามารถลบผู้ใช้นี้ได้ เนื่องจากมีประวัติคำสั่งซื้อเค้กที่เกี่ยวข้องอยู่ในระบบ ${ordersCount} รายการ`
+      );
+    }
+
+    // Explicitly delete any associated tokens
+    await prisma.token.deleteMany({
+      where: { user_id: userId },
+    });
+
+    const deleted = await UserRepository.deleteById(userId);
+
+    if (targetUsername) {
+      await syncDeleteAcrossAllDatabases(targetUsername);
+    }
+
+    return deleted;
   }
 
   export async function login(

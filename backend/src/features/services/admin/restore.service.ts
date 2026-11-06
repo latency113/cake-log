@@ -5,9 +5,23 @@ import { getDbParams } from "@/shared/utils/db-utils";
 import { getAcademicYear } from "@/providers/database/database.context";
 import { CakeSettingsRepository } from "@/features/repository/CakeSettings/CakeSettings.repository";
 
-const getSecurityKey = async (): Promise<string> => {
+const isKeyValid = async (key?: string): Promise<boolean> => {
+  if (!key || typeof key !== "string") return false;
+  const trimmed = key.trim();
+  if (!trimmed) return false;
+
   const settings = await CakeSettingsRepository.getCakeSettings();
-  return settings?.securityKey || process.env.RESTORE_KEY || "admin1234";
+  const configuredKey = settings?.securityKey?.trim();
+  const envKey = process.env.RESTORE_KEY?.trim();
+
+  if (!configuredKey && !envKey) {
+    throw new Error("Security key is not configured in the system.");
+  }
+
+  return (
+    (Boolean(configuredKey) && trimmed === configuredKey) ||
+    (Boolean(envKey) && trimmed === envKey)
+  );
 };
 
 const findPgTool = (toolName: string): string => {
@@ -52,8 +66,7 @@ export const listBackups = async (): Promise<string[]> => {
 };
 
 export const performRestore = async (fileName?: string, key?: string): Promise<string> => {
-  const restoreKey = await getSecurityKey();
-  if (key !== restoreKey) {
+  if (!(await isKeyValid(key))) {
     throw new Error("Invalid security key for restoration.");
   }
 
@@ -69,17 +82,18 @@ export const performRestore = async (fileName?: string, key?: string): Promise<s
       throw new Error(`Backup file not found: ${fileName}`);
     }
   } else {
-    // Find the latest .sql backup file
-    const backupFiles = fs
+    // Find the latest .sql backup file for the current year, or latest overall
+    const allFiles = fs
       .readdirSync(backupsDir)
       .filter((file) => file.endsWith(".sql"))
       .sort()
       .reverse();
 
-    if (backupFiles.length === 0) {
+    if (allFiles.length === 0) {
       throw new Error("No PostgreSQL backup found in the 'backups' directory.");
     }
-    targetFile = path.join(backupsDir, backupFiles[0]);
+    const yearMatchingFiles = currentYear ? allFiles.filter(f => f.includes(currentYear)) : [];
+    targetFile = path.join(backupsDir, yearMatchingFiles[0] || allFiles[0]);
   }
 
   const psqlPath = findPgTool('psql');
@@ -138,8 +152,7 @@ export const performRestore = async (fileName?: string, key?: string): Promise<s
 };
 
 export const performRestorePrePromotion = async (key?: string): Promise<string> => {
-  const restoreKey = await getSecurityKey();
-  if (key !== restoreKey) {
+  if (!(await isKeyValid(key))) {
     throw new Error("Invalid security key for restoration.");
   }
 
@@ -228,8 +241,7 @@ const runMigrations = (dbName: string): Promise<void> => {
 };
 
 export const getBackupFilePath = async (fileName: string, key?: string): Promise<string> => {
-  const restoreKey = await getSecurityKey();
-  if (key !== restoreKey) {
+  if (!(await isKeyValid(key))) {
     throw new Error("Invalid security key.");
   }
 

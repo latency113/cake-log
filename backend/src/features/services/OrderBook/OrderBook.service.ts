@@ -3,7 +3,7 @@ import {
   CreateOrderBookDto,
   UpdateOrderBookDto,
 } from "./OrderBook.schema";
-import { getPaginationParams } from "@/shared/utils/pagination";
+import { getPaginationParams, buildPaginatedResponse } from "@/shared/utils/pagination";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export namespace OrderBookService {
@@ -33,28 +33,12 @@ export namespace OrderBookService {
     const search = options.search;
 
     const { skip, take } = getPaginationParams(page, itemsPerPage);
-    const books = await OrderBookRepository.findAll({
-      skip,
-      take,
-      search,
-    });
-    const total = await OrderBookRepository.countAll(search);
+    const [books, total] = await Promise.all([
+      OrderBookRepository.findAll({ skip, take, search }),
+      OrderBookRepository.countAll(search),
+    ]);
 
-    const totalPages = Math.ceil(total / itemsPerPage);
-    const nextPage = page < totalPages;
-    const previousPage = page > 1;
-
-    return {
-      data: books,
-      meta_data: {
-        page,
-        itemsPerPage,
-        total,
-        totalPages,
-        nextPage,
-        previousPage,
-      },
-    };
+    return buildPaginatedResponse(books, total, page, itemsPerPage);
   }
 
   export async function findById(id: string) {

@@ -2,73 +2,55 @@ import { PrismaClient } from "./generated/client";
 
 const clients = new Map<string, PrismaClient>();
 
-// Clear any existing 2569 from cache immediately if this module reloads
-// if (clients.has("2569")) {
-//     clients.delete("2569");
-// }
-
-export const getClient = (year?: string): PrismaClient => {
-  // console.log(`[ConnectionManager] getClient called with year: "${year}"`);
-  // Normalize year
-  if (year === "current" || !year) {
-    year = undefined;
+/**
+ * Validates and normalizes an academic year identifier.
+ * Ensures the year is safe to use in database connection strings.
+ */
+const sanitizeYear = (year?: string): string | undefined => {
+  if (!year || year === "current") {
+    return undefined;
   }
-
-  // Safety: If year is 2569, we know it doesn't exist anymore, so fallback to default
-  if (year === "2569") {
-      // console.warn(`[ConnectionManager] !!! CRITICAL FALLBACK !!! Year 2569 requested but database does not exist. Forcing undefined.`);
-      year = undefined;
+  const trimmed = year.trim();
+  // Only accept alphanumeric characters and underscore/hyphen to prevent URL injection
+  if (!/^[a-zA-Z0-9_-]{1,20}$/.test(trimmed)) {
+    return undefined;
   }
+  return trimmed;
+};
 
-  // If no year specified, use the default client
+export const getClient = (requestedYear?: string): PrismaClient => {
+  const year = sanitizeYear(requestedYear);
+
+  // If no specific year requested, return the default database client
   if (!year) {
-      // console.log(`[ConnectionManager] Using default client`);
-      if (!clients.has("default")) {
-         const client = new PrismaClient();
-         clients.set("default", client);
-      }
-      return clients.get("default")!;
+    if (!clients.has("default")) {
+      const client = new PrismaClient();
+      clients.set("default", client);
+    }
+    return clients.get("default")!;
   }
 
-  // If we already have a client for this year, return it
+  // Return cached client if available
   if (clients.has(year)) {
-    // console.log(`[ConnectionManager] Returning cached client for year: ${year}`);
     return clients.get(year)!;
   }
 
-  // Create new client for the specific year
+  // Build year-specific database connection URL
   const originalUrl = process.env.DATABASE_URL;
   if (!originalUrl) {
-      throw new Error("DATABASE_URL is not set");
+    throw new Error("DATABASE_URL is not set");
   }
-  
-  // Parse and modify the URL
-  // Assumes format: postgresql://user:pass@host:port/dbname?params
-  // We want to change 'dbname' to 'dbname_year'
+
   let newUrl: string;
   try {
-      const urlObj = new URL(originalUrl);
-      const dbName = urlObj.pathname.split("/")[1]; 
-      const newDbName = `${dbName}_${year}`;
-
-      // --- ADDED CHECK ---
-      // We can use a synchronous check if we had a list, 
-      // but since this is called inside a Proxy getter (which is sync), 
-      // we have a challenge.
-      // However, ConnectionManager.getClient is NOT inside the proxy getter directly 
-      // for the first call, but it IS called by it.
-      
-      // For now, let's assume if it's 2569 and we know it doesn't exist, we fallback.
-      // A better way is to verify existence, but since this is sync, 
-      // let's at least log and handle the potential failure if we can't connect.
-      
-      urlObj.pathname = `/${newDbName}`;
-      newUrl = urlObj.toString();
-      
-      // console.log(`[ConnectionManager] Initializing connection for year ${year}: ${newDbName}`);
+    const urlObj = new URL(originalUrl);
+    const dbName = urlObj.pathname.split("/")[1];
+    const newDbName = `${dbName}_${year}`;
+    urlObj.pathname = `/${newDbName}`;
+    newUrl = urlObj.toString();
   } catch (e) {
-      console.error("Failed to parse DATABASE_URL, falling back to default", e);
-      return getClient(); // Fallback
+    console.error(`[ConnectionManager] Failed to construct URL for year ${year}, falling back to default`, e);
+    return getClient();
   }
 
   const client = new PrismaClient({
@@ -79,9 +61,43 @@ export const getClient = (year?: string): PrismaClient => {
     },
   });
 
-  // Test connection or just catch error later? 
-  // Prisma doesn't connect until first query.
-
   clients.set(year, client);
   return client;
 };
+
+export const disconnectAllClients = async (): Promise<void> => {
+  for (const [key, client] of clients.entries()) {
+    try {
+      await client.$disconnect();
+    } catch (e) {
+      console.error(`[ConnectionManager] Error disconnecting client ${key}`, e);
+    }
+  }
+  clients.clear();
+};
+
+export const getAllDatabaseClients = async (): Promise<PrismaClient[]> => {
+  const originalUrl = process.env.DATABASE_URL;
+  if (!originalUrl) return [getClient()];
+
+  try {
+    const urlObj = new URL(originalUrl);
+    const dbName = urlObj.pathname.split("/")[1];
+    const defaultClient = getClient();
+    const rows = await defaultClient.$queryRawUnsafe<{ datname: string }[]>(
+      `SELECT datname FROM pg_database WHERE datname LIKE '${dbName}_%' OR datname = '${dbName}'`
+    );
+
+    const clientList: PrismaClient[] = [];
+    for (const row of rows) {
+      const parts = row.datname.split("_");
+      const yearKey = row.datname === dbName ? undefined : parts[parts.length - 1];
+      clientList.push(getClient(yearKey));
+    }
+    return clientList;
+  } catch (error) {
+    console.error("[ConnectionManager] Failed to get all database clients, fallback to default", error);
+    return [getClient()];
+  }
+};
+

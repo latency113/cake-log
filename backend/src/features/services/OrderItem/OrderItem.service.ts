@@ -1,6 +1,6 @@
 import { OrderItemRepository } from "@/features/repository/OrderItem/OrderItem.repository";
 import { CreateOrderItemSchema, UpdateOrderItemSchema } from "./OrderItem.schema";
-import { getPaginationParams } from "@/shared/utils/pagination";
+import { getPaginationParams, buildPaginatedResponse } from "@/shared/utils/pagination";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { TeamService } from "@/features/services/Team/Team.service";
 
@@ -40,28 +40,16 @@ export namespace OrderItemService {
     const orderId = options.orderId;
 
     const { skip, take } = getPaginationParams(page, itemsPerPage);
-    const orderItems = await OrderItemRepository.findAll({
-      skip,
-      take,
-      orderId,
-    });
-    const total = await OrderItemRepository.countAll(orderId);
+    const [orderItems, total] = await Promise.all([
+      OrderItemRepository.findAll({
+        skip,
+        take,
+        orderId,
+      }),
+      OrderItemRepository.countAll(orderId),
+    ]);
 
-    const totalPages = Math.ceil(total / itemsPerPage);
-    const nextPage = page < totalPages;
-    const previousPage = page > 1;
-
-    return {
-      data: orderItems,
-      meta_data: {
-        page,
-        itemsPerPage,
-        total,
-        totalPages,
-        nextPage,
-        previousPage,
-      },
-    };
+    return buildPaginatedResponse(orderItems, total, page, itemsPerPage);
   }
 
   export async function findById(orderItemId: string) {

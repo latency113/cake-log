@@ -23,10 +23,10 @@ export const getDbParams = (year?: string | null) => {
 
   const finalDbName = dbName || 'postgres';
   
-  // If a year is specified and it's not the default "current" or "2569" (which we know is current in this project)
-  // we append the year to the database name.
+  // If a year is specified and it's not the default "current",
+  // we append the year to the database name (e.g. nvccake_2569, nvccake_2568)
   let targetDbName = finalDbName;
-  if (year && year !== "current" && year !== "2569") {
+  if (year && year !== "current") {
     targetDbName = `${finalDbName}_${year}`;
   }
 

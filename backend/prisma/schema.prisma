@@ -213,7 +213,7 @@ model Token {
   created_at DateTime @default(now())
   updated_at DateTime @updatedAt
 
-  user User @relation(fields: [user_id], references: [id])
+  user User @relation(fields: [user_id], references: [id], onDelete: Cascade)
 
   @@index([user_id], name: "idx_token_user_id")
   @@map("tokens")

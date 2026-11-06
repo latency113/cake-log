@@ -1,6 +1,6 @@
 import { ProductRepository } from "@/features/repository/Product/Product.repository"
 import { CreateProductDto, ProductSchema, UpdateProductDto } from "./Product.schema";
-import { getPaginationParams } from "@/shared/utils/pagination";
+import { getPaginationParams, buildPaginatedResponse } from "@/shared/utils/pagination";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export namespace ProductService {
@@ -35,29 +35,17 @@ export namespace ProductService {
     const search = options.search;
 
     const { skip, take } = getPaginationParams(page, itemsPerPage);
-    const products = await ProductRepository.findAll({
-      skip,
-      take,
-      search,
-      orderBy: { price: 'asc' },
-    });
-    const total = await ProductRepository.countAll(search);
+    const [products, total] = await Promise.all([
+      ProductRepository.findAll({
+        skip,
+        take,
+        search,
+        orderBy: { price: 'asc' },
+      }),
+      ProductRepository.countAll(search),
+    ]);
 
-    const totalPages = Math.ceil(total / itemsPerPage);
-    const nextPage = page < totalPages;
-    const previousPage = page > 1;
-
-    return {
-      data: products,
-      meta_data: {
-        page,
-        itemsPerPage,
-        total,
-        totalPages,
-        nextPage,
-        previousPage,
-      },
-    };
+    return buildPaginatedResponse(products, total, page, itemsPerPage);
   }
 
   export async function findById(productId: string) {

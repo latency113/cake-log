@@ -1,6 +1,6 @@
 import { GradeLevelRepository } from "@/features/repository/GradeLevel/GradeLevel.repository"
 import { CreateGradeLevelDto, GradeLevelSchema, UpdateGradeLevelDto } from "./GradeLevel.schema";
-import { getPaginationParams } from "@/shared/utils/pagination";
+import { getPaginationParams, buildPaginatedResponse } from "@/shared/utils/pagination";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 
 export namespace GradeLevelService {
@@ -35,28 +35,12 @@ export namespace GradeLevelService {
     const search = options.search;
 
     const { skip, take } = getPaginationParams(page, itemsPerPage);
-    const GradeLevels = await GradeLevelRepository.findAll({
-      skip,
-      take,
-      search,
-    });
-    const total = await GradeLevelRepository.countAll(search);
+    const [gradeLevels, total] = await Promise.all([
+      GradeLevelRepository.findAll({ skip, take, search }),
+      GradeLevelRepository.countAll(search),
+    ]);
 
-    const totalPages = ((total + itemsPerPage - 1) / itemsPerPage) >> 0;
-    const nextPage = page < totalPages;
-    const previousPage = page > 1;
-
-    return {
-      data: GradeLevels,
-      meta_data: {
-        page,
-        itemsPerPage,
-        total,
-        totalPages,
-        nextPage,
-        previousPage,
-      },
-    };
+    return buildPaginatedResponse(gradeLevels, total, page, itemsPerPage);
   }
 
   export async function findById(GradeLevelId: string) {

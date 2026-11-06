@@ -1,6 +1,6 @@
 import { TeamRepository } from "@/features/repository/Team/Team.repository";
 import { CreateTeamDto, UpdateTeamDto } from "./Team.schema";
-import { getPaginationParams } from "@/shared/utils/pagination";
+import { getPaginationParams, buildPaginatedResponse } from "@/shared/utils/pagination";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import prisma from "@/providers/database/database.provider";
 
@@ -40,29 +40,17 @@ export namespace TeamService {
     const team_type = options.team_type;
 
     const { skip, take } = getPaginationParams(page, itemsPerPage);
-    const teams = await TeamRepository.findAll({
-      skip,
-      take,
-      search,
-      team_type,
-    });
-    const total = await TeamRepository.countAll(search, team_type);
+    const [teams, total] = await Promise.all([
+      TeamRepository.findAll({
+        skip,
+        take,
+        search,
+        team_type,
+      }),
+      TeamRepository.countAll(search, team_type),
+    ]);
 
-    const totalPages = Math.ceil(total / itemsPerPage);
-    const nextPage = page < totalPages;
-    const previousPage = page > 1;
-
-    return {
-      data: teams,
-      meta_data: {
-        page,
-        itemsPerPage,
-        total,
-        totalPages,
-        nextPage,
-        previousPage,
-      },
-    };
+    return buildPaginatedResponse(teams, total, page, itemsPerPage);
   }
 
   export async function findById(teamId: string) {
