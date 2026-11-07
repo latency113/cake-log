@@ -11,32 +11,82 @@ type JWTInstance = {
 };
 
 async function syncUpdateAcrossAllDatabases(
-  username: string,
-  data: {
-    firstname?: string;
-    lastname?: string;
+  userId: string,
+  targetUsername: string,
+  updatedUser: {
+    id: string;
+    firstname: string;
+    lastname: string;
+    username: string;
     password?: string;
     email?: string | null;
+    role: any;
+    teacher_id?: string | null;
   }
 ) {
   try {
     const clients = await getAllDatabaseClients();
-    const updatePayload: Record<string, any> = {};
-    if (data.password) updatePayload.password = data.password;
-    if (data.firstname) updatePayload.firstname = data.firstname;
-    if (data.lastname) updatePayload.lastname = data.lastname;
-    if (data.email !== undefined) updatePayload.email = data.email;
-
-    if (Object.keys(updatePayload).length === 0) return;
-
     for (const client of clients) {
       try {
-        await client.user.updateMany({
-          where: { username },
-          data: updatePayload,
+        const existing = await client.user.findFirst({
+          where: {
+            OR: [
+              { id: userId },
+              { username: targetUsername },
+              { username: updatedUser.username },
+            ],
+          },
         });
+
+        let teacherId: string | null = null;
+        if (updatedUser.teacher_id) {
+          const teacherExists = await client.teacher.findUnique({
+            where: { id: updatedUser.teacher_id },
+          });
+          if (teacherExists) {
+            teacherId = updatedUser.teacher_id;
+          }
+        }
+
+        if (existing) {
+          const updatePayload: Record<string, any> = {
+            firstname: updatedUser.firstname,
+            lastname: updatedUser.lastname,
+            username: updatedUser.username,
+            email: updatedUser.email,
+            role: updatedUser.role,
+            teacher_id: teacherId,
+          };
+          if (updatedUser.password) {
+            updatePayload.password = updatedUser.password;
+          }
+
+          await client.user.update({
+            where: { id: existing.id },
+            data: updatePayload,
+          });
+        } else {
+          // If user does not exist in this database, create them to keep all years in sync!
+          if (updatedUser.password) {
+            await client.user.create({
+              data: {
+                id: userId,
+                firstname: updatedUser.firstname,
+                lastname: updatedUser.lastname,
+                username: updatedUser.username,
+                password: updatedUser.password,
+                email: updatedUser.email,
+                role: updatedUser.role,
+                teacher_id: teacherId,
+              },
+            });
+          }
+        }
       } catch (err) {
-        console.error(`[UserService] Error syncing user update for ${username}:`, err);
+        console.error(
+          `[UserService] Error syncing user update for ${targetUsername} in a year database:`,
+          err
+        );
       }
     }
   } catch (error) {
@@ -60,20 +110,26 @@ async function syncCreateAcrossAllDatabases(
     const clients = await getAllDatabaseClients();
     for (const client of clients) {
       try {
-        const existing = await client.user.findUnique({
-          where: { username: user.username },
+        const existing = await client.user.findFirst({
+          where: {
+            OR: [
+              { id: user.id },
+              { username: user.username },
+            ],
+          },
         });
-        if (!existing) {
-          let teacherId: string | null = null;
-          if (user.teacher_id) {
-            const teacherExists = await client.teacher.findUnique({
-              where: { id: user.teacher_id },
-            });
-            if (teacherExists) {
-              teacherId = user.teacher_id;
-            }
-          }
 
+        let teacherId: string | null = null;
+        if (user.teacher_id) {
+          const teacherExists = await client.teacher.findUnique({
+            where: { id: user.teacher_id },
+          });
+          if (teacherExists) {
+            teacherId = user.teacher_id;
+          }
+        }
+
+        if (!existing) {
           await client.user.create({
             data: {
               id: user.id,
@@ -86,9 +142,26 @@ async function syncCreateAcrossAllDatabases(
               teacher_id: teacherId,
             },
           });
+        } else {
+          // If already exists, update all fields to match completely
+          await client.user.update({
+            where: { id: existing.id },
+            data: {
+              firstname: user.firstname,
+              lastname: user.lastname,
+              username: user.username,
+              password: hashPassword,
+              email: user.email,
+              role: user.role,
+              teacher_id: teacherId,
+            },
+          });
         }
       } catch (err) {
-        console.error(`[UserService] Error syncing user create for ${user.username}:`, err);
+        console.error(
+          `[UserService] Error syncing user create for ${user.username} in a year database:`,
+          err
+        );
       }
     }
   } catch (error) {
@@ -96,25 +169,50 @@ async function syncCreateAcrossAllDatabases(
   }
 }
 
-async function syncDeleteAcrossAllDatabases(username: string) {
+async function syncDeleteAcrossAllDatabases(username: string, userId?: string) {
   try {
     const clients = await getAllDatabaseClients();
     for (const client of clients) {
       try {
-        const u = await client.user.findUnique({
-          where: { username },
-          select: { id: true },
+        const u = await client.user.findFirst({
+          where: {
+            OR: [
+              ...(userId ? [{ id: userId }] : []),
+              { username },
+            ],
+          },
+          select: { id: true, username: true },
         });
+
         if (u) {
-          await client.token.deleteMany({
-            where: { user_id: u.id },
+          const ordersCount = await client.order.count({
+            where: {
+              OR: [
+                { user_id: u.id },
+                { officer_prepare_id: u.id },
+                { officer_pickup_id: u.id },
+              ],
+            },
           });
-          await client.user.deleteMany({
-            where: { username },
-          });
+
+          if (ordersCount === 0) {
+            await client.token.deleteMany({
+              where: { user_id: u.id },
+            });
+            await client.user.delete({
+              where: { id: u.id },
+            });
+          } else {
+            console.warn(
+              `[UserService] Skipped deleting user ${u.username} from a year database because of ${ordersCount} existing orders.`
+            );
+          }
         }
       } catch (err) {
-        console.error(`[UserService] Error syncing user delete for ${username}:`, err);
+        console.error(
+          `[UserService] Error syncing user delete for ${username}:`,
+          err
+        );
       }
     }
   } catch (error) {
@@ -206,7 +304,10 @@ export namespace UserService {
       const updatedUser = await UserRepository.update(userId, data);
 
       if (targetUsername) {
-        await syncUpdateAcrossAllDatabases(targetUsername, data);
+        await syncUpdateAcrossAllDatabases(userId, targetUsername, {
+          ...updatedUser,
+          password: data.password || currentUser?.password,
+        });
       }
 
       return updatedUser;
@@ -253,7 +354,7 @@ export namespace UserService {
     const deleted = await UserRepository.deleteById(userId);
 
     if (targetUsername) {
-      await syncDeleteAcrossAllDatabases(targetUsername);
+      await syncDeleteAcrossAllDatabases(targetUsername, userId);
     }
 
     return deleted;

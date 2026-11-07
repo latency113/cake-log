@@ -48,6 +48,38 @@ export namespace CakeSettingsService {
     } catch (syncErr) {
       console.warn("Could not sync settings to default DB:", syncErr);
     }
+
+    // Synchronize Security Key across ALL year databases and default database
+    if (formattedData.securityKey !== undefined) {
+      try {
+        const { getAllDatabaseClients } = await import("@/providers/database/connection-manager");
+        const allClients = await getAllDatabaseClients();
+        console.log(`[CakeSettingsService] Synchronizing securityKey across ${allClients.length} databases...`);
+        for (const client of allClients) {
+          try {
+            const existingSetting = await client.cakeSettings.findFirst();
+            if (existingSetting) {
+              await client.cakeSettings.update({
+                where: { id: existingSetting.id },
+                data: { securityKey: formattedData.securityKey },
+              });
+            } else {
+              await client.cakeSettings.create({
+                data: {
+                  securityKey: formattedData.securityKey,
+                  academicYear: formattedData.academicYear,
+                  currentYear: formattedData.currentYear,
+                },
+              });
+            }
+          } catch (dbErr) {
+            console.error("[CakeSettingsService] Error syncing securityKey to a database client:", dbErr);
+          }
+        }
+      } catch (syncAllErr) {
+        console.error("[CakeSettingsService] Failed to sync securityKey across all databases:", syncAllErr);
+      }
+    }
     console.log("CakeSettingsService.createSettings: Upserted settings returned:", upsertedSettings);
     return upsertedSettings;
   };
