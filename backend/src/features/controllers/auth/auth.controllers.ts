@@ -14,12 +14,26 @@ export namespace AuthController {
         try {
           const { username, password } = body;
           const result = await UserService.login(username, password, jwtHandler);
+
+          // If maintenance mode is active, only allow SUPERADMIN and ADMIN to login
+          const userRole = result?.user?.role;
+          if (userRole !== "SUPERADMIN" && userRole !== "ADMIN") {
+            const { CakeSettingsRepository } = await import("@/features/repository/CakeSettings/CakeSettings.repository");
+            const settings = await CakeSettingsRepository.getCakeSettings();
+            if (settings?.isMaintenanceMode) {
+              set.status = 503;
+              return {
+                message: settings.maintenanceMessage || "ระบบอยู่ในโหมดปิดปรับปรุงชั่วคราว เฉพาะผู้ดูแลระบบเท่านั้นที่สามารถเข้าสู่ระบบได้",
+              };
+            }
+          }
+
           set.status = "OK";
           return result;
-        } catch (error) {
+        } catch (error: any) {
           console.error(error);
-          set.status = "Internal Server Error";
-          return "Login failed";
+          set.status = 500;
+          return error?.message || "Login failed";
         }
       },
       {
@@ -40,7 +54,10 @@ export namespace AuthController {
               email: t.Optional(t.Union([t.String(), t.Null()]))
             })
           }),
-          500: t.String(),
+          503: t.Object({
+            message: t.String()
+          }),
+          500: t.Union([t.String(), t.Object({ message: t.String() })]),
         },
         tags: ["Authentication"],
       }

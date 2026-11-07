@@ -1,6 +1,6 @@
 import { Elysia, t } from "elysia"; // Import 't' for schema validation
 import { performBackup } from "../../services/admin/backup.service";
-import { performRestore, performRestorePrePromotion, listBackups, getBackupFilePath } from "../../services/admin/restore.service";
+import { performRestore, performRestorePrePromotion, listBackups, getBackupFilePath, isKeyValid } from "../../services/admin/restore.service";
 import { TeacherUserService } from "@/features/services/Teacher/TeacherUser.service"; // Import the new service
 import { CakeSettingsService } from "@/features/services/admin/setting.service";
 import { InitYearService } from "@/features/services/admin/init-year.service";
@@ -240,6 +240,8 @@ export const adminController = new Elysia()
         pickupEndTime: t.Optional(t.String()),
         reporterName: t.Optional(t.String()),
         securityKey: t.Optional(t.String()),
+        isMaintenanceMode: t.Optional(t.Boolean()),
+        maintenanceMessage: t.Optional(t.String()),
       }),
       tags: ["Admin"],
       isSignIn: true,
@@ -289,8 +291,16 @@ export const adminController = new Elysia()
   )
   .delete(
     "/year/:year",
-    async ({ params, set }) => {
+    async ({ params, set, body }) => {
       try {
+        const securityKey = (body as any)?.securityKey;
+        if (securityKey) {
+          if (!(await isKeyValid(securityKey))) {
+            set.status = 400;
+            return { message: "Security Key ไม่ถูกต้อง", error: "Security Key ไม่ถูกต้อง" };
+          }
+        }
+
         const result = await InitYearService.deleteYear(params.year);
         set.status = 200;
         return result;
@@ -301,6 +311,11 @@ export const adminController = new Elysia()
       }
     },
     {
+      body: t.Optional(
+        t.Object({
+          securityKey: t.Optional(t.String()),
+        })
+      ),
       tags: ["Admin"],
       isSignIn: true,
       hasRole: ["SUPERADMIN"]

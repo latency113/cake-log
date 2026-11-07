@@ -20,12 +20,51 @@ export const app = new Elysia().group("/api/v1", (app) => {
   app.use(auth);
   app.use(AuthController.authController);
 
+  // Public system status endpoint (accessible without login)
+  app.get("/system-status", async () => {
+    try {
+      const { CakeSettingsRepository } = await import("@/features/repository/CakeSettings/CakeSettings.repository");
+      const settings = await CakeSettingsRepository.getCakeSettings();
+      return {
+        isMaintenanceMode: Boolean(settings?.isMaintenanceMode),
+        maintenanceMessage: settings?.maintenanceMessage || null,
+        academicYear: settings?.academicYear || null,
+        currentYear: settings?.currentYear || null,
+      };
+    } catch (err: any) {
+      return {
+        isMaintenanceMode: false,
+        maintenanceMessage: null,
+        academicYear: null,
+        currentYear: null,
+      };
+    }
+  });
+
   return app.guard(
     {
-      beforeHandle: ({ user, set }) => {
+      beforeHandle: async ({ user, set }) => {
         if (!user) {
           set.status = 401;
           return { message: "Unauthorized" };
+        }
+
+        // Maintenance Mode protection: Block non-admin users when maintenance mode is active
+        const userRole = (user as any)?.role;
+        if (userRole !== "SUPERADMIN" && userRole !== "ADMIN") {
+          try {
+            const { CakeSettingsRepository } = await import("@/features/repository/CakeSettings/CakeSettings.repository");
+            const settings = await CakeSettingsRepository.getCakeSettings();
+            if (settings?.isMaintenanceMode) {
+              set.status = 503;
+              return {
+                error: "MAINTENANCE_MODE",
+                message: settings.maintenanceMessage || "ระบบกำลังปิดปรับปรุงชั่วคราว",
+              };
+            }
+          } catch (e) {
+            // Ignore error if settings cannot be loaded
+          }
         }
       },
       detail: {

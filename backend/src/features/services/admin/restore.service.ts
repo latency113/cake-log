@@ -5,7 +5,7 @@ import { getDbParams } from "@/shared/utils/db-utils";
 import { getAcademicYear } from "@/providers/database/database.context";
 import { CakeSettingsRepository } from "@/features/repository/CakeSettings/CakeSettings.repository";
 
-const isKeyValid = async (key?: string): Promise<boolean> => {
+export const isKeyValid = async (key?: string): Promise<boolean> => {
   if (!key || typeof key !== "string") return false;
   const trimmed = key.trim();
   if (!trimmed) return false;

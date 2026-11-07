@@ -9,6 +9,8 @@ export const settingSchema = t.Object({
   pickupEndTime: t.Optional(t.String()),
   reporterName: t.Optional(t.String()),
   securityKey: t.Optional(t.String()),
+  isMaintenanceMode: t.Optional(t.Boolean()),
+  maintenanceMessage: t.Optional(t.String()),
 });
 
 export type SettingSchema = typeof settingSchema.static;
