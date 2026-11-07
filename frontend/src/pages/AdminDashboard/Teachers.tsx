@@ -163,7 +163,7 @@ const Teachers: React.FC = () => {
           </div>
           <Button
             onClick={handleAddTeacherClick}
-            className="bg-white text-blue-600 hover:bg-blue-50 hover:text-blue-700 transition-colors duration-200 flex items-center"
+            className="bg-white text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:bg-white dark:text-blue-600 dark:hover:bg-blue-50 dark:hover:text-blue-700 transition-colors duration-200 flex items-center font-semibold shadow-sm"
           >
             <PlusCircle className="w-5 h-5 mr-2" />
             เพิ่มรายชื่อครู

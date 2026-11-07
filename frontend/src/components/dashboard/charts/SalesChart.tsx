@@ -188,26 +188,26 @@ const SalesChart: React.FC<SalesChartProps> = ({ dailyPounds }) => {
   };
 
   return (
-    <div className="bg-white rounded-sm shadow-md border border-border p-8 flex flex-col h-full">
+    <div className="bg-card rounded-sm shadow-md border border-border p-8 flex flex-col h-full">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-10">
         <div className="flex items-center gap-4">
-          <div className="p-3 bg-blue-50 rounded-xl">
-            <TrendingUp className="w-6 h-6 text-blue-600" />
+          <div className="p-3 bg-blue-50 dark:bg-blue-950/60 rounded-xl">
+            <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
           </div>
           <div>
-            <h2 className="text-xl font-semibold text-slate-800">
+            <h2 className="text-xl font-semibold text-foreground">
               แนวโน้มยอดปอนด์รายวัน
             </h2>
-            <div className="flex items-center text-slate-400 gap-1.5 mt-0.5">
+            <div className="flex items-center text-muted-foreground gap-1.5 mt-0.5">
               <CalendarDays className="w-3.5 h-3.5" />
               <p className="text-xs font-medium uppercase tracking-wider">สรุปตามวันที่รับเค้ก</p>
             </div>
           </div>
         </div>
         
-        <div className="flex items-center gap-3 bg-slate-50 px-4 py-2 rounded-lg border border-slate-100">
+        <div className="flex items-center gap-3 bg-muted/50 px-4 py-2 rounded-lg border border-border">
           <div className="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
-          <span className="text-[10px]  text-slate-500 uppercase tracking-widest">
+          <span className="text-[10px] text-muted-foreground uppercase tracking-widest">
             ยอดปอนด์รวม
           </span>
         </div>

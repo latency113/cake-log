@@ -34,7 +34,7 @@ const TeamTable: React.FC<TeamTableProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-md border bg-white">
+      <div className="rounded-md border bg-card">
         <Table>
           <TableHeader>
             <TableRow>

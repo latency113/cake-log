@@ -195,7 +195,7 @@ const Users: React.FC = () => {
           </div>
           <Button
             onClick={handleAddUserClick}
-            className="bg-white text-purple-700 hover:bg-purple-50 hover:text-purple-800 transition-colors duration-200 flex items-center font-medium shadow-sm cursor-pointer"
+            className="bg-white text-purple-700 hover:bg-purple-50 hover:text-purple-800 dark:bg-white dark:text-purple-700 dark:hover:bg-purple-50 dark:hover:text-purple-800 transition-colors duration-200 flex items-center font-semibold shadow-sm cursor-pointer"
           >
             <PlusCircle className="w-5 h-5 mr-2" />
             เพิ่มผู้ใช้ใหม่
@@ -267,7 +267,7 @@ const Users: React.FC = () => {
             <input
               type="text"
               placeholder="ค้นหาผู้ใช้งาน..."
-              className="pl-10 bg-white/95 text-gray-900 border-none rounded-md w-full py-2 sm:w-64 focus:ring-2 focus:ring-white text-sm"
+              className="pl-10 bg-white/95 dark:bg-slate-900/90 text-gray-900 dark:text-slate-100 placeholder:text-muted-foreground border border-transparent dark:border-slate-800 rounded-md w-full py-2 sm:w-64 focus:ring-2 focus:ring-white text-sm"
               value={searchTerm}
               onChange={handleSearchChange}
             />
@@ -278,7 +278,7 @@ const Users: React.FC = () => {
       {loading ? (
         <UsersTableSkeleton />
       ) : error ? (
-        <div className="p-4 text-red-500 text-center bg-white rounded shadow-sm">
+        <div className="p-4 text-red-500 text-center bg-card border border-border rounded shadow-sm">
           Error: {error}
         </div>
       ) : (

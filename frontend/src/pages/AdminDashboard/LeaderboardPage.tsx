@@ -199,8 +199,7 @@ const LeaderboardPage: React.FC = () => {
             <Button
               id="print-button"
               onClick={handlePrint}
-              variant="secondary"
-              className="mt-4 sm:mt-0"
+              className="mt-4 sm:mt-0 bg-white text-amber-700 hover:bg-amber-50 hover:text-amber-800 dark:bg-white dark:text-amber-700 dark:hover:bg-amber-50 dark:hover:text-amber-800 font-semibold shadow-sm"
               title="พิมพ์หน้านี้ (ปรับกระดาษเป็นแนวนอนและ Scale 97% อัตโนมัติ)"
             >
               <Printer className="w-4 h-4 mr-2" />

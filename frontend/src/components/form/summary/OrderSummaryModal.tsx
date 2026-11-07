@@ -79,23 +79,23 @@ const OrderSummaryModal: React.FC<OrderSummaryModalProps> = ({
       />
 
       {/* Modal Content */}
-      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-[900px] max-h-[95vh] bg-white shadow-2xl z-50 overflow-hidden flex flex-col">
+      <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-[900px] max-h-[95vh] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-2xl z-50 overflow-hidden flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b bg-gradient-to-r from-pink-50 to-purple-50">
-          <h2 className="text-2xl font-bold text-gray-800">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border bg-gradient-to-r from-pink-50 to-purple-50 dark:from-slate-800 dark:to-slate-900">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-foreground">
             ตัวอย่างใบสั่งซื้อ
           </h2>
           <button
             onClick={onClose}
-            className="p-2 rounded-full hover:bg-gray-200 transition"
+            className="p-2 rounded-full hover:bg-gray-200 dark:hover:bg-slate-800 transition"
             aria-label="Close"
           >
-            <X className="w-5 h-5 text-gray-600" />
+            <X className="w-5 h-5 text-gray-600 dark:text-slate-400" />
           </button>
         </div>
 
         {/* Form Preview - Scrollable Content */}
-        <div className="flex-1 overflow-y-auto p-6 bg-gray-50 text-black">
+        <div className="flex-1 overflow-y-auto p-6 bg-gray-50 dark:bg-slate-950 text-black">
           <div className="max-w-[800px] mx-auto bg-pink-50 p-8 shadow-lg relative">
             {/* Header ของฟอร์ม */}
 
@@ -430,11 +430,11 @@ const OrderSummaryModal: React.FC<OrderSummaryModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="flex justify-end space-x-4 px-6 py-4 bg-gray-50 border-t">
+        <div className="flex justify-end space-x-4 px-6 py-4 bg-gray-50 dark:bg-slate-900 border-t border-border">
           <button
             type="button"
             onClick={onClose}
-            className="px-6 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition"
+            className="px-6 py-2 border border-gray-300 dark:border-slate-700 rounded-md text-sm font-medium text-gray-700 dark:text-slate-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 transition"
           >
             แก้ไข
           </button>

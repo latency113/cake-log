@@ -70,7 +70,7 @@ const ClassroomCakeSummaryContent: React.FC<
         return (
           <div
             key={`summary-block-${summaryIndex}`}
-            className={`classroom-summary-card mb-4 p-4 border border-gray-200 rounded-lg print:border-0 print:border-none print:p-0 print:m-0 print:rounded-none print:shadow-none ${
+            className={`classroom-summary-card mb-4 p-4 border border-gray-200 dark:border-slate-800 bg-card text-foreground rounded-lg print:border-0 print:border-none print:p-0 print:m-0 print:rounded-none print:shadow-none ${
               summaryIndex === 0
                 ? "first-summary-content"
                 : "print:break-before-page"
@@ -115,13 +115,13 @@ const ClassroomCakeSummaryContent: React.FC<
                 </p>
                 <div className="mt-3 print:hidden">
                   <Link to="/my-classroom/$classroomId/students" params={{ classroomId: classroomSummary.classroomId }}>
-                    <Button variant="outline" size="sm" className="gap-2 border-blue-200 text-blue-600 hover:text-blue-700 hover:bg-blue-50">
+                    <Button variant="outline" size="sm" className="gap-2 border-blue-200 dark:border-blue-900/60 text-blue-600 dark:text-blue-400 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/40">
                       <Users className="w-4 h-4" /> ดูรายชื่อนักเรียน
                     </Button>
                   </Link>
                 </div>
               </div>
-              <div className="border-2 border-gray-800 px-4 py-2">
+              <div className="border-2 border-gray-800 dark:border-slate-700 print:border-gray-800 px-4 py-2">
                 <p className="text-sm">
                   เล่มที่:{" "}
                   <span className="font-semibold">
@@ -137,56 +137,56 @@ const ClassroomCakeSummaryContent: React.FC<
               </div>
             </div>
 
-            <Table className="border-2 border-gray-800 border-collapse">
+            <Table className="border-2 border-gray-800 dark:border-slate-700 print:border-gray-800 border-collapse">
               <TableHeader>
-                <TableRow className="border-b-2 border-gray-800">
+                <TableRow className="border-b-2 border-gray-800 dark:border-slate-700 print:border-gray-800">
                   <TableHead
-                    className="border-l-2 border-r-2 border-gray-800 text-center font-bold text-black align-middle"
+                    className="border-l-2 border-r-2 border-gray-800 dark:border-slate-700 print:border-gray-800 text-center font-bold text-foreground print:text-black align-middle"
                     rowSpan={2}
                   >
                     เนื้อเค้ก / ราคา (บาท/ปอนด์)
                   </TableHead>
                   <TableHead
-                    className="text-center font-bold text-black border-b border-gray-800"
+                    className="text-center font-bold text-foreground print:text-black border-b border-gray-800 dark:border-slate-700 print:border-gray-800"
                     colSpan={5}
                   >
                     จำนวน / ชิ้น
                   </TableHead>
                   <TableHead
-                    className="border-l-2 border-gray-800 border-r-2 text-center font-bold text-black align-middle"
+                    className="border-l-2 border-gray-800 dark:border-slate-700 print:border-gray-800 border-r-2 text-center font-bold text-foreground print:text-black align-middle"
                     rowSpan={2}
                   >
                     รวมปอนด์
                   </TableHead>
                   <TableHead
-                    className="border-l-2 border-r-2 border-gray-800 text-center font-bold text-black align-middle"
+                    className="border-l-2 border-r-2 border-gray-800 dark:border-slate-700 print:border-gray-800 text-center font-bold text-foreground print:text-black align-middle"
                     rowSpan={2}
                   >
                     รวมเป็นเงิน
                   </TableHead>
                 </TableRow>
-                <TableRow className="border-b-2 border-gray-800">
-                  <TableHead className="border-r border-gray-800 text-center text-xs font-bold text-black">
+                <TableRow className="border-b-2 border-gray-800 dark:border-slate-700 print:border-gray-800">
+                  <TableHead className="border-r border-gray-800 dark:border-slate-700 print:border-gray-800 text-center text-xs font-bold text-foreground print:text-black">
                     1 ปอนด์
                     <br />
                     (ชิ้น)
                   </TableHead>
-                  <TableHead className="border-r border-gray-800 text-center text-xs font-bold text-black">
+                  <TableHead className="border-r border-gray-800 dark:border-slate-700 print:border-gray-800 text-center text-xs font-bold text-foreground print:text-black">
                     2 ปอนด์
                     <br />
                     (ชิ้น)
                   </TableHead>
-                  <TableHead className="border-r border-gray-800 text-center text-xs font-bold text-black">
+                  <TableHead className="border-r border-gray-800 dark:border-slate-700 print:border-gray-800 text-center text-xs font-bold text-foreground print:text-black">
                     3 ปอนด์
                     <br />
                     (ชิ้น)
                   </TableHead>
-                  <TableHead className="border-r border-gray-800 text-center text-xs font-bold text-black">
+                  <TableHead className="border-r border-gray-800 dark:border-slate-700 print:border-gray-800 text-center text-xs font-bold text-foreground print:text-black">
                     4 ปอนด์
                     <br />
                     (ชิ้น)
                   </TableHead>
-                  <TableHead className="border-r-2 border-gray-800 text-center text-xs font-bold text-black">
+                  <TableHead className="border-r-2 border-gray-800 dark:border-slate-700 print:border-gray-800 text-center text-xs font-bold text-foreground print:text-black">
                     5 ปอนด์
                     <br />
                     (ชิ้น)
@@ -201,71 +201,71 @@ const ClassroomCakeSummaryContent: React.FC<
                   .map((cake, index) => (
                     <TableRow
                       key={`${classroomSummary.departmentName}-${classroomSummary.gradeLevelName}-${classroomSummary.classroomName}-${cake.productName}-${index}`}
-                      className="border-b border-gray-800"
+                      className="border-b border-gray-800 dark:border-slate-700 print:border-gray-800"
                     >
-                      <TableCell className="border-l-2 border-r-2 border-gray-800 font-medium py-6">
+                      <TableCell className="border-l-2 border-r-2 border-gray-800 dark:border-slate-700 print:border-gray-800 font-medium py-6">
                         {cake.productName}{" "}
                         {cake.pricePerPound && `${cake.pricePerPound} บาท`}
                       </TableCell>
-                      <TableCell className="border-r border-gray-800 text-center py-6">
+                      <TableCell className="border-r border-gray-800 dark:border-slate-700 print:border-gray-800 text-center py-6">
                         {cake.quantityBySize?.[1] || ""}
                       </TableCell>
-                      <TableCell className="border-r border-gray-800 text-center py-6">
+                      <TableCell className="border-r border-gray-800 dark:border-slate-700 print:border-gray-800 text-center py-6">
                         {cake.quantityBySize?.[2] || ""}
                       </TableCell>
-                      <TableCell className="border-r border-gray-800 text-center py-6">
+                      <TableCell className="border-r border-gray-800 dark:border-slate-700 print:border-gray-800 text-center py-6">
                         {cake.quantityBySize?.[3] || ""}
                       </TableCell>
-                      <TableCell className="border-r border-gray-800 text-center py-6">
+                      <TableCell className="border-r border-gray-800 dark:border-slate-700 print:border-gray-800 text-center py-6">
                         {cake.quantityBySize?.[4] || ""}
                       </TableCell>
-                      <TableCell className="border-r-2 border-gray-800 text-center py-6">
+                      <TableCell className="border-r-2 border-gray-800 dark:border-slate-700 print:border-gray-800 text-center py-6">
                         {cake.quantityBySize?.[5] || ""}
                       </TableCell>
-                      <TableCell className="border-r-2 border-gray-800 text-center font-semibold py-6">
+                      <TableCell className="border-r-2 border-gray-800 dark:border-slate-700 print:border-gray-800 text-center font-semibold py-6">
                         {cake.totalPounds}
                       </TableCell>
-                      <TableCell className="border-r-2 border-gray-800 text-center font-semibold py-6">
+                      <TableCell className="border-r-2 border-gray-800 dark:border-slate-700 print:border-gray-800 text-center font-semibold py-6">
                         {cake.totalAmount.toLocaleString()}
                       </TableCell>
                     </TableRow>
                   ))}
-                <TableRow className="border-b-2 border-gray-800 bg-gray-50">
+                <TableRow className="border-b-2 border-gray-800 dark:border-slate-700 print:border-gray-800 bg-gray-50 dark:bg-slate-800/50 print:bg-gray-50">
                   <TableCell
-                    className="border-l-2 border-r-2 border-gray-800 text-right font-bold py-4"
+                    className="border-l-2 border-r-2 border-gray-800 dark:border-slate-700 print:border-gray-800 text-right font-bold py-4"
                     colSpan={6}
                   >
                     รวม
                   </TableCell>
-                  <TableCell className="border-r-2 border-gray-800 text-center font-bold py-4">
+                  <TableCell className="border-r-2 border-gray-800 dark:border-slate-700 print:border-gray-800 text-center font-bold py-4">
                     {totalPounds}
                   </TableCell>
-                  <TableCell className="border-r-2 border-gray-800 text-center font-bold py-4">
+                  <TableCell className="border-r-2 border-gray-800 dark:border-slate-700 print:border-gray-800 text-center font-bold py-4">
                     {totalAmount.toLocaleString()}
                   </TableCell>
                 </TableRow>
-                <TableRow className="border-b-2 border-gray-800">
+                <TableRow className="border-b-2 border-gray-800 dark:border-slate-700 print:border-gray-800">
                   <TableCell
-                    className="border-l-2 border-r-2 border-gray-800 text-right font-medium py-3"
+                    className="border-l-2 border-r-2 border-gray-800 dark:border-slate-700 print:border-gray-800 text-right font-medium py-3"
                     colSpan={6}
                   >
                     ส่วนลด (10 บาท x {totalPounds} ปอนด์)
                   </TableCell>
-                  <TableCell className="border-r-2 border-gray-800 text-center py-3">
+                  <TableCell className="border-r-2 border-gray-800 dark:border-slate-700 print:border-gray-800 text-center py-3">
                     {totalPounds}
                   </TableCell>
-                  <TableCell className="border-r-2 border-gray-800 text-center py-3">
+                  <TableCell className="border-r-2 border-gray-800 dark:border-slate-700 print:border-gray-800 text-center py-3">
                     {discountAmount.toLocaleString()}
                   </TableCell>
                 </TableRow>
-                <TableRow className="bg-gray-100">
+                <TableRow className="bg-gray-100 dark:bg-slate-800 print:bg-gray-100">
                   <TableCell
-                    className="border-l-2 border-r-2 border-gray-800 text-right font-bold py-3"
+                    className="border-l-2 border-r-2 border-gray-800 dark:border-slate-700 print:border-gray-800 text-right font-bold py-3"
                     colSpan={7}
                   >
                     สุทธิชำระ
                   </TableCell>
-                  <TableCell className="border-r-2 border-gray-800 text-center font-bold py-3 text-lg">
+                  <TableCell className="border-r-2 border-gray-800 dark:border-slate-700 print:border-gray-800 text-center font-bold py-3 text-lg">
                     {netAmount.toLocaleString()}
                   </TableCell>
                 </TableRow>

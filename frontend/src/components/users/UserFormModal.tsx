@@ -488,7 +488,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
         <form onSubmit={handleSubmit} className="grid gap-6 py-4">
           {/* User Type Switcher */}
           <div className="space-y-2">
-            <label className="text-sm font-semibold text-gray-700">
+            <label className="text-sm font-semibold text-foreground">
               ประเภทบัญชีผู้ใช้ *
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -497,24 +497,24 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
                 onClick={() => handleUserTypeSelect("REGULAR")}
                 className={`flex items-start p-3.5 rounded-lg border text-left transition-all cursor-pointer ${
                   userType === "REGULAR"
-                    ? "border-purple-600 bg-purple-50/70 ring-2 ring-purple-500/20 shadow-xs"
-                    : "border-gray-200 hover:border-gray-300 bg-white"
+                    ? "border-purple-600 bg-purple-50/70 dark:bg-purple-950/30 ring-2 ring-purple-500/20 shadow-xs"
+                    : "border-border hover:border-slate-400 dark:hover:border-slate-600 bg-card"
                 }`}
               >
                 <div
                   className={`p-2 rounded-md mr-3 ${
                     userType === "REGULAR"
                       ? "bg-purple-600 text-white"
-                      : "bg-gray-100 text-gray-500"
+                      : "bg-muted text-muted-foreground"
                   }`}
                 >
                   <UserIcon className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="font-semibold text-sm text-gray-900">
+                  <div className="font-semibold text-sm text-foreground">
                     ผู้ใช้งานทั่วไป
                   </div>
-                  <div className="text-xs text-gray-500 mt-0.5">
+                  <div className="text-xs text-muted-foreground mt-0.5">
                     ผู้ใช้งานระบบทั่วไป กำหนดบทบาทได้ (เจ้าหน้าที่, แอดมิน, ฯลฯ)
                   </div>
                 </div>
@@ -525,24 +525,24 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
                 onClick={() => handleUserTypeSelect("TEACHER")}
                 className={`flex items-start p-3.5 rounded-lg border text-left transition-all cursor-pointer ${
                   userType === "TEACHER"
-                    ? "border-amber-600 bg-amber-50/70 ring-2 ring-amber-500/20 shadow-xs"
-                    : "border-gray-200 hover:border-gray-300 bg-white"
+                    ? "border-amber-600 bg-amber-50/70 dark:bg-amber-950/30 ring-2 ring-amber-500/20 shadow-xs"
+                    : "border-border hover:border-slate-400 dark:hover:border-slate-600 bg-card"
                 }`}
               >
                 <div
                   className={`p-2 rounded-md mr-3 ${
                     userType === "TEACHER"
                       ? "bg-amber-600 text-white"
-                      : "bg-gray-100 text-gray-500"
+                      : "bg-muted text-muted-foreground"
                   }`}
                 >
                   <GraduationCap className="w-5 h-5" />
                 </div>
                 <div>
-                  <div className="font-semibold text-sm text-gray-900">
+                  <div className="font-semibold text-sm text-foreground">
                     ครูที่ต้องกรอกข้อมูลเค้ก
                   </div>
-                  <div className="text-xs text-gray-500 mt-0.5">
+                  <div className="text-xs text-muted-foreground mt-0.5">
                     ครูประจำชั้น/ที่ปรึกษา สำหรับเข้าสู่ระบบสั่งจองเค้กของห้องเรียน
                   </div>
                 </div>
@@ -552,20 +552,20 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
 
           {/* Teacher Selection Section (Visible only when userType is TEACHER) */}
           {userType === "TEACHER" && (
-            <div className="p-4 rounded-lg bg-amber-50/70 border border-amber-200 space-y-4">
+            <div className="p-4 rounded-lg bg-amber-50/70 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 space-y-4">
               <div className="flex items-center justify-between flex-wrap gap-2">
-                <div className="flex items-center text-amber-900 font-semibold text-sm">
-                  <GraduationCap className="w-4 h-4 mr-2 text-amber-600" />
+                <div className="flex items-center text-amber-900 dark:text-amber-200 font-semibold text-sm">
+                  <GraduationCap className="w-4 h-4 mr-2 text-amber-600 dark:text-amber-400" />
                   ข้อมูลครูผู้สั่งจองเค้ก
                 </div>
-                <div className="flex gap-1 text-xs bg-amber-100/70 p-1 rounded-md">
+                <div className="flex gap-1 text-xs bg-amber-100/70 dark:bg-amber-950/40 p-1 rounded-md">
                   <button
                     type="button"
                     onClick={() => setTeacherMode("EXISTING")}
                     className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${
                       teacherMode === "EXISTING"
-                        ? "bg-white font-medium shadow-xs text-amber-900"
-                        : "text-amber-700 hover:text-amber-900"
+                        ? "bg-card font-medium shadow-xs text-amber-900 dark:text-amber-200"
+                        : "text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200"
                     }`}
                   >
                     เลือกจากรายชื่อครู
@@ -575,8 +575,8 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
                     onClick={() => setTeacherMode("NEW")}
                     className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${
                       teacherMode === "NEW"
-                        ? "bg-white font-medium shadow-xs text-amber-900"
-                        : "text-amber-700 hover:text-amber-900"
+                        ? "bg-card font-medium shadow-xs text-amber-900 dark:text-amber-200"
+                        : "text-amber-700 dark:text-amber-400 hover:text-amber-900 dark:hover:text-amber-200"
                     }`}
                   >
                     + เพิ่มครูใหม่
@@ -586,16 +586,16 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
 
               {teacherMode === "EXISTING" ? (
                 <div className="space-y-2">
-                  <label className="text-xs font-medium text-gray-700">
+                  <label className="text-xs font-medium text-foreground">
                     เลือกครูในระบบ *
                   </label>
                   {isLoadingTeachers ? (
-                    <div className="flex items-center text-sm text-gray-500 py-2">
+                    <div className="flex items-center text-sm text-muted-foreground py-2">
                       <Loader2 className="w-4 h-4 animate-spin mr-2" />
                       กำลังโหลดรายชื่อครู...
                     </div>
                   ) : teachers.length === 0 ? (
-                    <div className="text-xs text-amber-800 bg-amber-100/60 p-3 rounded border border-amber-300">
+                    <div className="text-xs text-amber-800 dark:text-amber-200 bg-amber-100/60 dark:bg-amber-950/40 p-3 rounded border border-amber-300 dark:border-amber-800">
                       ยังไม่มีข้อมูลครูในระบบของปีนี้ คุณสามารถคลิกปุ่ม{" "}
                       <b>"+ เพิ่มครูใหม่"</b> ด้านบนเพื่อสร้างข้อมูลครูได้ทันที
                     </div>
@@ -604,7 +604,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
                       value={selectedTeacherId}
                       onValueChange={handleTeacherSelectChange}
                     >
-                      <SelectTrigger className="w-full bg-white">
+                      <SelectTrigger className="w-full bg-card">
                         <SelectValue placeholder="-- เลือกครูจากรายชื่อ --" />
                       </SelectTrigger>
                       <SelectContent className="max-h-60">
@@ -621,7 +621,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
               ) : (
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
                   <div>
-                    <label className="text-xs font-medium text-gray-700 block mb-1">
+                    <label className="text-xs font-medium text-foreground block mb-1">
                       ชื่อ-นามสกุลครู *
                     </label>
                     <input
@@ -646,18 +646,18 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
                           }));
                         }
                       }}
-                      className="w-full text-sm rounded-md border border-gray-300 px-3 py-2 bg-white focus:outline-none focus:ring-2 focus:ring-amber-500"
+                      className="w-full text-sm rounded-md border border-input px-3 py-2 bg-background text-foreground focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-medium text-gray-700 block mb-1">
+                    <label className="text-xs font-medium text-foreground block mb-1">
                       แผนกวิชา *
                     </label>
                     <Select
                       value={newTeacherDepartmentId}
                       onValueChange={setNewTeacherDepartmentId}
                     >
-                      <SelectTrigger className="w-full bg-white text-sm">
+                      <SelectTrigger className="w-full bg-card text-sm">
                         <SelectValue placeholder="-- เลือกแผนกวิชา --" />
                       </SelectTrigger>
                       <SelectContent className="max-h-60">

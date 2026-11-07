@@ -103,7 +103,7 @@ const Products: React.FC = () => {
           </div>
           <Button
             onClick={handleAddProductClick}
-            className="bg-white text-green-600 hover:bg-green-50 hover:text-green-700 transition-colors duration-200 flex items-center"
+            className="bg-white text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:bg-white dark:text-emerald-600 dark:hover:bg-emerald-50 dark:hover:text-emerald-700 transition-colors duration-200 flex items-center font-semibold shadow-sm"
           >
             <PlusCircle className="w-5 h-5 mr-2" />
             เพิ่มสินค้าใหม่

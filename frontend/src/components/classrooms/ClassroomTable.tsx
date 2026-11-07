@@ -107,12 +107,12 @@ const ClassroomTable: React.FC<ClassroomTableProps> = ({
 
   if (classrooms.length === 0) {
     return (
-      <div className="border border-gray-200 rounded-lg p-12 text-center">
-        <Home className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-        <h3 className="text-lg font-semibold text-gray-700 mb-2">
+      <div className="border border-border rounded-lg p-12 text-center bg-card">
+        <Home className="w-16 h-16 mx-auto text-muted-foreground/40 mb-4" />
+        <h3 className="text-lg font-semibold text-foreground mb-2">
           ไม่พบห้องเรียน
         </h3>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           ไม่มีห้องเรียนในแผนกนี้ กดปุ่ม "เพิ่มห้องเรียนใหม่" เพื่อสร้างห้องเรียน
         </p>
       </div>

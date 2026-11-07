@@ -489,7 +489,7 @@ const ClassroomsReport: React.FC = () => {
             <div className="flex space-x-4 print:hidden">
               <Button
                 onClick={handlePrintClassroomsReport}
-                className="bg-blue-500 text-white hover:bg-blue-600 transition-colors duration-200 flex items-center"
+                className="bg-white text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:bg-white dark:text-blue-600 dark:hover:bg-blue-50 dark:hover:text-blue-700 transition-colors duration-200 flex items-center font-semibold shadow-sm"
                 title="พิมพ์รายงาน (จัดแนวนอนและเต็มหน้ากระดาษอัตโนมัติ)"
               >
                 <Printer className="w-5 h-5 mr-2" />
@@ -498,7 +498,7 @@ const ClassroomsReport: React.FC = () => {
               <Button
                 onClick={handlePrintClassroomSummary}
                 id="print-classroom-summary-button"
-                className="bg-green-500 text-white hover:bg-green-600 transition-colors duration-200 flex items-center"
+                className="bg-emerald-600 text-white hover:bg-emerald-700 dark:bg-emerald-600 dark:text-white dark:hover:bg-emerald-700 transition-colors duration-200 flex items-center font-semibold shadow-sm"
                 disabled={loadingClassroomSummary} // Disable when summary data is loading
                 title="พิมพ์สรุปยอดเค้กของห้องเรียน (ปรับกระดาษเป็น A4 แนวตั้งอัตโนมัติ)"
               >

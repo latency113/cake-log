@@ -45,21 +45,30 @@ const DepartmentSalesBarChart: React.FC<DepartmentSalesBarChartProps> = ({
     handleResize();
     window.addEventListener('resize', handleResize);
     
-    const style = getComputedStyle(document.documentElement);
-    setChartTextColor(
-      style.getPropertyValue("--foreground").trim() || "#475569"
-    );
-    setGridColor(
-      style.getPropertyValue("--border").trim() || "rgba(148, 163, 184, 0.1)"
-    );
-    setTooltipBgColor(
-      style.getPropertyValue("--card").trim() || "rgba(15, 23, 42, 0.9)"
-    );
-    setTooltipTextColor(
-      style.getPropertyValue("--card-foreground").trim() || "#f8fafc"
-    );
+    const updateThemeColors = () => {
+      const isDark = document.documentElement.classList.contains('dark');
+      setChartTextColor(isDark ? "#f1f5f9" : "#475569");
+      setGridColor(isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(148, 163, 184, 0.15)");
+      setTooltipBgColor(isDark ? "rgba(30, 41, 59, 0.95)" : "rgba(15, 23, 42, 0.9)");
+      setTooltipTextColor("#f8fafc");
+    };
 
-    return () => window.removeEventListener('resize', handleResize);
+    updateThemeColors();
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        if (mutation.attributeName === 'class') {
+          updateThemeColors();
+        }
+      }
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      observer.disconnect();
+    };
   }, []);
 
   const internalDepartmentColorMap: { [key: string]: string } = {};

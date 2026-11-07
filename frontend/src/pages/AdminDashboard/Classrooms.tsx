@@ -466,7 +466,7 @@ const Classrooms: React.FC = () => {
 
                 <Button
                   onClick={() => setIsImportModalOpen(true)}
-                  className="bg-green-500 text-white hover:bg-green-600 transition-colors duration-200 flex items-center"
+                  className="bg-white text-blue-600 hover:bg-blue-50 hover:text-blue-700 dark:bg-white dark:text-blue-600 dark:hover:bg-blue-50 dark:hover:text-blue-700 transition-colors duration-200 flex items-center font-semibold shadow-sm"
                 >
                   <FileSpreadsheet className="w-5 h-5 mr-2" />
                   นำเข้า Excel

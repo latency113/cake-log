@@ -602,23 +602,23 @@ const ClassroomStudentsPage: React.FC = () => {
 
         {studentsCakeData && studentsCakeData.students.length > 0 ? (
           <div id="printable-classroom-students-section-screen">
-            <div className="border border-gray-300 rounded-lg overflow-hidden shadow-sm">
+            <div className="border border-slate-300 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm bg-card text-card-foreground">
               <table className="w-full border-collapse">
                 <thead>
-                  <tr className="bg-gray-100">
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-b border-r border-gray-300">
+                  <tr className="bg-slate-100 dark:bg-slate-800/80">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700 dark:text-slate-300 border-b border-r border-slate-300 dark:border-slate-800">
                       เลขที่
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-b border-r border-gray-300">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700 dark:text-slate-300 border-b border-r border-slate-300 dark:border-slate-800">
                       รหัสนักเรียน
                     </th>
-                    <th className="px-4 py-3 text-left text-sm font-medium text-gray-700 border-b border-r border-gray-300">
+                    <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700 dark:text-slate-300 border-b border-r border-slate-300 dark:border-slate-800">
                       ชื่อ-นามสกุล
                     </th>
-                    <th className="px-4 py-3 text-right text-sm font-medium text-gray-700 border-b border-r border-gray-300">
+                    <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700 dark:text-slate-300 border-b border-r border-slate-300 dark:border-slate-800">
                       จำนวนเค้ก (ปอนด์)
                     </th>
-                    <th className="px-4 py-3 text-center text-sm font-medium text-gray-700 border-b border-gray-300 w-32">
+                    <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-300 dark:border-slate-800 w-32">
                       จัดการ
                     </th>
                   </tr>
@@ -627,20 +627,20 @@ const ClassroomStudentsPage: React.FC = () => {
                   {studentsCakeData.students.map((student, index) => (
                     <tr
                       key={student.studentId}
-                      className="hover:bg-gray-50 group"
+                      className="hover:bg-slate-50 dark:hover:bg-slate-800/50 group transition-colors"
                     >
-                      <td className="px-4 py-3 text-sm text-gray-900 border-b border-r border-gray-300">
+                      <td className="px-4 py-3 text-sm text-slate-900 dark:text-slate-200 border-b border-r border-slate-300 dark:border-slate-800">
                         {index + 1}
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900 border-b border-r border-gray-300">
+                      <td className="px-4 py-3 text-sm text-slate-900 dark:text-slate-200 border-b border-r border-slate-300 dark:border-slate-800">
                         {student.studentId.replace(/\u200B/g, "")}
                       </td>
                       <td
-                        className="px-4 py-3 text-sm text-gray-900 border-b border-r border-gray-300 cursor-pointer hover:bg-slate-50 transition-colors"
+                        className="px-4 py-3 text-sm text-slate-900 dark:text-slate-200 border-b border-r border-slate-300 dark:border-slate-800 cursor-pointer hover:bg-slate-100/70 dark:hover:bg-slate-800 transition-colors"
                         onClick={() => handleStudentClick(student.studentName)}
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-medium text-blue-600 hover:text-blue-800 hover:underline">
+                          <span className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">
                             {student.studentName}
                           </span>
                           <button
@@ -651,22 +651,22 @@ const ClassroomStudentsPage: React.FC = () => {
                                 student.studentName,
                               );
                             }}
-                            className="text-slate-400 hover:text-blue-600 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"
                           >
                             <Edit2 size={14} />
                           </button>
                         </div>
                       </td>
-                      <td className="px-4 py-3 text-sm text-gray-900 text-right font-medium border-b border-r border-gray-300">
+                      <td className="px-4 py-3 text-sm text-slate-900 dark:text-slate-200 text-right font-medium border-b border-r border-slate-300 dark:border-slate-800">
                         {student.totalPounds}
                       </td>
-                      <td className="px-4 py-3 text-sm text-center border-b border-gray-300">
+                      <td className="px-4 py-3 text-sm text-center border-b border-slate-300 dark:border-slate-800">
                         {(user?.role === "SUPERADMIN" || student.studentId.includes("\u200B")) ? (
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDeleteStudent(student.studentId)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40"
                           >
                             <Trash2 size={16} />
                           </Button>
@@ -678,17 +678,17 @@ const ClassroomStudentsPage: React.FC = () => {
                   ))}
                 </tbody>
                 <tfoot>
-                  <tr className="bg-gray-100 font-bold">
+                  <tr className="bg-slate-100 dark:bg-slate-800/80 font-bold">
                     <td
                       colSpan={3}
-                      className="px-4 py-3 text-sm text-gray-900 text-right border-r border-gray-300"
+                      className="px-4 py-3 text-sm text-slate-900 dark:text-slate-100 text-right border-r border-slate-300 dark:border-slate-800"
                     >
                       รวมจำนวนปอนด์นักเรียนทุกคนในห้อง:
                     </td>
-                    <td className="px-4 py-3 text-sm text-gray-900 text-right border-r border-gray-300">
+                    <td className="px-4 py-3 text-sm text-slate-900 dark:text-slate-100 text-right border-r border-slate-300 dark:border-slate-800">
                       {studentsCakeData.totalPoundsForClassroom} ปอนด์
                     </td>
-                    <td className="bg-gray-100 border-b border-gray-300"></td>
+                    <td className="bg-slate-100 dark:bg-slate-800/80 border-b border-slate-300 dark:border-slate-800"></td>
                   </tr>
                 </tfoot>
               </table>

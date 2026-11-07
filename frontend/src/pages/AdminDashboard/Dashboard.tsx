@@ -30,7 +30,7 @@ const Dashboard: React.FC = () => {
       {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between mb-10 mt-5 gap-4">
         <div>
-          <h1 className="text-4xl semi-bold text-slate-800 tracking-tight flex items-center gap-3">
+          <h1 className="text-4xl semi-bold text-slate-800 dark:text-slate-100 tracking-tight flex items-center gap-3">
             <LayoutDashboard className="w-10 h-10 text-blue-600" />
             สรุปภาพรวมระบบ
           </h1>
@@ -38,11 +38,11 @@ const Dashboard: React.FC = () => {
             รายงานสถิติและผลการดำเนินงานยอดปอนด์เค้ก
           </p>
         </div>
-        <div className="flex items-center gap-3 bg-white px-5 py-3 rounded-2xl shadow-sm border border-border w-fit self-start md:self-center">
+        <div className="flex items-center gap-3 bg-white dark:bg-slate-900 px-5 py-3 rounded-2xl shadow-sm border border-border w-fit self-start md:self-center">
           <Clock className="w-5 h-5 text-blue-500" />
           <div className="text-left">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">อัพเดทล่าสุด</p>
-            <p className="text-sm font-bold text-slate-700 mt-0.5">
+            <p className="text-sm font-bold text-slate-700 dark:text-slate-200 mt-0.5">
               {new Date().toLocaleDateString("th-TH", { day: 'numeric', month: 'long', year: 'numeric' })}
             </p>
           </div>

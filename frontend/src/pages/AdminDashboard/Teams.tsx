@@ -140,7 +140,7 @@ const Teams: React.FC = () => {
           </div>
           <Button
             onClick={handleAddTeam}
-            className="bg-white text-purple-600 hover:bg-gray-100 self-start md:self-center"
+            className="bg-white text-purple-600 hover:bg-purple-50 hover:text-purple-700 dark:bg-white dark:text-purple-600 dark:hover:bg-purple-50 dark:hover:text-purple-700 font-semibold shadow-sm self-start md:self-center"
           >
             <PlusCircle className="w-5 h-5 mr-2" />
             เพิ่มทีม
@@ -176,7 +176,7 @@ const Teams: React.FC = () => {
       </div>
 
       {error && teams.length === 0 ? (
-        <div className="p-4 text-red-500 text-center bg-white rounded shadow-sm">
+        <div className="p-4 text-destructive text-center bg-card border border-destructive/20 rounded shadow-sm">
           เกิดข้อผิดพลาดในการโหลดข้อมูล: {error}
         </div>
       ) : (

@@ -68,9 +68,9 @@ const ClassroomFormModal: React.FC<ClassroomFormModalProps> = ({
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           
           {/* คำแนะนำ */}
-          <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-800">
+          <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/60 rounded-lg p-3 text-sm text-blue-800 dark:text-blue-300">
             <p className="font-semibold mb-1">คำแนะนำ:</p>
-            <ul className="list-disc list-inside space-y-1 text-xs text-blue-700">
+            <ul className="list-disc list-inside space-y-1 text-xs text-blue-700 dark:text-blue-400">
               <li>ระบบจะสร้าง ห้อง, ครู, แผนก และ นักเรียน จากไฟล์ให้อัตโนมัติ</li>
               <li>ใช้ไฟล์รูปแบบรายงาน (Report Format) ตามที่กำหนด</li>
             </ul>
@@ -90,35 +90,35 @@ const ClassroomFormModal: React.FC<ClassroomFormModalProps> = ({
             {!selectedFile ? (
               <label
                 htmlFor="excel-upload"
-                className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-50 transition-all duration-200"
+                className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-300 dark:border-slate-700 rounded-xl cursor-pointer hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all duration-200"
               >
-                <div className="p-3 bg-blue-100 rounded-full mb-3 group-hover:scale-110 transition-transform">
-                  <Upload className="w-6 h-6 text-blue-600" />
+                <div className="p-3 bg-blue-100 dark:bg-blue-950/60 rounded-full mb-3 group-hover:scale-110 transition-transform">
+                  <Upload className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                 </div>
-                <span className="text-sm font-medium text-gray-700">
+                <span className="text-sm font-medium text-gray-700 dark:text-slate-300">
                   คลิกเพื่อเลือกไฟล์ Excel
                 </span>
-                <span className="text-xs text-gray-400 mt-1">
+                <span className="text-xs text-gray-400 dark:text-slate-500 mt-1">
                   รองรับไฟล์ .xlsx, .xls
                 </span>
               </label>
             ) : (
-              <div className="relative flex items-center p-4 bg-green-50 border border-green-200 rounded-xl">
-                <div className="p-2 bg-green-100 rounded-lg mr-3">
-                  <FileSpreadsheet className="w-6 h-6 text-green-600" />
+              <div className="relative flex items-center p-4 bg-green-50 dark:bg-emerald-950/30 border border-green-200 dark:border-emerald-800/60 rounded-xl">
+                <div className="p-2 bg-green-100 dark:bg-emerald-900/50 rounded-lg mr-3">
+                  <FileSpreadsheet className="w-6 h-6 text-green-600 dark:text-emerald-400" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-gray-900 truncate">
+                  <p className="text-sm font-medium text-gray-900 dark:text-slate-100 truncate">
                     {selectedFile.name}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-gray-500 dark:text-slate-400">
                     {(selectedFile.size / 1024).toFixed(2)} KB
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setSelectedFile(null)}
-                  className="p-1 hover:bg-green-200 rounded-full text-gray-500 hover:text-red-500 transition-colors"
+                  className="p-1 hover:bg-green-200 dark:hover:bg-emerald-900/60 rounded-full text-gray-500 dark:text-slate-400 hover:text-red-500 dark:hover:text-red-400 transition-colors"
                   disabled={isSubmitting}
                 >
                   <X className="w-5 h-5" />

@@ -49,7 +49,7 @@ const DepartmentTable: React.FC<DepartmentTableProps> = ({
   const isAllSelected = departments.length > 0 && selectedIds.length === departments.length;
 
   return (
-    <div className="rounded-sm border shadow-md bg-white">
+    <div className="rounded-sm border shadow-md bg-card">
       <Table>
         <TableHeader>
           <TableRow>

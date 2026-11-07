@@ -13,25 +13,25 @@ const TopDepartmentsCard: React.FC<TopDepartmentsCardProps> = ({
     {
       badge: "bg-yellow-400 text-white",
       value: "text-yellow-500",
-      row: "border border-slate-200",
+      row: "border border-border bg-card/50",
     },
     {
       badge: "bg-slate-400 text-white",
-      value: "text-slate-500",
-      row: "border border-slate-200",
+      value: "text-slate-500 dark:text-slate-400",
+      row: "border border-border bg-card/50",
     },
     {
       badge: "bg-orange-400 text-white",
       value: "text-orange-500",
-      row: "border border-slate-200",
+      row: "border border-border bg-card/50",
     },
   ];
 
   return (
-    <div className="bg-white rounded-sm shadow-md border border-slate-200 flex flex-col h-full overflow-hidden">
+    <div className="bg-card rounded-sm shadow-md border border-border flex flex-col h-full overflow-hidden">
       {/* Header — matches other card headers in the dashboard */}
-      <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-        <h2 className="text-sm font-semibold text-slate-700 flex items-center gap-2">
+      <div className="px-6 py-4 border-b border-border flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <Award className="w-4 h-4 text-blue-500" />
           แผนกที่ซื้อมากที่สุด
         </h2>
@@ -62,10 +62,10 @@ const TopDepartmentsCard: React.FC<TopDepartmentsCardProps> = ({
 
                 {/* Dept info + progress bar */}
                 <div className="flex-1 min-w-0">
-                  <p className="text-[9px] uppercase tracking-wider leading-none mb-1">
+                  <p className="text-[9px] uppercase tracking-wider text-muted-foreground leading-none mb-1">
                     แผนก
                   </p>
-                  <p className="text-sm font-medium text-slate-700 truncate leading-tight">
+                  <p className="text-sm font-medium text-foreground truncate leading-tight">
                     {dept.name}
                   </p>
                 </div>

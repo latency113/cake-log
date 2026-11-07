@@ -7,15 +7,15 @@ export default function SalesRecordsPageSkeleton() {
       <SkeletonLoader className="h-10 w-24" />
 
       {/* Table-like structure */} 
-      <div className="border border-gray-200 shadow-md rounded-md overflow-hidden">
-        <div className="bg-gray-50 p-4 flex justify-between items-center">
+      <div className="border border-border bg-card shadow-sm rounded-md overflow-hidden">
+        <div className="bg-muted/50 p-4 flex justify-between items-center">
           <SkeletonLoader className="h-6 w-1/6" />
           <SkeletonLoader className="h-6 w-1/6" />
           <SkeletonLoader className="h-6 w-1/6" />
           <SkeletonLoader className="h-6 w-1/6" />
           <SkeletonLoader className="h-6 w-1/6" />
         </div>
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-border">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="p-4 flex justify-between items-center">
               <SkeletonLoader className="h-5 w-1/6" />

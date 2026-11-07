@@ -485,12 +485,12 @@ const SettingsPage: React.FC = () => {
       </div>
 
       {/* Switch Academic Year Section */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8 border-l-4 border-blue-500">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800 flex items-center">
+      <div className="bg-card p-6 rounded-lg shadow-md mb-8 border border-border border-l-4 border-l-blue-500">
+        <h2 className="text-2xl font-semibold mb-4 text-foreground flex items-center">
           <Database className="w-6 h-6 mr-2 text-blue-500" />
           เรียกดูข้อมูลปีการศึกษา
         </h2>
-        <p className="text-gray-600 mb-6">
+        <p className="text-muted-foreground mb-6">
           เลือกปีการศึกษาที่ต้องการเรียกดูหรือจัดการข้อมูล ระบบจะสลับไปยังฐานข้อมูลของปีที่เลือกโดยอัตโนมัติ
         </p>
         <div className="flex items-center justify-between flex-wrap gap-4">
@@ -505,7 +505,7 @@ const SettingsPage: React.FC = () => {
             <Button 
               variant="outline" 
               onClick={handleClearAllData}
-              className="flex items-center gap-2 text-red-600 border-red-200 hover:bg-red-50"
+              className="flex items-center gap-2 text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-950/40"
             >
               <RefreshCcw className="w-4 h-4" />
               ล้างข้อมูลทั้งหมด (ยกเว้นผู้ใช้)
@@ -523,12 +523,12 @@ const SettingsPage: React.FC = () => {
       </div>
 
       {/* Backup and Restore Section */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8 border-l-4 border-green-500">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800 flex items-center">
+      <div className="bg-card p-6 rounded-lg shadow-md mb-8 border border-border border-l-4 border-l-green-500">
+        <h2 className="text-2xl font-semibold mb-4 text-foreground flex items-center">
           <DownloadCloud className="w-6 h-6 mr-2 text-green-500" />
           สำรองและกู้คืนข้อมูล
         </h2>
-        <p className="text-gray-600 mb-6">
+        <p className="text-muted-foreground mb-6">
           คุณสามารถสำรองข้อมูลทั้งหมดของระบบได้ที่นี่ การสำรองข้อมูลเป็นสิ่งสำคัญเพื่อป้องกันข้อมูลสูญหาย
         </p>
         
@@ -555,15 +555,15 @@ const SettingsPage: React.FC = () => {
                 สำรองข้อมูล
               </Button>
             </div>
-            <div className="mt-4 p-4 bg-gray-50 rounded-md border border-gray-100">
-              <p className="text-sm text-gray-500 flex items-center gap-2">
+            <div className="mt-4 p-4 bg-muted/50 rounded-md border border-border">
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
                 <Undo2 className="w-4 h-4" />
                 หรือย้อนกลับเป็นไฟล์ล่าสุดทันที:
               </p>
               <Button
                 onClick={() => handleRevertData()}
                 variant="outline"
-                className="mt-2 w-full border-red-200 text-red-600 hover:bg-red-50"
+                className="mt-2 w-full border-red-200 dark:border-red-900/50 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/40"
               >
                 กู้คืนจากไฟล์ล่าสุด
               </Button>
@@ -575,20 +575,20 @@ const SettingsPage: React.FC = () => {
               <History className="w-5 h-5 text-amber-500" />
               ประวัติการสำรองข้อมูล
             </h3>
-            <div className="max-h-[250px] overflow-y-auto border rounded-md divide-y">
+            <div className="max-h-[250px] overflow-y-auto border border-border rounded-md divide-y divide-border">
               {isLoadingBackups ? (
-                <div className="p-4 text-center text-gray-400">กำลังโหลด...</div>
+                <div className="p-4 text-center text-muted-foreground">กำลังโหลด...</div>
               ) : backups.length > 0 ? (
                 backups.map((file) => (
-                  <div key={file} className="p-3 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                  <div key={file} className="p-3 flex items-center justify-between hover:bg-muted/60 transition-colors">
                     <div className="flex flex-col">
-                      <span className="text-sm font-mono text-gray-700 break-all">{file}</span>
+                      <span className="text-sm font-mono text-foreground break-all">{file}</span>
                     </div>
                     <div className="flex items-center gap-1">
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-blue-600 hover:text-blue-700 hover:bg-blue-50 shrink-0"
+                        className="text-blue-600 dark:text-blue-400 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-950/40 shrink-0"
                         onClick={() => handleDownloadBackup(file)}
                       >
                         <Download className="w-4 h-4 mr-1" />
@@ -597,7 +597,7 @@ const SettingsPage: React.FC = () => {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="text-amber-600 hover:text-amber-700 hover:bg-amber-50 shrink-0"
+                        className="text-amber-600 dark:text-amber-400 hover:text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-950/40 shrink-0"
                         onClick={() => handleRevertData(file)}
                       >
                         กู้คืน
@@ -606,7 +606,7 @@ const SettingsPage: React.FC = () => {
                   </div>
                 ))
               ) : (
-                <div className="p-4 text-center text-gray-400">ไม่พบไฟล์สำรองข้อมูล</div>
+                <div className="p-4 text-center text-muted-foreground">ไม่พบไฟล์สำรองข้อมูล</div>
               )}
             </div>
           </div>
@@ -614,12 +614,12 @@ const SettingsPage: React.FC = () => {
       </div>
 
       {/* Initialize New Year Section */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8 border-l-4 border-amber-500">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800 flex items-center">
+      <div className="bg-card p-6 rounded-lg shadow-md mb-8 border border-border border-l-4 border-l-amber-500">
+        <h2 className="text-2xl font-semibold mb-4 text-foreground flex items-center">
           <Sparkles className="w-6 h-6 mr-2 text-amber-500" />
           เตรียมระบบสำหรับปีการศึกษาใหม่
         </h2>
-        <p className="text-gray-600 mb-6">
+        <p className="text-muted-foreground mb-6">
           ใช้สำหรับสร้างฐานข้อมูลใหม่เมื่อเริ่มปีการศึกษาใหม่ ระบบจะคัดลอกข้อมูลผู้ใช้งาน (User) ไปยังฐานข้อมูลปีใหม่ให้โดยอัตโนมัติ
         </p>
         <div className="flex items-end gap-4">
@@ -644,8 +644,8 @@ const SettingsPage: React.FC = () => {
       </div>
 
       {/* Cake Settings Section */}
-      <div className="bg-white p-6 rounded-lg shadow-md mb-8 border-l-4 border-pink-500">
-        <h2 className="text-2xl font-semibold mb-4 text-gray-800">
+      <div className="bg-card p-6 rounded-lg shadow-md mb-8 border border-border border-l-4 border-l-pink-500">
+        <h2 className="text-2xl font-semibold mb-4 text-foreground">
           การตั้งค่าระบบ
         </h2>
         {isLoadingCakeSettings ? (

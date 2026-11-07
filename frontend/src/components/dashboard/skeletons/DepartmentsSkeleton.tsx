@@ -4,7 +4,7 @@ export default function DepartmentsSkeleton() {
   return (
     <div className="max-w-11/12 mx-auto p-4 space-y-6">
       {/* Header Section */} 
-      <div className="rounded-sm shadow-md p-8 mb-8">
+      <div className="bg-card border border-border rounded-lg shadow-sm p-8 mb-8">
         <div className="flex items-center justify-between">
           <div>
             <SkeletonLoader className="h-10 w-64 mb-2" />
@@ -15,13 +15,13 @@ export default function DepartmentsSkeleton() {
       </div>
 
       {/* Table-like structure */} 
-      <div className="border border-gray-200 shadow-md rounded-md overflow-hidden">
-        <div className="bg-gray-50 p-4 flex justify-between items-center">
+      <div className="border border-border bg-card shadow-sm rounded-md overflow-hidden">
+        <div className="bg-muted/50 p-4 flex justify-between items-center">
           <SkeletonLoader className="h-6 w-1/3" />
           <SkeletonLoader className="h-6 w-1/3" />
           <SkeletonLoader className="h-6 w-1/6" />
         </div>
-        <div className="divide-y divide-gray-200">
+        <div className="divide-y divide-border">
           {[...Array(5)].map((_, i) => (
             <div key={i} className="p-4 flex justify-between items-center">
               <SkeletonLoader className="h-5 w-1/3" />

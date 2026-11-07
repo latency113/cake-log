@@ -204,20 +204,20 @@ const OrderBooks: React.FC = () => {
                 placeholder="ค้นหาเลขเล่ม..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-white/90 text-gray-900 border-none rounded-md w-full sm:w-64 focus:ring-2 focus:ring-white"
+                className="pl-10 bg-white/95 dark:bg-slate-900/90 text-gray-900 dark:text-slate-100 placeholder:text-muted-foreground border border-transparent dark:border-slate-800 rounded-md w-full sm:w-64 focus:ring-2 focus:ring-pink-300"
               />
             </div>
             <div className="flex gap-2">
               <Button
                 onClick={handleBulkCreate}
                 variant="outline"
-                className="bg-transparent border-white text-white hover:bg-white hover:text-pink-600 transition-colors duration-200"
+                className="bg-transparent border-white text-white hover:bg-white hover:text-pink-600 dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-pink-600 transition-colors duration-200"
               >
                 สร้างเล่ม 001-100 อัตโนมัติ
               </Button>
               <Button
                 onClick={handleAddOrderBookClick}
-                className="bg-white text-pink-600 hover:bg-pink-50 hover:text-pink-700 transition-colors duration-200 flex items-center shadow-sm"
+                className="bg-white text-pink-600 hover:bg-pink-50 hover:text-pink-700 dark:bg-white dark:text-pink-600 dark:hover:bg-pink-50 dark:hover:text-pink-700 transition-colors duration-200 flex items-center font-semibold shadow-sm"
               >
                 <PlusCircle className="w-5 h-5 mr-2" />
                 เพิ่มสมุดจองใหม่

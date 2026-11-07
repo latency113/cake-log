@@ -23,7 +23,7 @@ const CakeDetailsTable: React.FC<CakeDetailsTableProps> = ({
       {/* Minimal Header */}
       <div className="px-6 py-4 border-b border-border">
         <div className="flex items-center space-x-3">
-          <div className="p-2 bg-blue-50 rounded-xl">
+          <div className="p-2 bg-blue-50 dark:bg-blue-950/50 rounded-xl">
             <Package className="w-5 h-5 text-blue-600" />
           </div>
           <h2 className="text-xl font-semibold text-foreground">

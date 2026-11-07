@@ -404,10 +404,10 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium truncate ${
                       order.status === "pending"
-                        ? "bg-blue-100 text-blue-800 border border-blue-200"
+                        ? "bg-blue-100 dark:bg-blue-950/60 text-blue-800 dark:text-blue-300 border border-blue-200 dark:border-blue-800"
                         : order.status === "approved"
-                        ? "bg-amber-100 text-amber-800 border border-amber-200"
-                        : "bg-green-100 text-green-800 border border-green-200"
+                        ? "bg-amber-100 dark:bg-amber-950/60 text-amber-800 dark:text-amber-300 border border-amber-200 dark:border-amber-800"
+                        : "bg-green-100 dark:bg-green-950/60 text-green-800 dark:text-green-300 border border-green-200 dark:border-green-800"
                     }`}
                   >
                     <div

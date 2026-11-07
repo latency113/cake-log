@@ -361,3 +361,25 @@ html {
   box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1) !important;
 }
 
+.dark .swal2-toast {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1px solid #1e293b !important;
+}
+
+.dark .swal2-input,
+.dark .swal2-file,
+.dark .swal2-textarea,
+.dark .swal2-select,
+.dark .swal2-radio,
+.dark .swal2-checkbox {
+  background-color: #020817 !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+.dark .swal2-validation-message {
+  background-color: #1e293b !important;
+  color: #f87171 !important;
+}
+

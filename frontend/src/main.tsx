@@ -73,7 +73,7 @@ const AuthRouterWrapper = () => {
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
+    <ThemeProvider defaultTheme="light" storageKey="vite-ui-theme">
       <AuthProvider>
         <NotFoundProvider>
           <QueryClientProvider client={queryClient}>

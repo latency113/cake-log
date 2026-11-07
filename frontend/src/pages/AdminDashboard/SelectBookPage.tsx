@@ -174,18 +174,18 @@ const SelectBookPage: React.FC = () => {
               placeholder="ค้นหาเลขเล่ม หรือ ห้อง..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 rounded-full bg-white"
+              className="pl-9 rounded-full bg-background text-foreground"
             />
           </div>
         </div>
       </div>
 
       {filteredBooks.length === 0 ? (
-        <div className="p-12 text-center border-2 border-dashed rounded-xld bg-gray-50/50">
+        <div className="p-12 text-center border-2 border-dashed rounded-xl bg-muted/30">
           <Book className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-20" />
           <p className="text-muted-foreground">ไม่พบสมุดจองที่ตรงตามเงื่อนไขการค้นหา</p>
           {searchTerm && (
-            <Button variant="link" onClick={() => setSearchTerm("")} className="mt-2 text-blue-600">
+            <Button variant="link" onClick={() => setSearchTerm("")} className="mt-2 text-blue-600 dark:text-blue-400">
               ล้างการค้นหา
             </Button>
           )}
@@ -217,8 +217,8 @@ const SelectBookPage: React.FC = () => {
                 key={book.id}
                 className={`relative overflow-hidden transition-all hover:shadow-lg flex flex-col h-full ${
                   (isTaken && !isOwnedByMe) || isClosed || isFinalized
-                    ? "opacity-70 bg-gray-50"
-                    : "border-blue-200 bg-white shadow-sm"
+                    ? "opacity-70 bg-muted/40 border-border"
+                    : "border-blue-200 dark:border-blue-900/50 bg-card shadow-sm"
                 }`}
               >
                 {isOwnedByMe && (
@@ -232,33 +232,33 @@ const SelectBookPage: React.FC = () => {
                       className={`p-2 rounded-lg ${
                         isOwnedByMe
                           ? "bg-blue-600 text-white"
-                          : "bg-blue-100 text-blue-600"
+                          : "bg-blue-100 dark:bg-blue-950/60 text-blue-600 dark:text-blue-400"
                       }`}
                     >
                       <Book className="w-6 h-6" />
                     </div>
                     {isClosed ? (
-                      <div className="flex items-center text-red-500 text-sm font-medium bg-red-50 px-2 py-1 rounded">
+                      <div className="flex items-center text-red-500 dark:text-red-400 text-sm font-medium bg-red-50 dark:bg-red-950/40 px-2 py-1 rounded">
                         <Lock className="w-3 h-3 mr-1" /> ปิดเล่ม
                       </div>
                     ) : isFinalized ? (
-                      <div className="flex items-center text-amber-600 text-sm font-medium bg-amber-50 px-2 py-1 rounded">
+                      <div className="flex items-center text-amber-600 dark:text-amber-400 text-sm font-medium bg-amber-50 dark:bg-amber-950/40 px-2 py-1 rounded">
                         <Lock className="w-3 h-3 mr-1" /> สรุปออเดอร์แล้ว
                       </div>
                     ) : isOwnedByMe ? (
-                      <div className="flex items-center text-blue-600 text-sm font-medium bg-blue-50 px-2 py-1 rounded">
+                      <div className="flex items-center text-blue-600 dark:text-blue-400 text-sm font-medium bg-blue-50 dark:bg-blue-950/40 px-2 py-1 rounded">
                         <CheckCircle className="w-3 h-3 mr-1" /> กำลังใช้งาน
                       </div>
                     ) : isOwnedByOthers ? (
-                      <div className="flex items-center text-gray-500 text-sm font-medium bg-gray-100 px-2 py-1 rounded">
+                      <div className="flex items-center text-muted-foreground text-sm font-medium bg-muted px-2 py-1 rounded">
                         <Lock className="w-3 h-3 mr-1" /> ไม่ว่าง ({book.classroom?.name})
                       </div>
                     ) : isFull ? (
-                      <div className="flex items-center text-orange-500 text-sm font-medium bg-orange-50 px-2 py-1 rounded">
+                      <div className="flex items-center text-orange-500 dark:text-orange-400 text-sm font-medium bg-orange-50 dark:bg-orange-950/40 px-2 py-1 rounded">
                         เต็มแล้ว
                       </div>
                     ) : (
-                      <div className="flex items-center text-green-600 text-sm font-medium bg-green-50 px-2 py-1 rounded">
+                      <div className="flex items-center text-green-600 dark:text-green-400 text-sm font-medium bg-green-50 dark:bg-green-950/40 px-2 py-1 rounded">
                         <CheckCircle className="w-3 h-3 mr-1" /> ว่าง
                       </div>
                     )}
@@ -268,7 +268,7 @@ const SelectBookPage: React.FC = () => {
                   </CardTitle>
                   <CardDescription className="flex flex-col">
                     {isTaken && (
-                      <span className="font-bold text-blue-600 text-sm mb-1 ">{roomName}</span>
+                      <span className="font-bold text-blue-600 dark:text-blue-400 text-sm mb-1 ">{roomName}</span>
                     )}
                     <span>เลขที่ {book.startNumber} - {book.endNumber}</span>
                   </CardDescription>
@@ -281,7 +281,7 @@ const SelectBookPage: React.FC = () => {
                         {book.currentNumber} / {book.maxCapacity}
                       </span>
                     </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                    <div className="w-full bg-muted dark:bg-slate-800 rounded-full h-2.5">
                       <div
                         className={`h-2.5 rounded-full ${
                           isFull

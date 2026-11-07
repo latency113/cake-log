@@ -126,8 +126,8 @@ const AdminSidebar: React.FC = () => {
                 }}
                 className="group flex items-center space-x-4 py-2 px-5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent transition-all duration-200 ease-in-out hover:shadow-lg"
               >
-                <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
-                  <ChartLine className="w-5 h-5 text-blue-600 group-[.active]:text-white" />
+                <div className="w-10 h-10 bg-blue-100 dark:bg-blue-950/60 rounded-lg flex items-center justify-center group-hover:bg-blue-200 dark:group-hover:bg-blue-900/60 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
+                  <ChartLine className="w-5 h-5 text-blue-600 dark:text-blue-400 group-[.active]:text-white" />
                 </div>
                 <div className="flex-1">
                   <span className="font-normal text-base">รวมแดชบอร์ด</span>
@@ -156,8 +156,8 @@ const AdminSidebar: React.FC = () => {
                 }}
                 className="group flex items-center space-x-4 py-2 px-5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent transition-all duration-200 ease-in-out hover:shadow-lg"
               >
-                <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
-                  <SquareChartGantt className="w-5 h-5 text-red-600 group-[.active]:text-white" />
+                <div className="w-10 h-10 bg-red-100 dark:bg-rose-950/60 rounded-lg flex items-center justify-center group-hover:bg-red-200 dark:group-hover:bg-rose-900/60 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
+                  <SquareChartGantt className="w-5 h-5 text-red-600 dark:text-rose-400 group-[.active]:text-white" />
                 </div>
                 <div className="flex-1">
                   <span className="font-normal text-base truncate">
@@ -188,8 +188,8 @@ const AdminSidebar: React.FC = () => {
                 }}
                 className="group flex items-center space-x-4 py-2 px-5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent transition-all duration-200 ease-in-out hover:shadow-lg"
               >
-                <div className="w-10 h-10 bg-yellow-100 rounded-lg flex items-center justify-center group-hover:bg-yellow-200 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
-                  <ChartNoAxesColumn className="w-5 h-5 text-yellow-600 group-[.active]:text-white" />
+                <div className="w-10 h-10 bg-yellow-100 dark:bg-amber-950/60 rounded-lg flex items-center justify-center group-hover:bg-yellow-200 dark:group-hover:bg-amber-900/60 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
+                  <ChartNoAxesColumn className="w-5 h-5 text-yellow-600 dark:text-amber-400 group-[.active]:text-white" />
                 </div>
                 <div className="flex-1">
                   <span className="font-normal text-base">แสดงอันดับ</span>
@@ -218,8 +218,8 @@ const AdminSidebar: React.FC = () => {
                 }}
                 className="group flex items-center space-x-4 py-2 px-5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent transition-all duration-200 ease-in-out hover:shadow-lg"
               >
-                <div className="w-10 h-10 bg-indigo-100 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
-                  <Home className="w-5 h-5 text-indigo-600 group-[.active]:text-white" />
+                <div className="w-10 h-10 bg-indigo-100 dark:bg-indigo-950/60 rounded-lg flex items-center justify-center group-hover:bg-indigo-200 dark:group-hover:bg-indigo-900/60 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
+                  <Home className="w-5 h-5 text-indigo-600 dark:text-indigo-400 group-[.active]:text-white" />
                 </div>
                 <div className="flex-1">
                   <span className="font-normal text-base truncate">รายงานผล</span>
@@ -257,8 +257,8 @@ const AdminSidebar: React.FC = () => {
                   }}
                   className="group flex items-center space-x-4 py-2 px-5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent transition-all duration-200 ease-in-out hover:shadow-lg"
                 >
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
-                    <ShoppingBag className="w-5 h-5 text-blue-600 group-[.active]:text-white" />
+                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-950/60 rounded-lg flex items-center justify-center group-hover:bg-blue-200 dark:group-hover:bg-blue-900/60 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
+                    <ShoppingBag className="w-5 h-5 text-blue-600 dark:text-blue-400 group-[.active]:text-white" />
                   </div>
                   <div className="flex-1">
                     <span className="font-normal text-base">
@@ -299,8 +299,8 @@ const AdminSidebar: React.FC = () => {
                   }}
                   className="group flex items-center space-x-4 py-2 px-5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent transition-all duration-200 ease-in-out hover:shadow-lg"
                 >
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center group-hover:bg-green-200 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
-                    <ShoppingBag className="w-5 h-5 text-green-600 group-[.active]:text-white" />
+                  <div className="w-10 h-10 bg-green-100 dark:bg-emerald-950/60 rounded-lg flex items-center justify-center group-hover:bg-green-200 dark:group-hover:bg-emerald-900/60 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
+                    <ShoppingBag className="w-5 h-5 text-green-600 dark:text-emerald-400 group-[.active]:text-white" />
                   </div>
                   <div className="flex-1">
                     <span className="font-normal text-base">
@@ -331,8 +331,8 @@ const AdminSidebar: React.FC = () => {
                   }}
                   className="group flex items-center space-x-4 py-2 px-5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent transition-all duration-200 ease-in-out hover:shadow-lg"
                 >
-                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center group-hover:bg-purple-200 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
-                    <UserCog className="w-5 h-5 text-purple-600 group-[.active]:text-white" />
+                  <div className="w-10 h-10 bg-purple-100 dark:bg-purple-950/60 rounded-lg flex items-center justify-center group-hover:bg-purple-200 dark:group-hover:bg-purple-900/60 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
+                    <UserCog className="w-5 h-5 text-purple-600 dark:text-purple-400 group-[.active]:text-white" />
                   </div>
                   <div className="flex-1">
                     <span className="font-normal text-base">จัดการผู้ใช้งาน</span>
@@ -361,8 +361,8 @@ const AdminSidebar: React.FC = () => {
                   }}
                   className="group flex items-center space-x-4 py-2 px-5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent transition-all duration-200 ease-in-out hover:shadow-lg"
                 >
-                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center group-hover:bg-orange-200 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
-                    <Package className="w-5 h-5 text-orange-600 group-[.active]:text-white" />
+                  <div className="w-10 h-10 bg-orange-100 dark:bg-amber-950/60 rounded-lg flex items-center justify-center group-hover:bg-orange-200 dark:group-hover:bg-amber-900/60 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
+                    <Package className="w-5 h-5 text-orange-600 dark:text-amber-400 group-[.active]:text-white" />
                   </div>
                   <div className="flex-1">
                     <span className="font-normal text-base">จัดการสินค้า</span>
@@ -391,8 +391,8 @@ const AdminSidebar: React.FC = () => {
                   }}
                   className="group flex items-center space-x-4 py-2 px-5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent transition-all duration-200 ease-in-out hover:shadow-lg"
                 >
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center group-hover:bg-blue-200 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
-                    <Users className="w-5 h-5 text-blue-600 group-[.active]:text-white" />
+                  <div className="w-10 h-10 bg-blue-100 dark:bg-blue-950/60 rounded-lg flex items-center justify-center group-hover:bg-blue-200 dark:group-hover:bg-blue-900/60 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
+                    <Users className="w-5 h-5 text-blue-600 dark:text-blue-400 group-[.active]:text-white" />
                   </div>
                   <div className="flex-1">
                     <span className="font-normal text-base">
@@ -423,8 +423,8 @@ const AdminSidebar: React.FC = () => {
                   }}
                   className="group flex items-center space-x-4 py-2 px-5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent transition-all duration-200 ease-in-out hover:shadow-lg"
                 >
-                  <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center group-hover:bg-pink-200 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
-                    <Users className="w-5 h-5 text-pink-600 group-[.active]:text-white" />
+                  <div className="w-10 h-10 bg-pink-100 dark:bg-pink-950/60 rounded-lg flex items-center justify-center group-hover:bg-pink-200 dark:group-hover:bg-pink-900/60 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
+                    <Users className="w-5 h-5 text-pink-600 dark:text-pink-400 group-[.active]:text-white" />
                   </div>
                   <div className="flex-1">
                     <span className="font-normal text-base">จัดการทีม</span>
@@ -454,8 +454,8 @@ const AdminSidebar: React.FC = () => {
                   className="group flex items-center space-x-4 py-2 px-5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent transition-all duration-200 ease-in-out hover:shadow-lg"
                 >
                   {" "}
-                  <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center group-hover:bg-red-200 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
-                    <Home className="w-5 h-5 text-red-600 group-[.active]:text-white" />
+                  <div className="w-10 h-10 bg-red-100 dark:bg-rose-950/60 rounded-lg flex items-center justify-center group-hover:bg-red-200 dark:group-hover:bg-rose-900/60 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
+                    <Home className="w-5 h-5 text-red-600 dark:text-rose-400 group-[.active]:text-white" />
                   </div>
                   <div className="flex-1">
                     <span className="font-normal text-base">จัดการชั้นเรียน</span>
@@ -484,8 +484,8 @@ const AdminSidebar: React.FC = () => {
                   }}
                   className="group flex items-center space-x-4 py-2 px-5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent transition-all duration-200 ease-in-out hover:shadow-lg"
                 >
-                  <div className="w-10 h-10 bg-teal-100 rounded-lg flex items-center justify-center group-hover:bg-teal-200 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
-                    <Building className="w-5 h-5 text-teal-600 group-[.active]:text-white" />
+                  <div className="w-10 h-10 bg-teal-100 dark:bg-teal-950/60 rounded-lg flex items-center justify-center group-hover:bg-teal-200 dark:group-hover:bg-teal-900/60 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
+                    <Building className="w-5 h-5 text-teal-600 dark:text-teal-400 group-[.active]:text-white" />
                   </div>
                   <div className="flex-1">
                     <span className="font-normal text-base">จัดการแผนก</span>
@@ -514,8 +514,8 @@ const AdminSidebar: React.FC = () => {
                   }}
                   className="group flex items-center space-x-4 py-2 px-5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent transition-all duration-200 ease-in-out hover:shadow-lg"
                 >
-                  <div className="w-10 h-10 bg-pink-100 rounded-lg flex items-center justify-center group-hover:bg-pink-200 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
-                    <Book className="w-5 h-5 text-pink-600 group-[.active]:text-white" />
+                  <div className="w-10 h-10 bg-pink-100 dark:bg-pink-950/60 rounded-lg flex items-center justify-center group-hover:bg-pink-200 dark:group-hover:bg-pink-900/60 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
+                    <Book className="w-5 h-5 text-pink-600 dark:text-pink-400 group-[.active]:text-white" />
                   </div>
                   <div className="flex-1">
                     <span className="font-normal text-base">จัดการสมุดจอง</span>
@@ -544,8 +544,8 @@ const AdminSidebar: React.FC = () => {
                   }}
                   className="group flex items-center space-x-4 py-2 px-5 rounded-lg text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground border border-transparent transition-all duration-200 ease-in-out hover:shadow-lg"
                 >
-                  <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center group-hover:bg-gray-200 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
-                    <Settings className="w-5 h-5 text-gray-600 group-[.active]:text-white" />
+                  <div className="w-10 h-10 bg-gray-100 dark:bg-slate-800 rounded-lg flex items-center justify-center group-hover:bg-gray-200 dark:group-hover:bg-slate-700 group-[.active]:bg-white/20 transition-all duration-200 shadow-md">
+                    <Settings className="w-5 h-5 text-gray-600 dark:text-slate-300 group-[.active]:text-white" />
                   </div>
                   <div className="flex-1">
                     <span className="font-normal text-base">ตั้งค่าระบบ</span>

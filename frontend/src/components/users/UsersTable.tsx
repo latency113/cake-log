@@ -78,8 +78,8 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDelete }) => {
                       {user.firstname} {user.lastname}
                     </span>
                     {user.teacher_id && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-amber-100 text-amber-900 border border-amber-200">
-                        <GraduationCap className="w-3 h-3 mr-0.5 text-amber-700" />
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-medium bg-amber-100 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                        <GraduationCap className="w-3.5 h-3.5 mr-0.5 text-amber-700 dark:text-amber-400" />
                         ครูสั่งเค้ก
                       </span>
                     )}
@@ -88,7 +88,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDelete }) => {
                     @{user.username}
                   </span>
                   {user.teacher && (
-                    <span className="text-xs text-amber-700 font-medium mt-0.5">
+                    <span className="text-xs text-amber-700 dark:text-amber-400 font-medium mt-0.5">
                       ครู: {user.teacher.name}{" "}
                       {user.teacher.department ? `(${user.teacher.department.name})` : ""}
                     </span>
@@ -102,7 +102,7 @@ const UsersTable: React.FC<UsersTableProps> = ({ users, onEdit, onDelete }) => {
                 {user.teacher_id ? (
                   <Badge
                     variant="outline"
-                    className="border-amber-400 bg-amber-50 text-amber-900 font-medium flex items-center gap-1 w-fit"
+                    className="border-amber-400 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/60 text-amber-900 dark:text-amber-300 font-medium flex items-center gap-1 w-fit"
                   >
                     <GraduationCap className="w-3.5 h-3.5 text-amber-600" />
                     ครูที่ต้องกรอกข้อมูลเค้ก
