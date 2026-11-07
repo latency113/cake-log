@@ -83,9 +83,11 @@ export const initYearDatabase = async (year: string): Promise<{ message: string;
   }
 };
 
-export const deleteYearDatabase = async (year: string): Promise<{ message: string; data: any }> => {
+export const deleteYearDatabase = async (year: string, securityKey?: string): Promise<{ message: string; data: any }> => {
   try {
-    const response = await api.delete(`/admin/year/${year}`);
+    const response = await api.delete(`/admin/year/${year}`, {
+      data: { securityKey },
+    });
     return response.data;
   } catch (error) {
     console.error("Error deleting year database:", error);
@@ -124,5 +126,29 @@ export const getCakeSettings = async (): Promise<ICakeSettings | null> => {
   } catch (error) {
     console.error("Error fetching cake settings:", error);
     throw error;
+  }
+};
+
+export interface ISystemStatus {
+  isMaintenanceMode: boolean;
+  maintenanceMessage: string | null;
+  academicYear: string | null;
+  currentYear: string | null;
+}
+
+export const getSystemStatus = async (): Promise<ISystemStatus> => {
+  try {
+    const response = await api.get("/system-status", {
+      params: { _t: Date.now() },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("Error fetching system status:", error);
+    return {
+      isMaintenanceMode: false,
+      maintenanceMessage: null,
+      academicYear: null,
+      currentYear: null,
+    };
   }
 };

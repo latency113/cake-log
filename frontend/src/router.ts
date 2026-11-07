@@ -56,10 +56,20 @@ const loginRoute = createRoute({
   path: "/login",
   component: lazyRouteComponent(() => import("./pages/Login")),
   beforeLoad: () => {
+    const isMaintenance = sessionStorage.getItem("isMaintenanceMode") === "true";
     const token = localStorage.getItem("access_token");
     if (token) {
       const decodedToken = decodeJwtToken(token);
       const userRole = decodedToken?.role?.toLowerCase();
+
+      // If maintenance mode is active, clear non-admin tokens and remain on login page
+      if (isMaintenance && userRole !== "superadmin" && userRole !== "admin") {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
+        return;
+      }
+
       switch (userRole) {
         case "superadmin":
           throw redirect({ to: "/dashboard" });
@@ -80,10 +90,20 @@ const registerRoute = createRoute({
   path: "/register",
   component: lazyRouteComponent(() => import("./pages/Register")),
   beforeLoad: () => {
+    const isMaintenance = sessionStorage.getItem("isMaintenanceMode") === "true";
     const token = localStorage.getItem("access_token");
     if (token) {
       const decodedToken = decodeJwtToken(token);
       const userRole = decodedToken?.role?.toLowerCase();
+
+      // If maintenance mode is active, clear non-admin tokens and remain on login page
+      if (isMaintenance && userRole !== "superadmin" && userRole !== "admin") {
+        localStorage.removeItem("access_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user");
+        return;
+      }
+
       switch (userRole) {
         case "superadmin":
           throw redirect({ to: "/dashboard" });
@@ -104,6 +124,12 @@ const creditsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/credits",
   component: lazyRouteComponent(() => import("./pages/CreditsPage")),
+});
+
+const maintenanceRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/maintenance",
+  component: lazyRouteComponent(() => import("./pages/MaintenancePage")),
 });
 
 // -------------------------------------------------------------
@@ -312,6 +338,7 @@ const officerAllOrdersRoute = createRoute({
 // -------------------------------------------------------------
 const routeTree = rootRoute.addChildren([
   welcomeRoute,
+  maintenanceRoute,
   classroomCakeSummaryRoute,
   creditsRoute,
   addTeamRoute,

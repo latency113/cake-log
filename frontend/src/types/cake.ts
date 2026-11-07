@@ -25,6 +25,8 @@ export interface ICakeSettings {
   pickupEndTime?: string;
   reporterName?: string;
   securityKey?: string;
+  isMaintenanceMode?: boolean;
+  maintenanceMessage?: string | null;
   createdAt: string;
   updatedAt: string;
 }

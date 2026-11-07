@@ -11,11 +11,23 @@ function App() {
   const isLoginPage = location.pathname === "/login";
   const isRegisterPage = location.pathname === "/register";
   const isWelcomePage = location.pathname === "/";
+  const isMaintenancePage = location.pathname.startsWith("/maintenance");
   const isOfficerOrdersPage = location.pathname.startsWith("/officer-orders");
   const isOfficerOrdersPreparePage = location.pathname.startsWith("/officer-prepare");
+  const isOfficerAllOrdersPage = location.pathname.startsWith("/officer-all-orders");
   const isExecutivePage = location.pathname.startsWith("/executive-summary");
   
-  if (isLoginPage || isRegisterPage || isWelcomePage || isNotFoundActive || isOfficerOrdersPage || isOfficerOrdersPreparePage || isExecutivePage) { // Use isNotFoundActive here
+  if (
+    isLoginPage ||
+    isRegisterPage ||
+    isWelcomePage ||
+    isMaintenancePage ||
+    isNotFoundActive ||
+    isOfficerOrdersPage ||
+    isOfficerOrdersPreparePage ||
+    isOfficerAllOrdersPage ||
+    isExecutivePage
+  ) {
     return <Outlet />;
   }
 

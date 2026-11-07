@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
-import { Outlet } from "@tanstack/react-router";
+import { Outlet, Link } from "@tanstack/react-router";
 import AdminSidebar from "./AdminSidebar";
 import { YearSelector } from "../common/YearSelector";
-import { getSystemActiveYear } from "@/utils/api/settings";
-import { AlertTriangle, RotateCcw } from "lucide-react";
+import { getSystemActiveYear, getSystemStatus } from "@/utils/api/settings";
+import { AlertTriangle, RotateCcw, Wrench } from "lucide-react";
 import { Button } from "../ui/button";
 
 const DashboardLayout: React.FC = () => {
   const [activeSystemYear, setActiveSystemYear] = useState<string>("2569");
+  const [isMaintenance, setIsMaintenance] = useState<boolean>(false);
   const currentSelectedYear = localStorage.getItem("academicYear") || activeSystemYear;
   const isHistorical = Boolean(currentSelectedYear && currentSelectedYear !== activeSystemYear);
 
@@ -15,6 +16,12 @@ const DashboardLayout: React.FC = () => {
     getSystemActiveYear()
       .then((res) => {
         if (res?.academicYear) setActiveSystemYear(res.academicYear);
+      })
+      .catch(() => {});
+
+    getSystemStatus()
+      .then((status) => {
+        setIsMaintenance(Boolean(status.isMaintenanceMode));
       })
       .catch(() => {});
   }, []);
@@ -46,6 +53,24 @@ const DashboardLayout: React.FC = () => {
             <YearSelector />
           </div>
         </header>
+
+        {/* Warning Banner when Maintenance Mode is ON */}
+        {isMaintenance && (
+          <div className="bg-amber-500/20 border-b border-amber-500/40 px-6 py-2 text-xs text-amber-950 dark:text-amber-200 flex items-center justify-between flex-wrap gap-2 animate-in fade-in slide-in-from-top-1 duration-200 print:hidden">
+            <div className="flex items-center gap-2">
+              <Wrench className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+              <span>
+                <strong>โหมดปิดปรับปรุงระบบกำลังเปิดใช้งาน:</strong> ผู้ใช้ทั่วไป (ครู, นักเรียน, เจ้าหน้าที่) จะไม่สามารถเข้าใช้งานได้
+              </span>
+            </div>
+            <Link
+              to="/dashboard/settings"
+              className="text-xs font-semibold text-amber-800 dark:text-amber-300 underline hover:text-amber-950 dark:hover:text-amber-100"
+            >
+              ไปที่หน้าตั้งค่าเพื่อจัดการ
+            </Link>
+          </div>
+        )}
 
         {/* Warning Banner when viewing historical academic year */}
         {isHistorical && (

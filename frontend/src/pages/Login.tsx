@@ -84,11 +84,12 @@ const Login: React.FC = () => {
       } else if (userRole === "user") {
         navigate({ to: "/select-book" });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Login error:", error);
+      const serverMessage = error?.response?.data?.message;
       showAlertError({
         title: "เข้าสู่ระบบไม่สำเร็จ",
-        text: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง",
+        text: serverMessage || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง",
       });
     } finally {
       setIsLoading(false);

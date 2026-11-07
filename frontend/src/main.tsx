@@ -10,7 +10,8 @@ import { Loader2 } from "lucide-react";
 import { Toaster } from "sonner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import { getSystemActiveYear } from "./utils/api/settings";
+import { getSystemActiveYear, getSystemStatus } from "./utils/api/settings";
+import { decodeJwtToken } from "./utils/auth";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,7 +31,46 @@ const AuthRouterWrapper = () => {
 
   useEffect(() => {
     const initializeApp = async () => {
-      // Sync academic year with server default if not manually overridden in this session
+      // 1. Check Maintenance Mode status
+      try {
+        const status = await getSystemStatus();
+        const currentPath = window.location.pathname;
+
+        if (status.isMaintenanceMode) {
+          sessionStorage.setItem("isMaintenanceMode", "true");
+          const token = localStorage.getItem("access_token");
+          let isPrivileged = false;
+          if (token) {
+            const decoded = decodeJwtToken(token);
+            const role = decoded?.role?.toLowerCase();
+            if (role === "superadmin" || role === "admin") {
+              isPrivileged = true;
+            } else {
+              // Clear non-admin tokens because system is under maintenance
+              localStorage.removeItem("access_token");
+              localStorage.removeItem("refresh_token");
+              localStorage.removeItem("user");
+            }
+          }
+
+          // If not admin and not already on /maintenance or /login, redirect
+          if (!isPrivileged && currentPath !== "/maintenance" && currentPath !== "/login") {
+            window.location.href = "/maintenance";
+            return;
+          }
+        } else {
+          sessionStorage.removeItem("isMaintenanceMode");
+          // If maintenance mode is off, but user is on /maintenance page, return to home
+          if (currentPath === "/maintenance") {
+            window.location.href = "/";
+            return;
+          }
+        }
+      } catch (statusErr) {
+        console.error("Failed to check maintenance status:", statusErr);
+      }
+
+      // 2. Sync academic year with server default if not manually overridden in this session
       try {
         const token = localStorage.getItem("access_token");
         if (token) {

@@ -60,7 +60,7 @@ const Navbar: React.FC<{ className?: string }> = ({ className }) => {
                   <div className="flex items-center space-x-2 mt-1">
                     <Sparkles className="w-3 h-3 text-blue-200" />
                     <span className="text-xs text-blue-100 font-medium">
-                      Version 1.5
+                      Version 1.5.3
                     </span>
                     <span className="text-[11px] bg-white/20 text-white px-2 py-0.5 rounded-full font-medium border border-white/20">
                       ปีการศึกษา 2569
