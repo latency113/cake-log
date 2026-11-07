@@ -406,10 +406,10 @@ const ClassroomsReport: React.FC = () => {
 
   const handlePrintClassroomSummary = () => {
     printSection("classroom-summary-print-section", "สรุปยอดเค้กของห้องเรียน", {
-      orientation: "landscape",
-      paperSize: "A5",
-      scale: 0.75,
-      margin: "5mm",
+      orientation: "portrait",
+      paperSize: "A4",
+      scale: 1,
+      margin: "10mm",
       customStyles: `
         @media print {
           .print\\:hidden, .screen-only {
@@ -458,6 +458,17 @@ const ClassroomsReport: React.FC = () => {
     printSection("printable-classrooms-section", "รายงานผลการเข้าร่วมกิจกรรม", {
       orientation: "landscape",
       margin: "8mm 12mm",
+      customStyles: `
+        .print-table-wrapper {
+          border: none !important;
+          box-shadow: none !important;
+        }
+        .print-table-title {
+          border: none !important;
+          border-bottom: none !important;
+          margin-bottom: 8px !important;
+        }
+      `,
     });
   };
 
@@ -489,7 +500,7 @@ const ClassroomsReport: React.FC = () => {
                 id="print-classroom-summary-button"
                 className="bg-green-500 text-white hover:bg-green-600 transition-colors duration-200 flex items-center"
                 disabled={loadingClassroomSummary} // Disable when summary data is loading
-                title="พิมพ์สรุปยอดเค้กของห้องเรียน (ปรับกระดาษเป็น A5 แนวนอนอัตโนมัติ)"
+                title="พิมพ์สรุปยอดเค้กของห้องเรียน (ปรับกระดาษเป็น A4 แนวตั้งอัตโนมัติ)"
               >
                 <Printer className="w-5 h-5 mr-2" />
                 พิมพ์สรุปยอดเค้กของห้องเรียน
@@ -640,7 +651,7 @@ const ClassroomsReport: React.FC = () => {
                   </div>
                   <div>
                     <span className="font-medium text-green-600">ปุ่มสีเขียว (สรุปยอดเค้กห้องเรียน):</span>
-                    <p className="text-muted-foreground ml-2">• ปรับเป็นแนวนอน (Landscape) และตารางขยายเต็มหน้ากระดาษ</p>
+                    <p className="text-muted-foreground ml-2">• ปรับเป็นแนวตั้ง (Portrait) ขนาด A4 และตารางขยายเต็มหน้ากระดาษ</p>
                   </div>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2">

@@ -35,29 +35,33 @@ interface SalesRecordsTableProps {
   salesRecords: DailySalesRecord[];
   productNames: string[];
   loggedInUsername?: string;
+  academicYear?: string;
+  newYear?: string;
 }
 
 const SalesRecordsTable: React.FC<SalesRecordsTableProps> = ({
   salesRecords,
   productNames,
   loggedInUsername,
+  academicYear: propAcademicYear,
+  newYear: propNewYear,
 }) => {
   const [cakeSettings, setCakeSettings] = useState<ICakeSettings | null>(null);
-  const [isLoadingCakeSettings, setIsLoadingCakeSettings] = useState(true);
 
   useEffect(() => {
+    // If academicYear and newYear were already provided by parent, skip fetching
+    if (propAcademicYear && propNewYear) return;
+
     const fetchSettings = async () => {
       try {
         const settings = await getCakeSettings();
         setCakeSettings(settings);
       } catch (error) {
         console.error("Failed to fetch cake settings:", error);
-      } finally {
-        setIsLoadingCakeSettings(false);
       }
     };
     fetchSettings();
-  }, []);
+  }, [propAcademicYear, propNewYear]);
   // Destructure productNames
   const poundSizes = ["1P", "2P", "3P", "4P", "5P"];
 
@@ -72,16 +76,26 @@ const SalesRecordsTable: React.FC<SalesRecordsTableProps> = ({
     totalPrice: 0,
   };
 
-  const displayAcademicYear = isLoadingCakeSettings
-    ? (new Date().getFullYear() + 543).toString() // Fallback while loading
-    : cakeSettings?.academicYear || (new Date().getFullYear() + 543).toString();
+  const selectedYear =
+    propAcademicYear ||
+    localStorage.getItem("academicYear") ||
+    cakeSettings?.academicYear ||
+    (new Date().getFullYear() + 543).toString();
 
-  const displayNewYear = (parseInt(displayAcademicYear) + 1).toString();
+  const displayAcademicYear =
+    propAcademicYear ||
+    cakeSettings?.academicYear ||
+    selectedYear;
+
+  const displayNewYear =
+    propNewYear ||
+    cakeSettings?.currentYear ||
+    (parseInt(displayAcademicYear) + 1).toString();
 
   return (
     <div className="p-8 max-w-full mx-auto text-foreground">
       <div className="text-center mb-6">
-        <h1 className="text-lg font-bold mb-2">วิทยาลัยอาชีวศึกษาครปฐม</h1>
+        <h1 className="text-lg font-bold mb-2">วิทยาลัยอาชีวศึกษานครปฐม</h1>
         <h2 className="text-base mb-2">ฝ่ายจ่ายเค้กตามใบสั่งจอง</h2>
         <h3 className="text-sm">
           ยอดการสั่งจองเค้ก ปีใหม่ {displayNewYear}{" "}

@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   showAlertSuccess,
   showAlertError,
@@ -370,7 +370,10 @@ const useOrderForm = (
       0
     );
     const calculatedDiscount = totalPounds * 10;
-    setFormData((prev) => ({ ...prev, discount: calculatedDiscount }));
+    setFormData((prev) => {
+      if (prev.discount === calculatedDiscount) return prev;
+      return { ...prev, discount: calculatedDiscount };
+    });
   }, [formData.cakeItems]);
 
   // Auto-fill number when book data becomes available or book_id is set initially
@@ -462,7 +465,7 @@ const useOrderForm = (
       }
     }
 
-    if (formData.classroom_id) {
+    if (formData.classroom_id && formData.year_id && formData.department_id && classroomsData.length > 0) {
       const classroomIsValidForYearAndDepartment = classroomsData.some(
         (cls) =>
           cls.id === formData.classroom_id &&
@@ -483,7 +486,7 @@ const useOrderForm = (
     loading,
   ]);
 
-  const handleGeneralInfoChange = (e: InputChangeEvent) => {
+  const handleGeneralInfoChange = useCallback((e: InputChangeEvent) => {
     const { name, value } = e.target;
     
     // Pre-calculate derived values
@@ -581,7 +584,7 @@ const useOrderForm = (
 
       return updatedFormData;
     });
-  };
+  }, [orderBooksData]);
 
   const handleNumberBlur = async (value: string) => {
     if (!validateOrderNumber(value)) {

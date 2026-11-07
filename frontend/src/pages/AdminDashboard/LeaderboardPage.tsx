@@ -22,11 +22,11 @@ const LeaderboardPage: React.FC = () => {
   const [teams, setTeams] = useState<TeamWithRelations[]>([]);
 
   const [cakeSettings, setCakeSettings] = useState<ICakeSettings | null>(null);
-  const [isLoadingCakeSettings, setIsLoadingCakeSettings] = useState(true);
 
-  const displayAcademicYear = isLoadingCakeSettings
-    ? (new Date().getFullYear() + 543).toString() // Fallback while loading
-    : cakeSettings?.academicYear || (new Date().getFullYear() + 543).toString();
+  const selectedYear = localStorage.getItem("academicYear");
+  const displayAcademicYear = cakeSettings?.academicYear
+    ? cakeSettings.academicYear
+    : selectedYear || (new Date().getFullYear() + 543).toString();
 
   const displayNewYear = (parseInt(displayAcademicYear) + 1).toString();
 
@@ -37,8 +37,6 @@ const LeaderboardPage: React.FC = () => {
         setCakeSettings(settings);
       } catch (error) {
         console.error("Failed to fetch cake settings:", error);
-      } finally {
-        setIsLoadingCakeSettings(false);
       }
     };
     fetchSettings();
@@ -83,6 +81,14 @@ const LeaderboardPage: React.FC = () => {
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
+        header,
+        #admin-sidebar,
+        #non-printable-header,
+        #print-button,
+        [class*="print:hidden"],
+        .print\\:hidden {
+          display: none !important;
+        }
       }
     `;
 
@@ -111,6 +117,14 @@ const LeaderboardPage: React.FC = () => {
             zoom: 0.97 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
+          }
+          header,
+          #admin-sidebar,
+          #non-printable-header,
+          #print-button,
+          [class*="print:hidden"],
+          .print\\:hidden {
+            display: none !important;
           }
         }
       `;

@@ -31,7 +31,7 @@ const OrderSearchActionBar: React.FC<OrderSearchActionBarProps> = ({
   allDepartments,
   showUserOrdersOnly,
   onShowUserOrdersOnlyChange,
-  onShowClassroomSummary, // Destructure new prop
+  onShowClassroomSummary: _onShowClassroomSummary, // Destructure new prop
 }) => {
 
   return (
@@ -111,12 +111,6 @@ const OrderSearchActionBar: React.FC<OrderSearchActionBarProps> = ({
                 </SelectItem>
               </SelectContent>
             </Select>
-            <button
-              onClick={onShowClassroomSummary}
-              className="ml-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
-            >
-              สรุปเค้กแต่ละห้อง
-            </button>
         </div>
       </div>
     </div>

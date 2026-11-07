@@ -17,13 +17,24 @@ import {
   X,
   Edit2,
   Trash2,
+  Lock,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
-import { useParams } from "@tanstack/react-router";
+import { useParams, useNavigate } from "@tanstack/react-router";
 import ClassroomStudentsPageSkeleton from "../../components/dashboard/skeletons/ClassroomStudentsPageSkeleton";
 import ClassroomStudentPrintReport from "../../components/dashboard/reports/ClassroomStudentPrintReport";
 import ClassroomCakeSummaryContent from "@/components/orders/ClassroomCakeSummaryContent";
 import { useClassroomCakeSummaries } from "@/hooks/useClassroomCakeSummaries";
-import { showToastSuccess, showToastError } from "@/utils/alerts";
+import {
+  showToastSuccess,
+  showToastError,
+  showConfirmDialog,
+  showAlertSuccess,
+  showAlertError,
+  showAlertInfo,
+} from "@/utils/alerts";
+import { finalizeClassroom } from "@/utils/api/data";
 import Swal from "sweetalert2";
 import { useAuth } from "@/contexts/AuthContext";
 import { printSection } from "@/utils/printUtils";
@@ -41,6 +52,7 @@ const ClassroomStudentsPage: React.FC = () => {
     strict: false,
   }) as any;
   const id = classroomId;
+  const navigate = useNavigate();
   const { user } = useAuth();
   const [classroom, setClassroom] = useState<Classroom | null>(null);
   const [studentsCakeData, setStudentsCakeData] = useState<{
@@ -55,6 +67,7 @@ const ClassroomStudentsPage: React.FC = () => {
     studentName: "",
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isFinalizing, setIsFinalizing] = useState(false);
   const [classroomOrders, setClassroomOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
 
@@ -260,15 +273,110 @@ const ClassroomStudentsPage: React.FC = () => {
     }
   };
 
+  const academicYear =
+    localStorage.getItem("academicYear") ||
+    (new Date().getFullYear() + 543).toString();
+
+  const advisorName =
+    classroom?.teacher
+      ? classroom.teacher.name
+      : cakeSummaryData?.[0]?.advisor || "";
+
+  const handlePrintStudents = () => {
+    if (!isFinalized) {
+      showAlertInfo({
+        title: "ยังไม่ได้สรุปยอดเค้ก",
+        text: "กรุณากด 'สรุปยอดเค้ก' เพื่อยืนยันและสรุปยอดข้อมูลของห้องเรียนนี้ก่อนพิมพ์รายงาน",
+      });
+      return;
+    }
+
+    const gradeLevel = classroom?.grade_level
+      ? `${
+          classroom.grade_level.level === "VOCATIONAL"
+            ? "ปวช."
+            : classroom.grade_level.level === "HIGHER"
+            ? "ปวส."
+            : classroom.grade_level.level
+        } ${classroom.grade_level.year}`
+      : "";
+    const title = `รายชื่อนักเรียน_${gradeLevel}_ห้อง_${classroom?.name || ""}`;
+    printSection(
+      "printable-classroom-students-section",
+      title,
+      {
+        orientation: "portrait",
+        paperSize: "A4",
+        scale: 0.96,
+        margin: "6mm 10mm 6mm 10mm",
+        customStyles: `
+          @page {
+            size: A4 portrait !important;
+            margin: 6mm 10mm 6mm 10mm !important;
+          }
+          body {
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+            color: #000 !important;
+            background: #fff !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          #printable-classroom-students-section {
+            display: block !important;
+            width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+          }
+          .print-only {
+            display: block !important;
+          }
+          table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+            page-break-inside: auto !important;
+          }
+          thead {
+            display: table-header-group !important;
+          }
+          tr {
+            page-break-inside: avoid !important;
+            page-break-after: auto !important;
+          }
+          th, td {
+            border: 1px solid #000 !important;
+          }
+          th {
+            background-color: #f1f5f9 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          tfoot tr {
+            background-color: #f8fafc !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+        `,
+      }
+    );
+  };
+
   const handlePrintCakeSummary = () => {
+    if (!isFinalized) {
+      showAlertInfo({
+        title: "ยังไม่ได้สรุปยอดเค้ก",
+        text: "กรุณากด 'สรุปยอดเค้ก' เพื่อยืนยันและสรุปยอดข้อมูลของห้องเรียนนี้ก่อนพิมพ์รายงาน",
+      });
+      return;
+    }
+
     printSection(
       "printable-classroom-cake-summary-section",
       "ใบสรุปยอดการสั่งจองเค้ก",
       {
-        orientation: "landscape",
-        paperSize: "A5",
-        scale: 0.75,
-        margin: "5mm",
+        orientation: "portrait",
+        paperSize: "A4",
+        scale: 1,
+        margin: "10mm",
         customStyles: `
           .print\\:hidden { display: none !important; }
           table { width: 100% !important; border-collapse: collapse !important; box-sizing: border-box !important; }
@@ -277,6 +385,41 @@ const ClassroomStudentsPage: React.FC = () => {
         `,
       }
     );
+  };
+
+  const isFinalized = Boolean(
+    classroom?.isOrderFinalized || cakeSummaryData?.[0]?.isOrderFinalized
+  );
+
+  const handleFinalizeClassroom = async () => {
+    if (!id || !classroom) return;
+
+    const isConfirmed = await showConfirmDialog({
+      title: "ยืนยันการสรุปยอดเค้ก?",
+      text: "เมื่อสรุปยอดแล้ว คุณจะไม่สามารถเพิ่มหรือแก้ไขออเดอร์ของห้องเรียนนี้ได้อีก ยืนยันที่จะดำเนินการต่อหรือไม่?",
+      confirmButtonText: "ยืนยัน, สรุปยอด",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (isConfirmed) {
+      try {
+        setIsFinalizing(true);
+        await finalizeClassroom(id);
+        showAlertSuccess({
+          title: "สำเร็จ!",
+          text: "สรุปยอดเค้กของห้องเรียนเรียบร้อยแล้ว",
+        });
+        fetchClassroomDetailsAndCakeData();
+      } catch (err) {
+        console.error(err);
+        showAlertError({
+          title: "เกิดข้อผิดพลาด",
+          text: "ไม่สามารถสรุปยอดได้ กรุณาลองใหม่อีกครั้ง",
+        });
+      } finally {
+        setIsFinalizing(false);
+      }
+    }
   };
 
   if (loading || cakeSummaryLoading) {
@@ -311,9 +454,15 @@ const ClassroomStudentsPage: React.FC = () => {
     <div className="classroom-students-page container max-w-11/12 mx-auto p-4">
       {/* Screen-only content */}
       <div className="screen-only">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8 bg-white dark:bg-slate-900 p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8 bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800">
           <Button
-            onClick={() => window.history.back()}
+            onClick={() => {
+              if (window.location.pathname.startsWith("/my-classroom")) {
+                navigate({ to: "/classroom" });
+              } else {
+                window.history.back();
+              }
+            }}
             variant="ghost"
             className="w-fit text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
           >
@@ -321,20 +470,47 @@ const ClassroomStudentsPage: React.FC = () => {
           </Button>
 
           <div className="flex flex-wrap items-center gap-3">
-            <Button
-              onClick={() => setIsAddingStudent(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
-            >
-              <UserPlus className="mr-2 h-4 w-4" /> เพิ่มนักเรียนรายบุคคล
-            </Button>
+            {/* Finalize Button / Finalized Badge */}
+            {!isFinalized ? (
+              <Button
+                onClick={handleFinalizeClassroom}
+                disabled={isFinalizing}
+                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md shadow-blue-500/20 gap-2 font-medium"
+              >
+                <Lock className="h-4 w-4" />
+                <span>สรุปยอดเค้ก</span>
+              </Button>
+            ) : (
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs font-semibold shadow-2xs">
+                <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span>สรุปยอดเค้กแล้ว</span>
+              </div>
+            )}
+
+            {!isFinalized && (
+              <Button
+                onClick={() => setIsAddingStudent(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
+              >
+                <UserPlus className="mr-2 h-4 w-4" /> เพิ่มนักเรียนรายบุคคล
+              </Button>
+            )}
 
             <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
 
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <Button
-                onClick={() => window.print()}
+                onClick={handlePrintStudents}
                 variant="outline"
-                className="gap-2 border-slate-200 dark:border-slate-800"
+                disabled={!isFinalized}
+                className={`gap-2 border-slate-200 dark:border-slate-800 ${
+                  !isFinalized ? "opacity-40 cursor-not-allowed" : ""
+                }`}
+                title={
+                  isFinalized
+                    ? "พิมพ์รายชื่อนักเรียน (แนวตั้ง A4)"
+                    : "กรุณากดสรุปยอดเค้กก่อนพิมพ์รายงาน"
+                }
               >
                 <Printer className="h-4 w-4" />
                 <span className="hidden sm:inline">รายชื่อนักเรียน</span>
@@ -342,11 +518,26 @@ const ClassroomStudentsPage: React.FC = () => {
               <Button
                 onClick={handlePrintCakeSummary}
                 variant="outline"
-                className="gap-2 border-slate-200 dark:border-slate-800"
+                disabled={!isFinalized}
+                className={`gap-2 border-slate-200 dark:border-slate-800 ${
+                  !isFinalized ? "opacity-40 cursor-not-allowed" : ""
+                }`}
+                title={
+                  isFinalized
+                    ? "พิมพ์สรุปยอดเค้กของห้องเรียน (A4 แนวตั้ง)"
+                    : "กรุณากดสรุปยอดเค้กก่อนพิมพ์รายงาน"
+                }
               >
                 <Printer className="h-4 w-4" />
                 <span className="hidden sm:inline">สรุปยอดเค้ก</span>
               </Button>
+
+              {!isFinalized && (
+                <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5 font-medium bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1.5 rounded-md border border-amber-200 dark:border-amber-800/60">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-500" />
+                  <span>ต้องสรุปยอดเค้กก่อนจึงจะพิมพ์รายงานได้</span>
+                </span>
+              )}
             </div>
           </div>
         </div>
@@ -379,7 +570,7 @@ const ClassroomStudentsPage: React.FC = () => {
               <Button
                 onClick={handleAddStudent}
                 disabled={isSaving}
-                className="flex-1 md:flex-none bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-6"
+                className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700 text-white shadow-sm px-6"
               >
                 เพิ่ม
               </Button>
@@ -527,6 +718,8 @@ const ClassroomStudentsPage: React.FC = () => {
           classroom={classroom}
           studentsCakeData={studentsCakeData}
           printId="printable-classroom-students-section"
+          academicYear={academicYear}
+          advisorName={advisorName}
         />
       )}
 

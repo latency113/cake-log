@@ -6,12 +6,16 @@ interface PrintableSalesRecordsContentProps {
   salesRecords: DailySalesRecord[];
   productNames: string[];
   loggedInUsername?: string;
+  academicYear?: string;
+  newYear?: string;
 }
 
 const PrintableSalesRecordsContent: React.FC<PrintableSalesRecordsContentProps> = ({
   salesRecords,
   productNames,
   loggedInUsername,
+  academicYear,
+  newYear,
 }) => {
   return (
     <div className="p-4">
@@ -19,6 +23,8 @@ const PrintableSalesRecordsContent: React.FC<PrintableSalesRecordsContentProps> 
         salesRecords={salesRecords}
         productNames={productNames}
         loggedInUsername={loggedInUsername}
+        academicYear={academicYear}
+        newYear={newYear}
       />
     </div>
   );

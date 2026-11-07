@@ -838,7 +838,7 @@ const UserFormModal: React.FC<UserFormModalProps> = ({
               className={`min-w-[120px] ${
                 userType === "TEACHER"
                   ? "bg-amber-600 hover:bg-amber-700 text-white"
-                  : ""
+                  : "bg-blue-600 hover:bg-blue-700 text-white"
               }`}
             >
               {isSubmitting ? (

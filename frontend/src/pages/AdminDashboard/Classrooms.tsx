@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from "react";
-import { Home, Rocket, FileSpreadsheet } from "lucide-react";
+import { Home, FileSpreadsheet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { showToastSuccess, showToastError } from "@/utils/alerts";
 // ... (rest of the imports)
@@ -9,7 +9,6 @@ import {
   updateClassroom,
   deleteClassroom,
   getStudentsCakePounds,
-  promoteClassrooms,
   importClassroomsFromExcel, // Import the new API function
 } from "@/utils/api/classrooms";
 import { getTeachers } from "@/utils/api/teachers";
@@ -30,7 +29,6 @@ import {
 } from "@/components/ui/select";
 import { Outlet, useRouterState } from "@tanstack/react-router";
 import ClassroomsSkeleton from "../../components/dashboard/skeletons/ClassroomsSkeleton";
-import Swal from "sweetalert2"; // Import SweetAlert2
 import '../../styles/print.css'
 import type { Classroom, Department } from "@/types";
 
@@ -255,50 +253,48 @@ const Classrooms: React.FC = () => {
     setIsDeleteConfirmModalOpen(true);
   };
 
-  const handlePromoteClick = async () => {
-    const result = await Swal.fire({
-      title: "ยืนยันการเลื่อนชั้นปี",
-      text: "คุณแน่ใจหรือไม่ว่าต้องการเลื่อนชั้นปีทั้งหมด? การดำเนินการนี้ไม่สามารถย้อนกลับได้. นักเรียนและชั้นเรียนจะถูกอัพเดทไปยังปีการศึกษาถัดไป.",
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonColor: "#3085d6",
-      cancelButtonColor: "#d33",
-      confirmButtonText: "ใช่, เลื่อนชั้นปี!",
-      cancelButtonText: "ยกเลิก",
-      reverseButtons: true,
-    });
-
-    if (result.isConfirmed) {
-      Swal.fire({
-        title: "กำลังดำเนินการ...",
-        text: "กำลังเลื่อนชั้นปี กรุณารอสักครู่",
-        allowOutsideClick: false,
-        didOpen: () => {
-          Swal.showLoading();
-        },
-      });
-
-      try {
-        const promoteResult = await promoteClassrooms();
-        Swal.fire({
-          icon: "success",
-          title: "สำเร็จ!",
-          text: promoteResult.message,
-          showConfirmButton: false,
-          timer: 1500,
-        });
-        fetchClassrooms(); // Refetch classrooms after promotion
-        setStatsData(new Map()); // Clear stats data to re-fetch
-      } catch (err: any) {
-        console.error("Error promoting classrooms:", err);
-        Swal.fire({
-          icon: "error",
-          title: "ข้อผิดพลาด!",
-          text: err.response?.data?.error || "เกิดข้อผิดพลาดในการเลื่อนชั้นปี",
-        });
-      }
-    }
-  };
+  // const handlePromoteClick = async () => {
+  //   const result = await Swal.fire({
+  //     title: "ยืนยันการเลื่อนชั้นปี",
+  //     text: "คุณแน่ใจหรือไม่ว่าต้องการเลื่อนชั้นปีทั้งหมด? การดำเนินการนี้ไม่สามารถย้อนกลับได้. นักเรียนและชั้นเรียนจะถูกอัพเดทไปยังปีการศึกษาถัดไป.",
+  //     icon: "warning",
+  //     showCancelButton: true,
+  //     confirmButtonColor: "#3085d6",
+  //     cancelButtonColor: "#d33",
+  //     confirmButtonText: "ใช่, เลื่อนชั้นปี!",
+  //     cancelButtonText: "ยกเลิก",
+  //     reverseButtons: true,
+  //   });
+  //   if (result.isConfirmed) {
+  //     Swal.fire({
+  //       title: "กำลังดำเนินการ...",
+  //       text: "กำลังเลื่อนชั้นปี กรุณารอสักครู่",
+  //       allowOutsideClick: false,
+  //       didOpen: () => {
+  //         Swal.showLoading();
+  //       },
+  //     });
+  //     try {
+  //       const promoteResult = await promoteClassrooms();
+  //       Swal.fire({
+  //         icon: "success",
+  //         title: "สำเร็จ!",
+  //         text: promoteResult.message,
+  //         showConfirmButton: false,
+  //         timer: 1500,
+  //       });
+  //       fetchClassrooms();
+  //       setStatsData(new Map());
+  //     } catch (err: any) {
+  //       console.error("Error promoting classrooms:", err);
+  //       Swal.fire({
+  //         icon: "error",
+  //         title: "ข้อผิดพลาด!",
+  //         text: err.response?.data?.error || "เกิดข้อผิดพลาดในการเลื่อนชั้นปี",
+  //       });
+  //     }
+  //   }
+  // };
 
   // const handleRevertPromoteClick = async () => {
   //   const result = await Swal.fire({
@@ -460,17 +456,17 @@ const Classrooms: React.FC = () => {
                   <Undo2 className="w-5 h-5 mr-2" />
                   ย้อนกลับการเลื่อนชั้นปี
                 </Button> */}
-                <Button
+                {/* <Button
                   onClick={handlePromoteClick}
                   className="bg-green-500 text-white hover:bg-green-600 transition-colors duration-200 flex items-center"
                 >
                 <Rocket className="w-5 h-5 mr-2" />
                   เลื่อนชั้นปี
-                </Button>
+                </Button> */}
 
                 <Button
                   onClick={() => setIsImportModalOpen(true)}
-                  className="bg-yellow-500 text-white hover:bg-yellow-600 transition-colors duration-200 flex items-center"
+                  className="bg-green-500 text-white hover:bg-green-600 transition-colors duration-200 flex items-center"
                 >
                   <FileSpreadsheet className="w-5 h-5 mr-2" />
                   นำเข้า Excel

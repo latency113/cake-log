@@ -82,6 +82,6 @@ createRoot(document.getElementById("root")!).render(
         </NotFoundProvider>
       </AuthProvider>
     </ThemeProvider>
-    <Toaster />
+    <Toaster richColors position="top-right" closeButton />
   </StrictMode>
 );

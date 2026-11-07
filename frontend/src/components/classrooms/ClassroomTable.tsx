@@ -139,7 +139,7 @@ const ClassroomTable: React.FC<ClassroomTableProps> = ({
         {chunks.map((chunk, chunkIndex) => (
           <div
             key={chunkIndex}
-            className={`rounded-sm border shadow-md print-table-wrapper ${chunkIndex < chunks.length - 1 ? 'print-page-break' : ''}`}
+            className={`print-table-wrapper border-0 print:border-none shadow-none print:shadow-none ${chunkIndex < chunks.length - 1 ? 'print-page-break' : ''}`}
           >
             {typeof printTitle === 'string' && (
               <div className="print-table-title">{printTitle}</div>

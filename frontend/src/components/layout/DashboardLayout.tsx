@@ -30,7 +30,7 @@ const DashboardLayout: React.FC = () => {
       <AdminSidebar />
       <div className="flex-1 min-w-0 flex flex-col">
         {/* Top bar with Year Selector & System Info */}
-        <header className="sticky top-0 z-20 h-13 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-b border-border flex items-center justify-between px-6 shadow-2xs">
+        <header className="sticky top-0 z-20 h-13 bg-white/90 dark:bg-slate-900/90 backdrop-blur-sm border-b border-border flex items-center justify-between px-6 shadow-2xs print:hidden">
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span className="font-semibold text-foreground">แผงควบคุมระบบ (Admin)</span>
             <span>/</span>
@@ -49,7 +49,7 @@ const DashboardLayout: React.FC = () => {
 
         {/* Warning Banner when viewing historical academic year */}
         {isHistorical && (
-          <div className="bg-amber-500/15 border-b border-amber-500/30 px-6 py-2 text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between flex-wrap gap-2 animate-in fade-in slide-in-from-top-1 duration-200">
+          <div className="bg-amber-500/15 border-b border-amber-500/30 px-6 py-2 text-xs text-amber-900 dark:text-amber-200 flex items-center justify-between flex-wrap gap-2 animate-in fade-in slide-in-from-top-1 duration-200 print:hidden">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
               <span>
@@ -68,7 +68,7 @@ const DashboardLayout: React.FC = () => {
           </div>
         )}
 
-        <main className="flex-1 min-w-0 p-6">
+        <main className="flex-1 min-w-0 p-6 print:p-0">
           <Outlet />
         </main>
       </div>

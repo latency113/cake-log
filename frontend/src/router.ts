@@ -157,7 +157,14 @@ const userClassroomStudentsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/my-classroom/$classroomId/students",
   component: lazyRouteComponent(() => import("./pages/AdminDashboard/ClassroomStudentsPage")),
-  beforeLoad: requireRoles(["user"]),
+  beforeLoad: requireRoles(["user", "admin", "superadmin"]),
+});
+
+const teacherClassroomRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/classroom",
+  component: lazyRouteComponent(() => import("./pages/TeacherClassroomPage")),
+  beforeLoad: requireRoles(["user", "superadmin", "admin"]),
 });
 
 // -------------------------------------------------------------
@@ -314,6 +321,7 @@ const routeTree = rootRoute.addChildren([
   registerRoute,
   orderSearchRoute,
   userClassroomStudentsRoute,
+  teacherClassroomRoute,
   dashboardRoute.addChildren([
     dashboardIndexRoute,
     ordersRoute,

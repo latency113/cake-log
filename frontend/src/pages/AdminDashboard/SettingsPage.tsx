@@ -730,6 +730,9 @@ const SettingsPage: React.FC = () => {
                   value={cakeSettings.securityKey || ""}
                   onChange={handleSettingsChange}
                 />
+                <p className="text-xs text-muted-foreground">
+                  * เมื่อบันทึกการเปลี่ยน Security Key ระบบจะอัปเดตไปยังฐานข้อมูลทุกปีการศึกษาโดยอัตโนมัติ
+                </p>
               </div>
             </div>
             <Button
@@ -759,7 +762,7 @@ const SettingsPage: React.FC = () => {
     if (isKeyChanged) {
       const { value: oldKey } = await Swal.fire({
         title: 'ยืนยันการเปลี่ยน Security Key',
-        text: 'กรุณากรอก Security Key เดิมเพื่อยืนยันการเปลี่ยนแปลง',
+        text: 'กรุณากรอก Security Key เดิมเพื่อยืนยันการเปลี่ยนแปลง (การเปลี่ยนแปลงนี้จะมีผลกับทุกปีการศึกษา)',
         input: 'password',
         inputPlaceholder: 'กรอก Security Key เดิม',
         showCancelButton: true,

@@ -20,10 +20,10 @@ const ClassroomCakeSummaryPage: React.FC = () => {
       "classroom-summary-print-section",
       "สรุปยอดเค้กของห้องเรียน",
       {
-        orientation: "landscape",
-        paperSize: "A5",
-        scale: 0.75,
-        margin: "5mm",
+        orientation: "portrait",
+        paperSize: "A4",
+        scale: 1,
+        margin: "10mm",
         customStyles: `
           @media print {
             .print\\:hidden, .screen-only {
@@ -121,7 +121,7 @@ const ClassroomCakeSummaryPage: React.FC = () => {
                 onClick={handlePrint}
                 id="print-classroom-summary-button"
                 className="bg-green-500 text-white hover:bg-green-600 transition-colors duration-200 flex items-center"
-                title="พิมพ์สรุปยอดเค้กของห้องเรียน (ปรับกระดาษเป็น A5 แนวนอนอัตโนมัติ)"
+                title="พิมพ์สรุปยอดเค้กของห้องเรียน (ปรับกระดาษเป็น A4 แนวตั้งอัตโนมัติ)"
               >
                 <Printer className="w-5 h-5 mr-2" /> พิมพ์สรุปยอดเค้กของห้องเรียน
               </Button>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import ReactDOM from "react-dom/client";
 import useDashboardData from "../../hooks/useDashboardData";
 import SalesRecordsTable from "../../components/dashboard/tables/SalesRecordsTable";
@@ -8,12 +8,36 @@ import { useAuth } from "@/contexts/AuthContext";
 import SalesRecordsPageSkeleton from "../../components/dashboard/skeletons/SalesRecordsPageSkeleton";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../../components/ui/dialog";
 import printScaleInstructionImg from "../../../public/assets/print.jpg";
+import { getCakeSettings } from "@/utils/api/settings";
+import type { ICakeSettings } from "@/types/cake";
 
 const SalesRecordsPage: React.FC = () => {
   const { dashboardSummary, loading, error, consolidatedSalesRecords } =
     useDashboardData();
   const { user } = useAuth();
   const [showScaleInstruction, setShowScaleInstruction] = useState(false);
+  const [cakeSettings, setCakeSettings] = useState<ICakeSettings | null>(null);
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const settings = await getCakeSettings();
+        setCakeSettings(settings);
+      } catch (err) {
+        console.error("Failed to load cake settings in SalesRecordsPage:", err);
+      }
+    };
+    fetchSettings();
+  }, []);
+
+  const selectedYear =
+    localStorage.getItem("academicYear") ||
+    (new Date().getFullYear() + 543).toString();
+
+  const currentAcademicYear = cakeSettings?.academicYear || selectedYear;
+  const currentNewYear =
+    cakeSettings?.currentYear ||
+    (parseInt(currentAcademicYear) + 1).toString();
 
   const handlePrint = () => {
     if (!dashboardSummary || !consolidatedSalesRecords) return;
@@ -77,6 +101,8 @@ const SalesRecordsPage: React.FC = () => {
           salesRecords={consolidatedSalesRecords}
           productNames={dashboardSummary.allProducts.map((p) => p.name)}
           loggedInUsername={user?.username}
+          academicYear={currentAcademicYear}
+          newYear={currentNewYear}
         />
       );
 

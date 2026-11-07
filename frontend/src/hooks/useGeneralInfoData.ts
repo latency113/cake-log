@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useMemo } from "react";
 import type { OrderFormState, Department, Year, Classroom, Team, User } from "../types";
 
 interface UseGeneralInfoDataProps {
@@ -20,21 +20,16 @@ interface UseGeneralInfoDataReturn {
 }
 
 const useGeneralInfoData = ({ formData, departments, years, teams, user }: UseGeneralInfoDataProps): UseGeneralInfoDataReturn => {
-  const [filteredYears, setFilteredYears] = useState<Year[]>([]);
-  const [filteredClassrooms, setFilteredClassrooms] = useState<Classroom[]>([]);
-  const [filteredTeams, setFilteredTeams] = useState<Team[]>([]);
-
   // Check if user is a teacher based on Role. Fallback to teacher_id check.
   const isTeacher = user?.role === "USER" || !!user?.teacher_id;
-  const myClassrooms = user?.teacher?.classroom || [];
+  const myClassrooms = useMemo(() => user?.teacher?.classroom || [], [user?.teacher?.classroom]);
 
   // Filter departments based on user role
   const departmentOptions = useMemo(() => {
     let filteredDepts = departments || [];
-    if (isTeacher) {
-      const myDeptIds = new Set(myClassrooms.map(c => c.department_id));
-      // console.log("useGeneralInfoData: Filtering departments. Allowed IDs:", Array.from(myDeptIds));
-      filteredDepts = filteredDepts.filter(d => myDeptIds.has(d.id));
+    if (isTeacher && myClassrooms.length > 0) {
+      const myDeptIds = new Set(myClassrooms.map((c) => c.department_id));
+      filteredDepts = filteredDepts.filter((d) => myDeptIds.has(d.id));
     }
     return filteredDepts.map((department) => ({
       value: department.id,
@@ -42,77 +37,81 @@ const useGeneralInfoData = ({ formData, departments, years, teams, user }: UseGe
     }));
   }, [departments, isTeacher, myClassrooms]);
 
-  // Filter years based on department AND teacher assignments
-  useEffect(() => {
-    if (formData.department_id) {
-      let departmentYears = years.filter((year) =>
-        year.classrooms?.some((classroom) => classroom.department_id == formData.department_id)
+  // Filter years based on department AND teacher assignments (derived via useMemo)
+  const filteredYears = useMemo(() => {
+    if (!formData.department_id) return [];
+    let departmentYears = (years || []).filter((year) =>
+      year.classrooms?.some((classroom) => classroom.department_id === formData.department_id)
+    );
+
+    if (isTeacher && myClassrooms.length > 0) {
+      const myYearIds = new Set(
+        myClassrooms
+          .filter((c) => c.department_id === formData.department_id)
+          .map((c) => c.grade_level_id)
       );
-
-      if (isTeacher) {
-        const myYearIds = new Set(myClassrooms.filter(c => c.department_id === formData.department_id).map(c => c.grade_level_id));
-        departmentYears = departmentYears.filter(y => myYearIds.has(y.id));
-      }
-
-      setFilteredYears(departmentYears);
-    } else {
-      setFilteredYears([]);
+      departmentYears = departmentYears.filter((y) => myYearIds.has(y.id));
     }
+
+    return departmentYears;
   }, [formData.department_id, years, isTeacher, myClassrooms]);
 
-  // Filter classrooms based on year, department AND teacher assignments
-  useEffect(() => {
-    if (formData.year_id) {
-      const selectedYear = years.find((year) => year.id === formData.year_id);
-      let filtered = selectedYear?.classrooms?.filter(
-        (classroom) => classroom.department_id == formData.department_id
+  // Filter classrooms based on year, department AND teacher assignments (derived via useMemo)
+  const filteredClassrooms = useMemo(() => {
+    if (!formData.year_id) return [];
+    const selectedYear = (years || []).find((year) => year.id === formData.year_id);
+    let filtered =
+      selectedYear?.classrooms?.filter(
+        (classroom) => classroom.department_id === formData.department_id
       ) ?? [];
 
-      if (isTeacher) {
-        const myClassroomIds = new Set(myClassrooms.map(c => c.id));
-        filtered = filtered.filter(c => myClassroomIds.has(c.id));
-      }
-
-      setFilteredClassrooms(filtered);
-    } else {
-      setFilteredClassrooms([]);
+    if (isTeacher && myClassrooms.length > 0) {
+      const myClassroomIds = new Set(myClassrooms.map((c) => c.id));
+      filtered = filtered.filter((c) => myClassroomIds.has(c.id));
     }
+
+    return filtered;
   }, [formData.year_id, formData.department_id, years, isTeacher, myClassrooms]);
 
-  // Filter teams based on competitionType only, allowing selection from any department/classroom
-  useEffect(() => {
-    let filtered = teams || []; // Start with all teams
-
+  // Filter teams based on competitionType only (derived via useMemo)
+  const filteredTeams = useMemo(() => {
+    const list = teams || [];
     if (formData.competitionType === "person") {
-      filtered = filtered.filter(team => team.team_type === "person");
+      return list.filter((team) => team.team_type === "person");
     } else if (formData.competitionType === "team") {
-      filtered = filtered.filter(team => team.team_type === "team");
+      return list.filter((team) => team.team_type === "team");
     }
-
-    setFilteredTeams(filtered);
+    return list;
   }, [formData.competitionType, teams]);
 
-  const classroomOptions = (
-    (filteredClassrooms || []).map((classroom) => ({
-      value: classroom.id,
-      label: classroom.name,
-    }))
+  const classroomOptions = useMemo(
+    () =>
+      (filteredClassrooms || []).map((classroom) => ({
+        value: classroom.id,
+        label: classroom.name,
+      })),
+    [filteredClassrooms]
   );
 
-  const classLevelOptions = (
-    (filteredYears || []).map((year) => ({
-      value: year.id,
-      label: `${year.level === "VOCATIONAL" ? "ปวช" : "ปวส"} ${year.year}`,
-    }))
+  const classLevelOptions = useMemo(
+    () =>
+      (filteredYears || []).map((year) => ({
+        value: year.id,
+        label: `${year.level === "VOCATIONAL" ? "ปวช" : "ปวส"} ${year.year}`,
+      })),
+    [filteredYears]
   );
 
-  const teamOptions = (
-    filteredTeams.map((team) => ({
-      value: team.id,
-      label: team.team_type === "person" && team.student_member_name
-        ? `${team.name} (${team.student_member_name})`
-        : team.name,
-    }))
+  const teamOptions = useMemo(
+    () =>
+      filteredTeams.map((team) => ({
+        value: team.id,
+        label:
+          team.team_type === "person" && team.student_member_name
+            ? `${team.name} (${team.student_member_name})`
+            : team.name,
+      })),
+    [filteredTeams]
   );
 
   return {

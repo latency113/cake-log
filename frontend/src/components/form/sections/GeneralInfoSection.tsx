@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import InputField from "../../common/InputField";
 import {
   Select,
@@ -156,16 +156,13 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
   const [teachersMap, setTeachersMap] = useState<Map<string, string>>(
     new Map()
   );
-  const [studentOptions, setStudentOptions] = useState<
-    { value: string; label: string }[]
-  >([]);
   const [customerNameSearchTerm, setCustomerNameSearchTerm] = useState(
     formData.customerName || ""
   );
   const [openCustomerNameSelect, setOpenCustomerNameSelect] = useState(false);
 
   // Generate date options
-const currentYearAD = new Date().getFullYear();
+  const currentYearAD = new Date().getFullYear();
 
   // Initializer for selectedDay
   const getInitialDay = (pickupDate: string | undefined): string => {
@@ -179,13 +176,25 @@ const currentYearAD = new Date().getFullYear();
   };
 
   // Initializer for selectedMonth
-  const getInitialMonth = (): string => {
-    return "12"; // Always default to December
+  const getInitialMonth = (pickupDate: string | undefined): string => {
+    if (pickupDate) {
+      const date = new Date(pickupDate);
+      if (!isNaN(date.getTime())) {
+        return (date.getMonth() + 1).toString();
+      }
+    }
+    return "12"; // Default to December
   };
 
   // Initializer for selectedYear
-  const getInitialYear = (): string => {
-    return currentYearAD.toString(); // Always default to current year
+  const getInitialYear = (pickupDate: string | undefined): string => {
+    if (pickupDate) {
+      const date = new Date(pickupDate);
+      if (!isNaN(date.getTime())) {
+        return date.getFullYear().toString();
+      }
+    }
+    return currentYearAD.toString(); // Default to current year
   };
 
   // Date selection states
@@ -193,11 +202,26 @@ const currentYearAD = new Date().getFullYear();
     getInitialDay(formData.pickup_date)
   );
   const [selectedMonth, setSelectedMonth] = useState<string>(
-    getInitialMonth()
+    getInitialMonth(formData.pickup_date)
   );
   const [selectedYear, setSelectedYear] = useState<string>(
-    getInitialYear()
+    getInitialYear(formData.pickup_date)
   );
+
+  // Sync date components if formData.pickup_date changes externally (e.g. editing order)
+  useEffect(() => {
+    if (formData.pickup_date) {
+      const date = new Date(formData.pickup_date);
+      if (!isNaN(date.getTime())) {
+        const d = date.getDate().toString();
+        const m = (date.getMonth() + 1).toString();
+        const y = date.getFullYear().toString();
+        setSelectedDay((prev) => (prev !== d ? d : prev));
+        setSelectedMonth((prev) => (prev !== m ? m : prev));
+        setSelectedYear((prev) => (prev !== y ? y : prev));
+      }
+    }
+  }, [formData.pickup_date]);
 
   // Dynamic month options
   const monthOptions = Array.from({ length: 12 }, (_, i) => {
@@ -325,60 +349,38 @@ const currentYearAD = new Date().getFullYear();
     fetchAllData();
   }, []);
 
-  useEffect(() => {
-    const updateAdvisorAndStudents = () => {
-      let newAdvisorValue = "";
-      let newStudentOptions: { value: string; label: string }[] = [];
+  // Derive studentOptions via useMemo to prevent setState during render cycles
+  const studentOptions = useMemo<{ value: string; label: string }[]>(() => {
+    if (!formData.classroom_id) return [];
+    const selectedClassroom = classroomsMap.get(formData.classroom_id);
+    if (selectedClassroom?.students && selectedClassroom.students.length > 0) {
+      return selectedClassroom.students.map((student: any) => ({
+        value: student.studentName,
+        label: student.studentName,
+      }));
+    }
+    return [];
+  }, [formData.classroom_id, classroomsMap]);
 
-      if (formData.classroom_id) {
-        const selectedClassroom = classroomsMap.get(formData.classroom_id);
-        if (selectedClassroom) {
-          const advisorName = teachersMap.get(selectedClassroom.teacher_id);
-          if (advisorName) {
-            newAdvisorValue = advisorName;
-          }
-          if (
-            selectedClassroom.students &&
-            selectedClassroom.students.length > 0
-          ) {
-            newStudentOptions = selectedClassroom.students.map((student) => ({
-              value: student.studentName,
-              label: student.studentName,
-            }));
-          }
+  // Sync advisor only when a valid advisorName exists and differs
+  useEffect(() => {
+    if (formData.classroom_id) {
+      const selectedClassroom = classroomsMap.get(formData.classroom_id);
+      if (selectedClassroom) {
+        const advisorName = teachersMap.get(selectedClassroom.teacher_id);
+        if (advisorName && formData.advisor !== advisorName) {
+          handleChange({
+            target: {
+              name: "advisor",
+              value: advisorName,
+            },
+          } as InputChangeEvent);
         }
       }
-
-      if (formData.advisor !== newAdvisorValue) {
-        handleChange({
-          target: {
-            name: "advisor",
-            value: newAdvisorValue,
-          },
-        } as InputChangeEvent);
-      }
-
-      setStudentOptions(newStudentOptions);
-
-      // If classroom changes and formData.customerName is not part of the new student options,
-      // and it was not set from initial order, then clear it.
-      // This logic is complex and might need re-evaluation. For now, let's simplify.
-      // If a customerName was provided by initialOrder, we should keep it.
-      // If the classroom_id changes, and the existing customerName is not in the new list,
-      // it means the old customerName is irrelevant.
-      // For editing, if customerName comes from initialOrder, we keep it.
-      // For new orders, if customerName was manually entered or selected and then classroom changes,
-      // it might need to be cleared.
-
-      // Let's rely on the Select's value prop to handle displaying customerName.
-      // The validation should flag if the customerName is not valid for the selected classroom.
-    };
-
-    updateAdvisorAndStudents();
+    }
   }, [
     formData.classroom_id,
     formData.advisor,
-    formData.customerName, // Keep this to react to changes in formData.customerName
     classroomsMap,
     teachersMap,
     handleChange,
