@@ -144,4 +144,48 @@ export namespace OrderBookRepository {
       },
     });
   }
+
+  export async function bulkClose(ids?: string[], closeAllUnbooked?: boolean) {
+    const where: any = {
+      isClosed: false,
+      currentNumber: 0,
+      orders: { none: {} },
+      OR: [
+        { classroom_id: null },
+        { classroom: { isOrderFinalized: false } },
+      ],
+    };
+    if (ids && ids.length > 0 && !closeAllUnbooked) {
+      where.id = { in: ids };
+    }
+    const result = await prisma.orderBook.updateMany({
+      where,
+      data: {
+        isClosed: true,
+      },
+    });
+    return result.count;
+  }
+
+  export async function bulkOpen(ids?: string[], openAllUnbooked?: boolean) {
+    const where: any = {
+      isClosed: true,
+      currentNumber: 0,
+      orders: { none: {} },
+      OR: [
+        { classroom_id: null },
+        { classroom: { isOrderFinalized: false } },
+      ],
+    };
+    if (ids && ids.length > 0 && !openAllUnbooked) {
+      where.id = { in: ids };
+    }
+    const result = await prisma.orderBook.updateMany({
+      where,
+      data: {
+        isClosed: false,
+      },
+    });
+    return result.count;
+  }
 }

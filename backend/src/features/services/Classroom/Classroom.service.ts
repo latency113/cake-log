@@ -269,4 +269,12 @@ export async function update(
   export async function finalizeClassroomOrders(classroomId: string) {
     return ClassroomRepository.finalizeOrder(classroomId);
   }
+
+  export async function unfinalizeClassroomOrders(classroomId: string) {
+    return ClassroomRepository.unfinalizeOrder(classroomId);
+  }
+
+  export async function setFinalizeClassroomOrders(classroomId: string, isOrderFinalized: boolean) {
+    return ClassroomRepository.setFinalize(classroomId, isOrderFinalized);
+  }
 }

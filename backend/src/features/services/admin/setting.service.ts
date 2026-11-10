@@ -25,28 +25,36 @@ export namespace CakeSettingsService {
       formattedData.pickupEndDate = null;
     }
 
+    const { getAcademicYear } = await import("@/providers/database/database.context");
+    const { getActiveAcademicYear } = await import("@/shared/middleware/database-selector");
+    const currentActiveYear = getActiveAcademicYear();
+    const currentContextYear = getAcademicYear();
+    const isHistorical = Boolean(currentContextYear && currentContextYear !== currentActiveYear);
+
     const upsertedSettings = await CakeSettingsRepository.upsertCakeSettings(formattedData);
-    if (upsertedSettings?.academicYear) {
+    if (!isHistorical && upsertedSettings?.academicYear) {
       setActiveAcademicYearCache(upsertedSettings.academicYear);
     }
 
-    // Also sync active settings into master default DB so system-active-year stays accurate
-    try {
-      const { getClient } = await import("@/providers/database/connection-manager");
-      const defaultClient = getClient();
-      const existingInDefault = await defaultClient.cakeSettings.findFirst();
-      if (existingInDefault) {
-        await defaultClient.cakeSettings.update({
-          where: { id: existingInDefault.id },
-          data: formattedData,
-        });
-      } else {
-        await defaultClient.cakeSettings.create({
-          data: formattedData,
-        });
+    // Only sync active settings into master default DB if NOT editing a historical year
+    if (!isHistorical) {
+      try {
+        const { getClient } = await import("@/providers/database/connection-manager");
+        const defaultClient = getClient();
+        const existingInDefault = await defaultClient.cakeSettings.findFirst();
+        if (existingInDefault) {
+          await defaultClient.cakeSettings.update({
+            where: { id: existingInDefault.id },
+            data: formattedData,
+          });
+        } else {
+          await defaultClient.cakeSettings.create({
+            data: formattedData,
+          });
+        }
+      } catch (syncErr) {
+        console.warn("Could not sync settings to default DB:", syncErr);
       }
-    } catch (syncErr) {
-      console.warn("Could not sync settings to default DB:", syncErr);
     }
 
     // Synchronize Security Key and Maintenance Mode across ALL year databases and default database

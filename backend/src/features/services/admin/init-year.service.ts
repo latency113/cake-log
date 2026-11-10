@@ -233,7 +233,17 @@ ${error.stderr?.toString() || "(empty)"}
             currentYear: year,
           },
         });
-        console.log(`[InitYearService] Copied CakeSettings.`);
+        // Also update the source default database active year
+        await sourceClient.cakeSettings.update({
+          where: { id: settings.id },
+          data: {
+            academicYear: year,
+            currentYear: year,
+          },
+        });
+        const { setActiveAcademicYearCache } = await import("@/shared/middleware/database-selector");
+        setActiveAcademicYearCache(year);
+        console.log(`[InitYearService] Copied CakeSettings and updated active year to ${year}.`);
       }
 
       console.log(

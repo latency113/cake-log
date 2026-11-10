@@ -258,4 +258,26 @@ export namespace ClassroomRepository {
       },
     });
   }
+
+  export async function unfinalizeOrder(classroomId: string) {
+    return prisma.classroom.update({
+      where: {
+        id: classroomId,
+      },
+      data: {
+        isOrderFinalized: false,
+      },
+    });
+  }
+
+  export async function setFinalize(classroomId: string, isOrderFinalized: boolean) {
+    return prisma.classroom.update({
+      where: {
+        id: classroomId,
+      },
+      data: {
+        isOrderFinalized,
+      },
+    });
+  }
 }

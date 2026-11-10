@@ -33,6 +33,7 @@ export const UpdateOrderBookDto = t.Partial(
     maxCapacity: t.Number(),
     isClosed: t.Boolean(),
     classroom_id: t.Nullable(t.String()),
+    isOrderFinalized: t.Boolean(),
   })
 );
 export type UpdateOrderBookDto = typeof UpdateOrderBookDto.static;
@@ -43,6 +44,7 @@ export const OrderBookWithRelationsSchema = t.Composite([
     classroom: t.Optional(t.Nullable(t.Object({
       id: t.String(),
       name: t.String(),
+      isOrderFinalized: t.Optional(t.Boolean()),
       grade_level: t.Optional(t.Object({
         id: t.String(),
         level: t.String(),

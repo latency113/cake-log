@@ -202,6 +202,10 @@ export namespace OrderService {
         throw new Error("Order not found");
       }
 
+      if (orderToDelete.classroom?.isOrderFinalized || orderToDelete.book?.isClosed) {
+        throw new Error("Cannot delete order from a finalized or closed order book");
+      }
+
       await prisma.$transaction(async (tx) => {
         await tx.orderItem.deleteMany({
           where: { order_id: orderId },

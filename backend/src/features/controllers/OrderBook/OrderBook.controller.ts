@@ -109,6 +109,68 @@ export namespace OrderBookController {
         isSignIn: true
       }
     )
+    .post(
+      "/bulk-close",
+      async ({ body, set }) => {
+        try {
+          const count = await OrderBookService.bulkClose(body.ids, body.closeAllUnbooked);
+          return {
+            count,
+            message: `ปิดสมุดจองที่ไม่มีการจองสำเร็จ ${count} เล่ม`,
+          };
+        } catch (error: any) {
+          set.status = "Internal Server Error";
+          return error.message || "Internal Server Error";
+        }
+      },
+      {
+        body: t.Object({
+          ids: t.Optional(t.Array(t.String())),
+          closeAllUnbooked: t.Optional(t.Boolean()),
+        }),
+        response: {
+          200: t.Object({
+            count: t.Number(),
+            message: t.String(),
+          }),
+          500: t.String(),
+        },
+        tags: ["OrderBooks"],
+        isSignIn: true,
+        hasRole: ["SUPERADMIN", "ADMIN"],
+      }
+    )
+    .post(
+      "/bulk-open",
+      async ({ body, set }) => {
+        try {
+          const count = await OrderBookService.bulkOpen(body.ids, body.openAllUnbooked);
+          return {
+            count,
+            message: `เปิดสมุดจองที่ไม่มีการจองสำเร็จ ${count} เล่ม`,
+          };
+        } catch (error: any) {
+          set.status = "Internal Server Error";
+          return error.message || "Internal Server Error";
+        }
+      },
+      {
+        body: t.Object({
+          ids: t.Optional(t.Array(t.String())),
+          openAllUnbooked: t.Optional(t.Boolean()),
+        }),
+        response: {
+          200: t.Object({
+            count: t.Number(),
+            message: t.String(),
+          }),
+          500: t.String(),
+        },
+        tags: ["OrderBooks"],
+        isSignIn: true,
+        hasRole: ["SUPERADMIN", "ADMIN"],
+      }
+    )
     .get(
       "/:id",
       async ({ params: { id }, set }) => {
@@ -146,6 +208,10 @@ export namespace OrderBookController {
             set.status = "Not Found";
             return error.message;
           }
+          if (error.message === "Cannot unassign or change owner of a finalized order book") {
+            set.status = "Bad Request";
+            return error.message;
+          }
           if (error.message === "Book number already exists") {
             set.status = "Conflict";
             return error.message;
@@ -162,6 +228,7 @@ export namespace OrderBookController {
             updatedBook: OrderBookSchema,
             message: t.String(),
           }),
+          400: t.String(),
           404: t.String(),
           409: t.String(),
           500: t.String(),
@@ -179,6 +246,10 @@ export namespace OrderBookController {
           const updatedBook = await OrderBookService.update(id, { classroom_id });
           return { updatedBook, message: "OrderBook assigned successfully" };
         } catch (error: any) {
+          if (error.message === "Cannot unassign or change owner of a finalized order book") {
+            set.status = "Bad Request";
+            return error.message;
+          }
           set.status = "Internal Server Error";
           return error.message || "Internal Server Error";
         }
@@ -188,6 +259,14 @@ export namespace OrderBookController {
         body: t.Object({ 
           classroom_id: t.String(),
         }),
+        response: {
+          200: t.Object({
+            updatedBook: OrderBookSchema,
+            message: t.String(),
+          }),
+          400: t.String(),
+          500: t.String(),
+        },
         tags: ["OrderBooks"],
         isSignIn: true,
         hasRole: ["SUPERADMIN", "ADMIN"]
@@ -204,6 +283,10 @@ export namespace OrderBookController {
             set.status = "Not Found";
             return error.message;
           }
+          if (error.message === "Cannot delete a finalized order book") {
+            set.status = "Bad Request";
+            return error.message;
+          }
           set.status = "Internal Server Error";
           return error.message || "Internal Server Error";
         }
@@ -212,6 +295,7 @@ export namespace OrderBookController {
         params: t.Object({ id: t.String() }),
         response: {
           200: t.Object({ message: t.String() }),
+          400: t.String(),
           404: t.String(),
           500: t.String(),
         },

@@ -371,6 +371,39 @@ export namespace ClassroomController {
     )
 
     .patch(
+      "/:ClassroomId/unfinalize",
+      async ({ params, set }) => {
+        try {
+          const { ClassroomId } = params;
+          const updatedClassroom = await ClassroomService.unfinalizeClassroomOrders(
+            ClassroomId
+          );
+          set.status = "OK";
+          return {
+            updatedClassroom,
+            message: "Classroom orders unfinalized successfully.",
+          };
+        } catch (error: any) {
+          set.status = "Internal Server Error";
+          return error.message || "Internal Server Error";
+        }
+      },
+      {
+        params: t.Object({ ClassroomId: t.String() }),
+        response: {
+          200: t.Object({
+            updatedClassroom: ClassroomSchema,
+            message: t.String(),
+          }),
+          500: t.String(),
+        },
+        tags: ["Classrooms"],
+        isSignIn: true,
+        hasRole: ["SUPERADMIN", "ADMIN"]
+      }
+    )
+
+    .patch(
       "/:ClassroomId",
       async ({ params, body, set }) => {
         try {

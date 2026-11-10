@@ -97,6 +97,7 @@ export const OrderWithRelationsSchema = t.Composite([
     book: t.Optional(t.Nullable(t.Object({
       id: t.String(),
       bookNumber: t.String(),
+      isClosed: t.Optional(t.Boolean()),
     }))),
     officer_prepare: t.Optional(t.Nullable(UserSmallSchema)),
     officer_pickup: t.Optional(t.Nullable(UserSmallSchema)),

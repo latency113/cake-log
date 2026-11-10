@@ -181,6 +181,10 @@ export namespace OrderController {
               set.status = "Not Found";
               return error.message;
             }
+            if (error.message === "Cannot delete order from a finalized or closed order book") {
+              set.status = "Bad Request";
+              return "ไม่สามารถลบคำสั่งซื้อในเล่มที่สรุปยอดแล้วได้";
+            }
           }
           set.status = "Internal Server Error";
           return "Internal Server Error";
@@ -194,6 +198,7 @@ export namespace OrderController {
           200: t.Object({
             message: t.String(),
           }),
+          400: t.String(),
           404: t.String(),
           500: t.String(),
         },
