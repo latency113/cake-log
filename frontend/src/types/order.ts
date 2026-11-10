@@ -25,6 +25,7 @@ export interface Order {
   book?: {
     id: string;
     bookNumber: string;
+    isClosed?: boolean;
   };
   classroom?: any; // Add classroom field to access isOrderFinalized
   department_id?: string; // Added

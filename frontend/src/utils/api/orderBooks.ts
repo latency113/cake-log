@@ -37,3 +37,21 @@ export const deleteOrderBook = async (id: string) => {
   const response = await api.delete(`/order-books/${id}`);
   return response.data;
 };
+
+export const bulkCloseOrderBooks = async (options: {
+  ids?: string[];
+  closeAllUnbooked?: boolean;
+}) => {
+  const response = await api.post("/order-books/bulk-close", options);
+  return response.data;
+};
+
+export const bulkOpenOrderBooks = async (options: {
+  ids?: string[];
+  openAllUnbooked?: boolean;
+}) => {
+  const response = await api.post("/order-books/bulk-open", options);
+  return response.data;
+};
+
+

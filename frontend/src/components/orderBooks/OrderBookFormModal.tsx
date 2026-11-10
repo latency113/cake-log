@@ -25,12 +25,13 @@ const OrderBookFormModal: React.FC<OrderBookFormModalProps> = ({
   onSave,
   currentOrderBook,
 }) => {
-  const [formData, setFormData] = useState<Partial<OrderBook>>({
+  const [formData, setFormData] = useState<Partial<OrderBook> & { isOrderFinalized?: boolean }>({
     bookNumber: "",
     startNumber: "1",
     endNumber: "50",
     maxCapacity: 50,
     isClosed: false,
+    isOrderFinalized: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -42,6 +43,7 @@ const OrderBookFormModal: React.FC<OrderBookFormModalProps> = ({
         endNumber: currentOrderBook.endNumber,
         maxCapacity: currentOrderBook.maxCapacity,
         isClosed: currentOrderBook.isClosed,
+        isOrderFinalized: Boolean(currentOrderBook.classroom?.isOrderFinalized),
       });
     } else {
       setFormData({
@@ -50,6 +52,7 @@ const OrderBookFormModal: React.FC<OrderBookFormModalProps> = ({
         endNumber: "50",
         maxCapacity: 50,
         isClosed: false,
+        isOrderFinalized: false,
       });
     }
   }, [currentOrderBook, isOpen]);
@@ -158,6 +161,30 @@ const OrderBookFormModal: React.FC<OrderBookFormModalProps> = ({
                   className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
                 >
                   {formData.isClosed ? "ปิดแล้ว" : "เปิดอยู่"}
+                </label>
+              </div>
+            </div>
+          )}
+          {currentOrderBook && currentOrderBook.classroom_id && (
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="isOrderFinalized" className="text-right">
+                สรุปยอด
+              </Label>
+              <div className="flex items-center space-x-2">
+                <Checkbox
+                  id="isOrderFinalized"
+                  checked={formData.isOrderFinalized}
+                  onCheckedChange={(checked) =>
+                    setFormData((prev) => ({ ...prev, isOrderFinalized: Boolean(checked) }))
+                  }
+                />
+                <label
+                  htmlFor="isOrderFinalized"
+                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                >
+                  {formData.isOrderFinalized
+                    ? "สรุปยอดแล้ว (ไม่อนุญาตให้ลบออเดอร์)"
+                    : "ยังไม่สรุปยอด"}
                 </label>
               </div>
             </div>

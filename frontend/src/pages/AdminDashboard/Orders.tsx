@@ -213,6 +213,13 @@ const Orders: React.FC = () => {
   const handleDeleteOrder = useCallback((orderId: string) => {
     const order = orders.find((o) => o.id === orderId);
     if (order) {
+      if (order.classroom?.isOrderFinalized || order.book?.isClosed) {
+        showAlertError({
+          title: "ไม่สามารถลบได้",
+          text: "สมุดจองเล่มนี้สรุปยอดแล้ว ไม่สามารถลบคำสั่งซื้อได้",
+        });
+        return;
+      }
       setSelectedOrderForAction(order);
       setIsDeleteConfirmModalOpen(true);
     }
@@ -220,13 +227,25 @@ const Orders: React.FC = () => {
 
   const handleConfirmDelete = useCallback(async () => {
     if (selectedOrderForAction) {
+      if (selectedOrderForAction.classroom?.isOrderFinalized || selectedOrderForAction.book?.isClosed) {
+        showAlertError({
+          title: "ไม่สามารถลบได้",
+          text: "สมุดจองเล่มนี้สรุปยอดแล้ว ไม่สามารถลบคำสั่งซื้อได้",
+        });
+        setIsDeleteConfirmModalOpen(false);
+        setSelectedOrderForAction(null);
+        return;
+      }
       try {
         await deleteOrder(selectedOrderForAction.id!);
         revalidate();
         showAlertSuccess({ title: "ลบสำเร็จ!", text: "คำสั่งซื้อถูกลบเรียบร้อยแล้ว" });
-      } catch (error) {
+      } catch (error: any) {
         console.error("Error deleting order:", error);
-        showAlertError({ title: "เกิดข้อผิดพลาด!", text: "ไม่สามารถลบคำสั่งซื้อได้" });
+        showAlertError({
+          title: "เกิดข้อผิดพลาด!",
+          text: error?.response?.data || "ไม่สามารถลบคำสั่งซื้อได้",
+        });
       } finally {
         setIsDeleteConfirmModalOpen(false);
         setSelectedOrderForAction(null);

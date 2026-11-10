@@ -1,7 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { PlusCircle, Book, Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { PlusCircle, Book, Search, ChevronLeft, ChevronRight, Lock, Unlock, CheckCircle2, ChevronDown, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { showToastSuccess, showToastError, showConfirmDialog } from "@/utils/alerts";
 import type { OrderBook } from "@/types/orderBook";
 import {
@@ -9,8 +17,11 @@ import {
   createOrderBook,
   updateOrderBook,
   deleteOrderBook,
+  bulkCloseOrderBooks,
+  bulkOpenOrderBooks,
 } from "@/utils/api/orderBooks";
-import OrderBookTable from "@/components/orderBooks/OrderBookTable";
+import { finalizeClassroom, unfinalizeClassroom } from "@/utils/api/data";
+import OrderBookTable, { isBookUnbooked } from "@/components/orderBooks/OrderBookTable";
 import OrderBookFormModal from "@/components/orderBooks/OrderBookFormModal";
 import OrderBookDeleteConfirmModal from "@/components/orderBooks/OrderBookDeleteConfirmModal";
 import OrderBooksSkeleton from "@/components/dashboard/skeletons/OrderBooksSkeleton";
@@ -22,6 +33,7 @@ const OrderBooks: React.FC = () => {
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteConfirmModalOpen, setIsDeleteConfirmModalOpen] = useState(false);
   const [selectedOrderBook, setSelectedOrderBook] = useState<OrderBook | null>(null);
+  const [selectedBookIds, setSelectedBookIds] = useState<string[]>([]);
 
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -40,7 +52,12 @@ const OrderBooks: React.FC = () => {
   // Reset to page 1 on search
   useEffect(() => {
     setCurrentPage(1);
+    setSelectedBookIds([]);
   }, [debouncedSearchTerm]);
+
+  useEffect(() => {
+    setSelectedBookIds([]);
+  }, [currentPage]);
 
   const fetchOrderBooks = async () => {
     setLoading(true);
@@ -72,6 +89,13 @@ const OrderBooks: React.FC = () => {
   };
 
   const handleDeleteClick = (orderBook: OrderBook) => {
+    if (orderBook.classroom?.isOrderFinalized) {
+      showToastError({
+        title: "ไม่สามารถลบได้",
+        text: `สมุดจองเล่มที่ ${orderBook.bookNumber} สรุปยอดเค้กเรียบร้อยแล้ว ไม่สามารถลบได้`,
+      });
+      return;
+    }
     setSelectedOrderBook(orderBook);
     setIsDeleteConfirmModalOpen(true);
   };
@@ -102,13 +126,23 @@ const OrderBooks: React.FC = () => {
       fetchOrderBooks();
       setIsDeleteConfirmModalOpen(false);
       setSelectedOrderBook(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error deleting order book:", err);
-      showToastError({ title: "Error", text: "เกิดข้อผิดพลาดในการลบสมุดจอง" });
+      const errorMessage =
+        err?.response?.data || "เกิดข้อผิดพลาดในการลบสมุดจอง";
+      showToastError({ title: "Error", text: errorMessage });
     }
   };
 
   const handleUnassign = async (orderBook: OrderBook) => {
+    if (orderBook.classroom?.isOrderFinalized) {
+      showToastError({
+        title: "ไม่สามารถยกเลิกเจ้าของได้",
+        text: `สมุดจองเล่มที่ ${orderBook.bookNumber} สรุปยอดเค้กเรียบร้อยแล้ว ไม่สามารถยกเลิกเจ้าของได้`,
+      });
+      return;
+    }
+
     const confirmed = await showConfirmDialog({
       title: "ยืนยันการยกเลิกเจ้าของ",
       text: `คุณต้องการยกเลิกเจ้าของสำหรับสมุดจองเล่มที่ ${orderBook.bookNumber} ใช่หรือไม่?`,
@@ -125,9 +159,55 @@ const OrderBooks: React.FC = () => {
       await updateOrderBook(orderBook.id, { classroom_id: null } as any);
       showToastSuccess({ title: "Success", text: "ยกเลิกเจ้าของเรียบร้อยแล้ว!" });
       fetchOrderBooks();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error unassigning order book:", err);
-      showToastError({ title: "Error", text: "ไม่สามารถยกเลิกเจ้าของได้" });
+      const errorMessage =
+        err?.response?.data || "ไม่สามารถยกเลิกเจ้าของได้";
+      showToastError({ title: "Error", text: errorMessage });
+    }
+  };
+
+  const handleToggleFinalize = async (orderBook: OrderBook) => {
+    if (!orderBook.classroom_id) {
+      showToastError({ title: "ข้อผิดพลาด", text: "สมุดจองเล่มนี้ยังไม่มีเจ้าของห้องเรียน" });
+      return;
+    }
+
+    const isCurrentlyFinalized = Boolean(orderBook.classroom?.isOrderFinalized);
+    const roomName = orderBook.classroom?.name
+      ? `ห้อง ${orderBook.classroom.name}`
+      : "ห้องเรียน";
+
+    const confirmed = await showConfirmDialog({
+      title: isCurrentlyFinalized ? "ยืนยันการปลดล็อกสรุปยอด" : "ยืนยันการสรุปยอด",
+      text: isCurrentlyFinalized
+        ? `คุณต้องการปลดล็อกการสรุปยอดสำหรับสมุดจองเล่มที่ ${orderBook.bookNumber} (${roomName}) ใช่หรือไม่? เมื่อปลดล็อกแล้วห้องเรียนจะสามารถเพิ่มและแก้ไขรายการออเดอร์ได้อีกครั้ง`
+        : `คุณต้องการสรุปยอดสำหรับสมุดจองเล่มที่ ${orderBook.bookNumber} (${roomName}) ใช่หรือไม่? เมื่อสรุปยอดแล้วออเดอร์ในเล่มนี้จะไม่สามารถลบได้`,
+      confirmButtonText: isCurrentlyFinalized ? "ยืนยันปลดล็อก" : "ยืนยันสรุปยอด",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (!confirmed) return;
+
+    try {
+      if (isCurrentlyFinalized) {
+        await unfinalizeClassroom(orderBook.classroom_id);
+      } else {
+        await finalizeClassroom(orderBook.classroom_id);
+      }
+      showToastSuccess({
+        title: "สำเร็จ",
+        text: isCurrentlyFinalized
+          ? "ปลดล็อกสรุปยอดเรียบร้อยแล้ว"
+          : "สรุปยอดเรียบร้อยแล้ว",
+      });
+      fetchOrderBooks();
+    } catch (err) {
+      console.error("Error toggling finalize status:", err);
+      showToastError({
+        title: "เกิดข้อผิดพลาด",
+        text: "ไม่สามารถปรับสถานะการสรุปยอดได้",
+      });
     }
   };
 
@@ -178,6 +258,146 @@ const OrderBooks: React.FC = () => {
     }
   };
 
+  const handleToggleSelect = (id: string) => {
+    setSelectedBookIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleToggleSelectAll = () => {
+    const eligibleIds = orderBooks.filter(isBookUnbooked).map((b) => b.id);
+    const allSelected = eligibleIds.length > 0 && eligibleIds.every((id) => selectedBookIds.includes(id));
+    if (allSelected) {
+      setSelectedBookIds((prev) => prev.filter((id) => !eligibleIds.includes(id)));
+    } else {
+      setSelectedBookIds((prev) => Array.from(new Set([...prev, ...eligibleIds])));
+    }
+  };
+
+  const handleBulkCloseSelected = async () => {
+    if (selectedBookIds.length === 0) return;
+
+    const confirmed = await showConfirmDialog({
+      title: "ยืนยันการปิดสมุดจอง",
+      text: `คุณต้องการปิดสมุดจองที่ไม่มีการจองที่เลือกจำนวน ${selectedBookIds.length} เล่ม ใช่หรือไม่? เมื่อปิดแล้วสมุดเล่มนี้จะไม่สามารถนำไปเปิดสั่งจองได้อีก`,
+      confirmButtonText: "ยืนยันปิดเล่ม",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (!confirmed) return;
+
+    setLoading(true);
+    try {
+      const res = await bulkCloseOrderBooks({ ids: selectedBookIds });
+      showToastSuccess({
+        title: "สำเร็จ",
+        text: `ปิดสมุดจองเรียบร้อยแล้วจำนวน ${res.count} เล่ม`,
+      });
+      setSelectedBookIds([]);
+      fetchOrderBooks();
+    } catch (err) {
+      console.error("Error bulk closing order books:", err);
+      showToastError({
+        title: "เกิดข้อผิดพลาด",
+        text: "ไม่สามารถปิดสมุดจองที่เลือกได้",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBulkOpenSelected = async () => {
+    if (selectedBookIds.length === 0) return;
+
+    const confirmed = await showConfirmDialog({
+      title: "ยืนยันการเปิดสมุดจอง",
+      text: `คุณต้องการเปิดสมุดจองที่ไม่มีการจองที่เลือกจำนวน ${selectedBookIds.length} เล่ม ใช่หรือไม่? เมื่อเปิดแล้วสมุดเล่มนี้จะสามารถนำไปใช้สั่งจองได้ตามปกติ`,
+      confirmButtonText: "ยืนยันเปิดเล่ม",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (!confirmed) return;
+
+    setLoading(true);
+    try {
+      const res = await bulkOpenOrderBooks({ ids: selectedBookIds });
+      showToastSuccess({
+        title: "สำเร็จ",
+        text: `เปิดสมุดจองเรียบร้อยแล้วจำนวน ${res.count} เล่ม`,
+      });
+      setSelectedBookIds([]);
+      fetchOrderBooks();
+    } catch (err) {
+      console.error("Error bulk opening order books:", err);
+      showToastError({
+        title: "เกิดข้อผิดพลาด",
+        text: "ไม่สามารถเปิดสมุดจองที่เลือกได้",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleCloseAllUnbookedInSystem = async () => {
+    const confirmed = await showConfirmDialog({
+      title: "ยืนยันการปิดสมุดจองที่ไม่มีการจองทั้งหมด",
+      text: "คุณต้องการปิดสมุดจองทั้งหมดในระบบที่ยังไม่มีการจองเลยใช่หรือไม่? ระบบจะทำการปิดเฉพาะเล่มที่ยังไม่ถูกปิดและไม่มีรายการจองเท่านั้น",
+      confirmButtonText: "ยืนยันปิดทั้งหมด",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (!confirmed) return;
+
+    setLoading(true);
+    try {
+      const res = await bulkCloseOrderBooks({ closeAllUnbooked: true });
+      showToastSuccess({
+        title: "สำเร็จ",
+        text: `ปิดสมุดจองที่ไม่มีการจองทั้งหมดเรียบร้อยแล้ว (${res.count} เล่ม)`,
+      });
+      setSelectedBookIds([]);
+      fetchOrderBooks();
+    } catch (err) {
+      console.error("Error closing all unbooked order books:", err);
+      showToastError({
+        title: "เกิดข้อผิดพลาด",
+        text: "ไม่สามารถปิดสมุดจองได้",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOpenAllUnbookedInSystem = async () => {
+    const confirmed = await showConfirmDialog({
+      title: "ยืนยันการเปิดสมุดจองที่ไม่มีการจองทั้งหมด",
+      text: "คุณต้องการเปิดสมุดจองทั้งหมดในระบบที่ยังไม่มีการจองเลยใช่หรือไม่? ระบบจะทำการเปิดเฉพาะเล่มที่ปิดอยู่และไม่มีรายการจองเท่านั้น",
+      confirmButtonText: "ยืนยันเปิดทั้งหมด",
+      cancelButtonText: "ยกเลิก",
+    });
+
+    if (!confirmed) return;
+
+    setLoading(true);
+    try {
+      const res = await bulkOpenOrderBooks({ openAllUnbooked: true });
+      showToastSuccess({
+        title: "สำเร็จ",
+        text: `เปิดสมุดจองที่ไม่มีการจองทั้งหมดเรียบร้อยแล้ว (${res.count} เล่ม)`,
+      });
+      setSelectedBookIds([]);
+      fetchOrderBooks();
+    } catch (err) {
+      console.error("Error opening all unbooked order books:", err);
+      showToastError({
+        title: "เกิดข้อผิดพลาด",
+        text: "ไม่สามารถเปิดสมุดจองได้",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   if (loading && orderBooks.length === 0) {
     return <OrderBooksSkeleton />;
   }
@@ -188,60 +408,156 @@ const OrderBooks: React.FC = () => {
 
   return (
     <div className="max-w-11/12 mx-auto">
-      <div className="bg-gradient-to-r from-pink-400 to-rose-500 rounded-sm shadow-md p-8 mb-8 text-white">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 rounded-xl shadow-md p-6 sm:p-8 mb-6 text-white">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-5">
           <div>
-            <h1 className="text-4xl font-bold mb-2 flex items-center">
-              <Book className="w-10 h-10 mr-4 text-white" />
+            <h1 className="text-3xl sm:text-4xl font-bold mb-1.5 flex items-center gap-3">
+              <Book className="w-9 h-9 text-white drop-shadow-sm" />
               จัดการสมุดจอง
             </h1>
-            <p className="text-white text-lg">รายการสมุดจองทั้งหมด</p>
+            <p className="text-pink-100 text-sm sm:text-base">รายการสมุดจองทั้งหมดในระบบ</p>
           </div>
-          <div className="flex flex-col sm:flex-row gap-4">
+          <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-pink-400" />
               <Input
                 placeholder="ค้นหาเลขเล่ม..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 bg-white/95 dark:bg-slate-900/90 text-gray-900 dark:text-slate-100 placeholder:text-muted-foreground border border-transparent dark:border-slate-800 rounded-md w-full sm:w-64 focus:ring-2 focus:ring-pink-300"
+                className="pl-9 bg-white/95 dark:bg-slate-900/90 text-gray-900 dark:text-slate-100 placeholder:text-muted-foreground border-0 shadow-inner rounded-lg w-full sm:w-56 focus:ring-2 focus:ring-white h-10"
               />
             </div>
-            <div className="flex gap-2">
-              <Button
-                onClick={handleBulkCreate}
-                variant="outline"
-                className="bg-transparent border-white text-white hover:bg-white hover:text-pink-600 dark:border-white dark:text-white dark:hover:bg-white dark:hover:text-pink-600 transition-colors duration-200"
-              >
-                สร้างเล่ม 001-100 อัตโนมัติ
-              </Button>
-              <Button
-                onClick={handleAddOrderBookClick}
-                className="bg-white text-pink-600 hover:bg-pink-50 hover:text-pink-700 dark:bg-white dark:text-pink-600 dark:hover:bg-pink-50 dark:hover:text-pink-700 transition-colors duration-200 flex items-center font-semibold shadow-sm"
-              >
-                <PlusCircle className="w-5 h-5 mr-2" />
-                เพิ่มสมุดจองใหม่
-              </Button>
-            </div>
+
+            {/* Bulk Actions Dropdown Menu - High Contrast Solid White */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  className="h-10 bg-white dark:bg-slate-900 text-gray-800 dark:text-slate-100 hover:bg-pink-50 dark:hover:bg-slate-800 hover:text-pink-600 transition-all duration-150 flex items-center gap-2 rounded-lg text-xs sm:text-sm font-bold shadow-md border-0"
+                >
+                  <SlidersHorizontal className="w-4 h-4 text-pink-500 shrink-0" />
+                  <span>ตัวเลือกเพิ่มเติม</span>
+                  <ChevronDown className="w-3.5 h-3.5 text-gray-400 dark:text-slate-400" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-72 p-2 shadow-xl border-border bg-card">
+                <DropdownMenuLabel className="text-xs font-semibold text-muted-foreground px-2 py-1.5 uppercase tracking-wider">
+                  จัดการสมุดจองทั้งระบบ
+                </DropdownMenuLabel>
+                
+                <DropdownMenuItem
+                  onClick={handleOpenAllUnbookedInSystem}
+                  className="flex items-start gap-3 p-2.5 rounded-md cursor-pointer hover:bg-emerald-50 dark:hover:bg-emerald-950/40 focus:bg-emerald-50 dark:focus:bg-emerald-950/40"
+                >
+                  <div className="p-1.5 rounded-md bg-emerald-100 dark:bg-emerald-900/50 text-emerald-600 dark:text-emerald-400 shrink-0 mt-0.5">
+                    <Unlock className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-sm text-foreground">เปิดเล่มที่ยังไม่จองทั้งหมด</span>
+                    <span className="text-xs text-muted-foreground">เปิดรับจองสำหรับสมุดที่ยังไม่มีรายการจอง</span>
+                  </div>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem
+                  onClick={handleCloseAllUnbookedInSystem}
+                  className="flex items-start gap-3 p-2.5 rounded-md cursor-pointer hover:bg-rose-50 dark:hover:bg-rose-950/40 focus:bg-rose-50 dark:focus:bg-rose-950/40"
+                >
+                  <div className="p-1.5 rounded-md bg-rose-100 dark:bg-rose-900/50 text-rose-600 dark:text-rose-400 shrink-0 mt-0.5">
+                    <Lock className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-sm text-foreground">ปิดเล่มที่ยังไม่จองทั้งหมด</span>
+                    <span className="text-xs text-muted-foreground">ปิดรับจองเฉพาะสมุดที่ไม่มีรายการจอง</span>
+                  </div>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator className="my-1.5" />
+
+                <DropdownMenuItem
+                  onClick={handleBulkCreate}
+                  className="flex items-start gap-3 p-2.5 rounded-md cursor-pointer hover:bg-pink-50 dark:hover:bg-pink-950/40 focus:bg-pink-50 dark:focus:bg-pink-950/40"
+                >
+                  <div className="p-1.5 rounded-md bg-pink-100 dark:bg-pink-900/50 text-pink-600 dark:text-pink-400 shrink-0 mt-0.5">
+                    <PlusCircle className="w-4 h-4" />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="font-semibold text-sm text-foreground">สร้างเล่ม 001-100 อัตโนมัติ</span>
+                    <span className="text-xs text-muted-foreground">สร้างชุดสมุดจองเริ่มต้นอัตโนมัติ</span>
+                  </div>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            <Button
+              onClick={handleAddOrderBookClick}
+              className="bg-white text-pink-600 hover:bg-pink-50 hover:text-pink-700 active:scale-95 transition-all duration-150 flex items-center font-semibold shadow-md h-10 rounded-lg text-xs sm:text-sm"
+            >
+              <PlusCircle className="w-4 h-4 mr-1.5" />
+              เพิ่มสมุดจองใหม่
+            </Button>
           </div>
         </div>
       </div>
+
+      {selectedBookIds.length > 0 && (
+        <div className="bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-900/60 rounded-md p-3 px-4 mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-2 text-sm text-amber-900 dark:text-amber-200">
+            <CheckCircle2 className="w-5 h-5 text-amber-600 dark:text-amber-400 shrink-0" />
+            <span>
+              เลือกสมุดจองที่ไม่มีการจอง <strong>{selectedBookIds.length}</strong> เล่ม
+            </span>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setSelectedBookIds([])}
+              className="text-muted-foreground hover:text-foreground text-xs"
+            >
+              ยกเลิกการเลือก
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleBulkOpenSelected}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium flex items-center gap-1.5 shadow-sm text-xs"
+            >
+              <Unlock className="w-3.5 h-3.5" />
+              เปิดเล่มที่เลือก ({selectedBookIds.length} เล่ม)
+            </Button>
+            <Button
+              size="sm"
+              onClick={handleBulkCloseSelected}
+              className="bg-amber-600 hover:bg-amber-700 text-white font-medium flex items-center gap-1.5 shadow-sm text-xs"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              ปิดเล่มที่เลือก ({selectedBookIds.length} เล่ม)
+            </Button>
+          </div>
+        </div>
+      )}
       
       {loading ? (
         <div className="opacity-50 pointer-events-none">
            <OrderBookTable
             orderBooks={orderBooks}
+            selectedBookIds={selectedBookIds}
+            onToggleSelect={handleToggleSelect}
+            onToggleSelectAll={handleToggleSelectAll}
             onEdit={handleEditOrderBook}
             onDelete={handleDeleteClick}
             onUnassign={handleUnassign}
+            onToggleFinalize={handleToggleFinalize}
           />
         </div>
       ) : (
         <OrderBookTable
           orderBooks={orderBooks}
+          selectedBookIds={selectedBookIds}
+          onToggleSelect={handleToggleSelect}
+          onToggleSelectAll={handleToggleSelectAll}
           onEdit={handleEditOrderBook}
           onDelete={handleDeleteClick}
           onUnassign={handleUnassign}
+          onToggleFinalize={handleToggleFinalize}
         />
       )}
 

@@ -273,14 +273,10 @@ const OrderSearchPage: React.FC = () => {
   const handleDeleteOrder = (orderId: string) => {
     const order = orders.find((o) => o.id === orderId);
     if (order) {
-      if (
-        order.classroom?.isOrderFinalized &&
-        user?.role !== "ADMIN" &&
-        user?.role !== "SUPERADMIN"
-      ) {
+      if (order.classroom?.isOrderFinalized || order.book?.isClosed) {
         showAlertError({
           title: "ไม่สามารถลบได้",
-          text: "ออเดอร์นี้ถูกสรุปยอดไปแล้ว สามารถลบได้โดยแอดมินเท่านั้น",
+          text: "สมุดจองเล่มนี้สรุปยอดแล้ว ไม่สามารถลบคำสั่งซื้อได้",
         });
         return;
       }

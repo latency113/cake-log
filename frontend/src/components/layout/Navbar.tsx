@@ -6,6 +6,7 @@ import {
   ChevronDown,
   LogOut,
   GraduationCap,
+  Home,
 } from "lucide-react";
 import { ModeToggle } from "../theme/mode-toggle";
 import { Link, useNavigate } from "@tanstack/react-router"; // Import useNavigate
@@ -46,8 +47,8 @@ const Navbar: React.FC<{ className?: string }> = ({ className }) => {
           <div className="container mx-auto flex justify-between items-center">
             {/* Logo and Title Section */}
             <div className="flex items-center space-x-3 group cursor-pointer">
-              <a
-                href="/select-book"
+              <Link
+                to="/select-book"
                 className="flex items-center space-x-3 group"
               >
                 <div className="p-2 bg-white/10 rounded-xl backdrop-blur-sm group-hover:bg-white/20 transition-colors duration-300">
@@ -67,24 +68,31 @@ const Navbar: React.FC<{ className?: string }> = ({ className }) => {
                     </span>
                   </div>
                 </div>
-              </a>
+              </Link>
             </div>
 
             {/* Right Section */}
             <div className="flex items-center space-x-3">
               {token && (
                 <>
+                  <Link to="/select-book">
+                    <button className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-3 md:px-4 py-2 md:py-2.5 rounded-md transition-colors backdrop-blur-sm border border-white/20 hover:border-white/30">
+                      <Home className="w-4 h-4" />
+                      <span className="text-sm md:text-md font-medium">หน้าแรก</span>
+                    </button>
+                  </Link>
+
                   <Link to="/order-search">
-                    <button className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-4 py-2.5 rounded-md transition-colors backdrop-blur-sm border border-white/20 hover:border-white/30">
+                    <button className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-3 md:px-4 py-2 md:py-2.5 rounded-md transition-colors backdrop-blur-sm border border-white/20 hover:border-white/30">
                       <ShoppingBag className="w-4 h-4" />
-                      <span className="text-md font-medium">ค้นหาออเดอร์</span>
+                      <span className="text-sm md:text-md font-medium">ค้นหาออเดอร์</span>
                     </button>
                   </Link>
 
                   <Link to="/classroom">
-                    <button className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-4 py-2.5 rounded-md transition-colors backdrop-blur-sm border border-white/20 hover:border-white/30">
+                    <button className="flex items-center space-x-2 bg-white/10 hover:bg-white/20 px-3 md:px-4 py-2 md:py-2.5 rounded-md transition-colors backdrop-blur-sm border border-white/20 hover:border-white/30">
                       <GraduationCap className="w-4 h-4" />
-                      <span className="text-md font-medium">
+                      <span className="text-sm md:text-md font-medium">
                          รายชื่อนักเรียน
                       </span>
                     </button>

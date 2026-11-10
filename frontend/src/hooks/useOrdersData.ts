@@ -45,6 +45,12 @@ const useOrdersData = (): UseOrdersDataResult => {
     fetchData();
   }, [fetchData]);
 
+  const classroomMap = useMemo(() => {
+    const map = new Map<string, Classroom>();
+    classrooms.forEach((c) => map.set(c.id, c));
+    return map;
+  }, [classrooms]);
+
   const classroomToDepartmentMap = useMemo(() => {
     const map = new Map<string, string>();
     classrooms.forEach((classroom) => {
@@ -65,9 +71,13 @@ const useOrdersData = (): UseOrdersDataResult => {
     return orders.map((order) => {
       const departmentId = classroomToDepartmentMap.get(order.classroom_id ?? "");
       const departmentName = departmentId ? departmentMap.get(departmentId) : "N/A";
-      return { ...order, departmentName };
+      const classroom = order.classroom_id ? classroomMap.get(order.classroom_id) : undefined;
+      const mergedClassroom = order.classroom
+        ? { ...classroom, ...order.classroom }
+        : classroom;
+      return { ...order, departmentName, classroom: mergedClassroom };
     });
-  }, [orders, classroomToDepartmentMap, departmentMap]);
+  }, [orders, classroomToDepartmentMap, departmentMap, classroomMap]);
 
   const ordersByDate = useMemo(() => {
     const map = new Map<string, Order[]>();

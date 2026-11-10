@@ -187,22 +187,19 @@ const OfficerPrepareOrderDetailModal: React.FC<OfficerPrepareOrderDetailModalPro
             font-family: 'Noto Sans Thai', 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             margin: 0;
             padding: 8mm 12mm;
-            background-color: #fdf2f8 !important;
+            background-color: #ffffff !important;
+            color: #000000 !important;
           }
-          .bg-pink-50 {
-            background-color: #fdf2f8 !important;
+          /* ตั้งค่าการพิมพ์เป็นขาวดำ */
+          table, th, td {
+            border-color: #000000 !important;
+            color: #000000 !important;
           }
-          .bg-pink-100 {
-            background-color: #fce7f3 !important;
+          .border-b {
+            border-bottom-color: #000000 !important;
           }
-          .bg-pink-200 {
-            background-color: #fbcfe8 !important;
-          }
-          .border-pink-300 {
-            border-color: #f9a8d4 !important;
-          }
-          .border-pink-400 {
-            border-color: #f472b6 !important;
+          * {
+            color: #000000 !important;
           }
         </style>
       </head>
@@ -228,6 +225,7 @@ const OfficerPrepareOrderDetailModal: React.FC<OfficerPrepareOrderDetailModalPro
           yearsData={yearsData}
           teamsData={teamsData}
           classroomsData={classroomsData}
+          isBlackAndWhite={true}
         />
       );
 
@@ -285,6 +283,7 @@ const OfficerPrepareOrderDetailModal: React.FC<OfficerPrepareOrderDetailModalPro
               onClick={handlePrint}
               className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:opacity-50"
               disabled={loadingData || !order}
+              title="พิมพ์ใบสั่งจองเค้ก (ขาวดำ A4 แนวตั้ง)"
             >
               <Printer className="w-4 h-4"/>พิมพ์
             </button>

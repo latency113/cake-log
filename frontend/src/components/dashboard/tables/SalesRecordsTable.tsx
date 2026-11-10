@@ -341,6 +341,69 @@ const SalesRecordsTable: React.FC<SalesRecordsTableProps> = ({
                     .toLocaleString()}
                 </td>
               ))}
+              <td
+                colSpan={2}
+                className="py-3 px-2 text-center text-sm bg-green-100 dark:bg-emerald-950/50 dark:text-emerald-200 print:bg-green-100"
+              >
+                {salesRecords
+                  .reduce((sum, r) => sum + r.dailyTotalPrice, 0)
+                  .toLocaleString()}
+              </td>
+            </tr>
+            <tr className="border-t-2 border-gray-400 dark:border-slate-600 print:border-gray-400 bg-gray-100 dark:bg-slate-800/80 print:bg-gray-100 font-bold">
+              <td className="py-3 px-4 text-sm border-r border-gray-400 dark:border-slate-600 print:border-gray-400">
+                ส่วนลด
+              </td>
+              {productNames.map((name) => (
+                <td
+                  key={`total-discount-${name}`}
+                  colSpan={5}
+                  className="py-3 px-2 text-center text-sm border-r-2 border-gray-600 dark:border-slate-600 print:border-gray-600 bg-gray-100 dark:bg-slate-800/80 print:bg-gray-100"
+                >
+                  {(
+                    salesRecords.reduce(
+                      (sum, r) => sum + (r.productSales[name]?.totalPound || 0),
+                      0
+                    ) * 10
+                  ).toLocaleString()}
+                </td>
+              ))}
+              <td
+                colSpan={2}
+                className="py-3 px-2 text-center text-sm bg-green-100 dark:bg-emerald-950/50 dark:text-emerald-200 print:bg-green-100"
+              >
+                {(
+                  salesRecords.reduce((sum, r) => sum + r.dailyTotalPound, 0) *
+                  10
+                ).toLocaleString()}
+              </td>
+            </tr>
+            <tr className="border-t-2 border-gray-400 dark:border-slate-600 print:border-gray-400 bg-gray-100 dark:bg-slate-800/80 print:bg-gray-100 font-bold">
+              <td className="py-3 px-4 text-sm border-r border-gray-400 dark:border-slate-600 print:border-gray-400">
+                ยอดหลังหักส่วนลด
+              </td>
+              {productNames.map((name) => {
+                const totalPrice = salesRecords.reduce(
+                  (sum, r) => sum + (r.productSales[name]?.totalPrice || 0),
+                  0
+                );
+                const totalPound = salesRecords.reduce(
+                  (sum, r) => sum + (r.productSales[name]?.totalPound || 0),
+                  0
+                );
+                const discount = totalPound * 10;
+                const netPrice = totalPrice - discount;
+                return (
+                  <td
+                    key={`net-price-${name}`}
+                    colSpan={5}
+                    className="py-3 px-2 text-center text-sm border-r-2 border-gray-600 dark:border-slate-600 print:border-gray-600 bg-gray-100 dark:bg-slate-800/80 print:bg-gray-100"
+                  >
+                    {netPrice.toLocaleString()}
+                  </td>
+                );
+              })}
+            
             </tr>
             <tr className="border-t-2 border-gray-400 dark:border-slate-600 print:border-gray-400 bg-gray-100 dark:bg-slate-800/80 print:bg-gray-100 font-bold">
               <td className="py-3 px-4 text-sm border-r border-gray-400 dark:border-slate-600 print:border-gray-400">
@@ -350,9 +413,17 @@ const SalesRecordsTable: React.FC<SalesRecordsTableProps> = ({
                 colSpan={productNames.length * 5 + 2}
                 className="py-3 px-2 text-center text-sm bg-green-100 dark:bg-emerald-950/50 dark:text-emerald-200 print:bg-green-100"
               >
-                {salesRecords
-                  .reduce((sum, r) => sum + r.dailyTotalPrice, 0)
-                  .toLocaleString()}
+                {(
+                  salesRecords.reduce(
+                    (sum, r) => sum + r.dailyTotalPrice,
+                    0
+                  ) -
+                  salesRecords.reduce(
+                    (sum, r) => sum + r.dailyTotalPound,
+                    0
+                  ) *
+                    10
+                ).toLocaleString()}
               </td>
             </tr>
           </tbody>

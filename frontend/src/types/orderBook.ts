@@ -7,7 +7,20 @@ export interface OrderBook {
   maxCapacity: number;
   isClosed: boolean;
   classroom_id?: string | null;
-  classroom?: any; // Simplified
+  classroom?: {
+    id: string;
+    name: string;
+    isOrderFinalized?: boolean;
+    department?: {
+      id: string;
+      name: string;
+    };
+    grade_level?: {
+      id: string;
+      level: string;
+      year: number;
+    };
+  } | null;
   createdAt?: string; // Optional if not always returned/needed
   updatedAt?: string;
   orders?: any[]; // Simplified for now, or use Order[] if needed
@@ -27,4 +40,6 @@ export interface UpdateOrderBookDto {
   currentNumber?: number;
   maxCapacity?: number;
   isClosed?: boolean;
+  classroom_id?: string | null;
+  isOrderFinalized?: boolean;
 }

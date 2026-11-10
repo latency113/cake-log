@@ -689,20 +689,20 @@ const SettingsPage: React.FC = () => {
                   </h3>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
                     <div className="space-y-2">
-                      <Label htmlFor="academicYear">ปีการศึกษา (พ.ศ.)</Label>
+                      <Label htmlFor="academicYear">ปีการศึกษา / ปีระบบที่ใช้งาน (พ.ศ.)</Label>
                       <Input
                         type="text"
                         id="academicYear"
-                        placeholder="เช่น 2568"
+                        placeholder="เช่น 2569"
                         value={cakeSettings.academicYear || ""}
                         onChange={handleSettingsChange}
                       />
                       <p className="text-xs text-muted-foreground">
-                        ปีการศึกษาของสถานศึกษา
+                        ปีการศึกษาหลักที่ใช้งานในระบบ (กำหนดเป็นปีปัจจุบัน)
                       </p>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="currentYear">ปีปัจจุบัน / ปีเทศกาลปีใหม่ (พ.ศ.)</Label>
+                      <Label htmlFor="currentYear">ปีเทศกาลเค้กปีใหม่ (พ.ศ.)</Label>
                       <Input
                         type="text"
                         id="currentYear"
@@ -711,7 +711,7 @@ const SettingsPage: React.FC = () => {
                         onChange={handleSettingsChange}
                       />
                       <p className="text-xs text-muted-foreground">
-                        ปี พ.ศ. ของเทศกาลเค้กปีใหม่
+                        ปี พ.ศ. ของเทศกาลเค้กปีใหม่ (สำหรับแสดงบนหัวรายงาน)
                       </p>
                     </div>
                     <div className="space-y-2">

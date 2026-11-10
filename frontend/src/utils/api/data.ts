@@ -33,6 +33,16 @@ export const finalizeClassroom = async (classroomId: string) => {
   }
 };
 
+export const unfinalizeClassroom = async (classroomId: string) => {
+  try {
+    const response = await api.patch(`/classrooms/${classroomId}/unfinalize`);
+    return response.data;
+  } catch (error) {
+    console.error("Error unfinalizing classroom:", error);
+    throw error;
+  }
+};
+
 export const getYears = async (): Promise<GradeLevel[]> => {
   try {
     const response = await api.get("/grade-levels");

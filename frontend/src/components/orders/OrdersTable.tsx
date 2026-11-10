@@ -112,10 +112,16 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
     }
   };
 
-  const handleDeleteClick = (e: React.MouseEvent, orderId: string) => {
+  const handleDeleteClick = (
+    e: React.MouseEvent,
+    order: Order & { departmentName?: string }
+  ) => {
     e.stopPropagation();
+    if (order.classroom?.isOrderFinalized || order.book?.isClosed) {
+      return;
+    }
     if (onDeleteOrder) {
-      onDeleteOrder(orderId);
+      onDeleteOrder(order.id);
     }
   };
 
@@ -458,16 +464,26 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                         const isAdmin =
                           currentUser?.role === Role.ADMIN ||
                           currentUser?.role === Role.SUPERADMIN;
-                        const isFinalized = order.classroom?.isOrderFinalized;
-                        const canPerformAction =
+                        const isFinalized = Boolean(
+                          order.classroom?.isOrderFinalized || order.book?.isClosed
+                        );
+
+                        const canEdit =
                           (isAdmin ||
                             (order.user_id === currentUser?.id &&
                               order.status !== "approved" && !isFinalized)) &&
                           order.status !== "complete";
 
+                        const canDelete =
+                          !isFinalized &&
+                          (isAdmin ||
+                            (order.user_id === currentUser?.id &&
+                              order.status !== "approved")) &&
+                          order.status !== "complete";
+
                         return (
                           <div className="flex items-center justify-center space-x-2">
-                            {onEditOrder && canPerformAction && (
+                            {onEditOrder && canEdit && (
                               <button
                                 className="flex p-2 text-yellow-600 hover:bg-yellow-100 rounded-lg transition-colors duration-200 group"
                                 onClick={(e) => handleEditClick(e, order)}
@@ -476,14 +492,26 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
                                 <span className="text-xs"> แก้ไข</span>
                               </button>
                             )}
-                            {onDeleteOrder && canPerformAction && (
-                              <button
-                                className="flex p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors duration-200 group"
-                                onClick={(e) => handleDeleteClick(e, order.id)}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                <span className="text-xs"> ลบ</span>
-                              </button>
+                            {onDeleteOrder && (
+                              canDelete ? (
+                                <button
+                                  className="flex p-2 text-red-600 hover:bg-red-100 rounded-lg transition-colors duration-200 group"
+                                  onClick={(e) => handleDeleteClick(e, order)}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  <span className="text-xs"> ลบ</span>
+                                </button>
+                              ) : isFinalized ? (
+                                <button
+                                  className="flex p-2 text-gray-400 dark:text-gray-500 cursor-not-allowed rounded-lg opacity-60"
+                                  disabled
+                                  title="เล่มนี้สรุปยอดแล้ว ไม่สามารถลบได้"
+                                  onClick={(e) => e.stopPropagation()}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  <span className="text-xs"> สรุปยอดแล้ว</span>
+                                </button>
+                              ) : null
                             )}
                           </div>
                         );

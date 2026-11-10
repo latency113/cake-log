@@ -893,7 +893,7 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
               />
               {/* InputField สำหรับ 'วัน' สิ้นสุด */}
 
-                            <Select
+              <Select
                 onValueChange={handleMonthChange}
                 value={selectedMonth}
               >
