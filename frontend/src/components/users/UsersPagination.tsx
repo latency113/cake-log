@@ -22,10 +22,9 @@ const UsersPagination: React.FC<UsersPaginationProps> = ({
   onPageChange,
   onItemsPerPageChange,
 }) => {
-  const totalPages = Math.ceil(totalUsers / itemsPerPage);
-  const startItem = (currentPage - 1) * itemsPerPage + 1;
+  const totalPages = Math.max(1, Math.ceil(totalUsers / itemsPerPage));
+  const startItem = totalUsers === 0 ? 0 : (currentPage - 1) * itemsPerPage + 1;
   const endItem = Math.min(currentPage * itemsPerPage, totalUsers);
-
 
   const pageNumbers = [];
   for (let i = 1; i <= totalPages; i++) {
@@ -34,13 +33,13 @@ const UsersPagination: React.FC<UsersPaginationProps> = ({
 
   return (
     <div key={`${currentPage}-${itemsPerPage}`} className="bg-muted px-6 py-4 border-t border-border">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-4">
         <div className="flex items-center text-sm text-foreground">
           <span>แสดง</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="mx-2 px-2 py-1 h-auto text-sm">
-                {itemsPerPage} รายการต่อหน้า
+              <Button variant="outline" className="mx-2 px-2 py-1 h-auto text-sm cursor-pointer">
+                {itemsPerPage >= 9999 ? "แสดงทั้งหมด" : `${itemsPerPage} รายการต่อหน้า`}
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
@@ -48,23 +47,31 @@ const UsersPagination: React.FC<UsersPaginationProps> = ({
                 <DropdownMenuItem
                   key={pageSize}
                   onSelect={() => onItemsPerPageChange(pageSize)}
-                  className={pageSize === itemsPerPage ? "bg-accent text-accent-foreground" : ""}
+                  className={`cursor-pointer ${pageSize === itemsPerPage ? "bg-accent text-accent-foreground font-semibold" : ""}`}
                 >
                   {pageSize} รายการต่อหน้า
                 </DropdownMenuItem>
               ))}
+              <DropdownMenuItem
+                onSelect={() => onItemsPerPageChange(9999)}
+                className={`cursor-pointer ${itemsPerPage >= 9999 ? "bg-accent text-accent-foreground font-semibold" : ""}`}
+              >
+                แสดงทั้งหมด
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <span className="ml-4 font-medium">
-            {startItem}-{endItem} จาก {totalUsers} รายการ
+          <span className="ml-2 font-medium">
+            {totalUsers === 0
+              ? "0 รายการ"
+              : `${startItem}-${endItem} จาก ${totalUsers} รายการ`}
           </span>
         </div>
         <div className="flex items-center space-x-2">
           <button
             type="button"
             onClick={() => onPageChange(currentPage - 1)}
-            disabled={currentPage === 1}
-            className="px-3 py-1 border border-input rounded-md text-sm hover:bg-secondary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={currentPage <= 1}
+            className="px-3 py-1 border border-input rounded-md text-sm hover:bg-secondary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             ก่อนหน้า
           </button>
@@ -74,9 +81,9 @@ const UsersPagination: React.FC<UsersPaginationProps> = ({
                 type="button"
                 key={page}
                 onClick={() => onPageChange(page)}
-                className={`px-3 py-1 rounded-md text-sm ${
+                className={`px-3 py-1 rounded-md text-sm cursor-pointer ${
                   page === currentPage
-                    ? "bg-blue-600 text-white"
+                    ? "bg-purple-600 text-white font-medium"
                     : "border border-input text-foreground hover:bg-secondary"
                 }`}
               >
@@ -87,8 +94,8 @@ const UsersPagination: React.FC<UsersPaginationProps> = ({
           <button
             type="button"
             onClick={() => onPageChange(currentPage + 1)}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 border border-input rounded-md text-sm hover:bg-secondary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={currentPage >= totalPages}
+            className="px-3 py-1 border border-input rounded-md text-sm hover:bg-secondary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
           >
             ถัดไป
           </button>

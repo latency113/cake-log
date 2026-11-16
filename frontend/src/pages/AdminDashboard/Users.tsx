@@ -9,52 +9,91 @@ import { Button } from "@/components/ui/button";
 import type { User } from "../../types";
 import { showToastSuccess, showToastError } from "@/utils/alerts";
 import UsersPagination from "@/components/users/UsersPagination";
-// import InputField from "@/components/common/InputField"; // No longer needed
 
 const Users: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
-  const [searchTerm, setSearchTerm] = useState(""); // Add searchTerm state
+  const [searchTerm, setSearchTerm] = useState("");
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState("");
+
+  const [filterType, setFilterType] = useState<
+    "all" | "teachers" | "regular" | "staff"
+  >("all");
+
+  const { users, loading, error, addUser, editUser, removeUser } =
+    useUsersData();
 
   // Debounce search term
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm);
-    }, 500);
+    }, 300);
 
     return () => {
       clearTimeout(handler);
     };
   }, [searchTerm]);
 
-  // Reset page when search term changes
+  // Reset page when filter or search changes
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearchTerm]);
+  }, [filterType, debouncedSearchTerm]);
 
-  const { users, totalCount, loading, error, addUser, editUser, removeUser } =
-    useUsersData(currentPage, itemsPerPage, debouncedSearchTerm);
+  // คำนวณจำนวนผู้ใช้งานแต่ละประเภทจากข้อมูลทั้งหมดในระบบ
+  const counts = useMemo(() => {
+    return {
+      all: users.length,
+      teachers: users.filter((u) => Boolean(u.teacher_id || u.teacher)).length,
+      regular: users.filter(
+        (u) => !u.teacher_id && !u.teacher && u.role === "USER"
+      ).length,
+      staff: users.filter((u) => u.role !== "USER").length,
+    };
+  }, [users]);
 
-  const [filterType, setFilterType] = useState<
-    "all" | "teachers" | "regular" | "staff"
-  >("all");
-
+  // กรองผู้ใช้งานตาม filterType และ searchTerm
   const filteredUsers = useMemo(() => {
-    if (filterType === "all") return users;
+    let result = users;
+
     if (filterType === "teachers") {
-      return users.filter((u) => Boolean(u.teacher_id || u.teacher));
-    }
-    if (filterType === "regular") {
-      return users.filter(
+      result = result.filter((u) => Boolean(u.teacher_id || u.teacher));
+    } else if (filterType === "regular") {
+      result = result.filter(
         (u) => !u.teacher_id && !u.teacher && u.role === "USER"
       );
+    } else if (filterType === "staff") {
+      result = result.filter((u) => u.role !== "USER");
     }
-    if (filterType === "staff") {
-      return users.filter((u) => u.role !== "USER");
+
+    if (debouncedSearchTerm.trim()) {
+      const term = debouncedSearchTerm.toLowerCase().trim();
+      result = result.filter((u) => {
+        const username = u.username?.toLowerCase() || "";
+        const firstname = u.firstname?.toLowerCase() || "";
+        const lastname = u.lastname?.toLowerCase() || "";
+        const email = u.email?.toLowerCase() || "";
+        const teacherName = u.teacher?.name?.toLowerCase() || "";
+        const deptName = u.teacher?.department?.name?.toLowerCase() || "";
+
+        return (
+          username.includes(term) ||
+          firstname.includes(term) ||
+          lastname.includes(term) ||
+          email.includes(term) ||
+          teacherName.includes(term) ||
+          deptName.includes(term)
+        );
+      });
     }
-    return users;
-  }, [users, filterType]);
+
+    return result;
+  }, [users, filterType, debouncedSearchTerm]);
+
+  // ข้อมูลที่แสดงในหน้าปัจจุบัน
+  const totalFilteredUsers = filteredUsers.length;
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedUsers = filteredUsers.slice(startIndex, endIndex);
 
   const [isFormModalOpen, setIsFormModalOpen] = useState(false);
   const [isDeleteConfirmModalOpen, setIsDeleteConfirmModalOpen] =
@@ -79,14 +118,12 @@ const Users: React.FC = () => {
   const handleSaveUser = async (userData: Partial<User>) => {
     try {
       if (selectedUser && selectedUser.id) {
-        // Editing existing user
         await editUser(selectedUser.id, userData);
       } else {
-        // Adding new user
-        await addUser(userData as User); // Cast to user
+        await addUser(userData as User);
       }
       setIsFormModalOpen(false);
-      return true; // Indicate success
+      return true;
     } catch (error) {
       console.error("Failed to save user:", error);
       showToastError({
@@ -94,7 +131,7 @@ const Users: React.FC = () => {
         text:
           error instanceof Error ? error.message : "An unknown error occurred.",
       });
-      return false; // Indicate failure
+      return false;
     }
   };
 
@@ -122,42 +159,20 @@ const Users: React.FC = () => {
     }
   };
 
-  // Function สำหรับตรวจสอบ username ซ้ำ
+  // ตรวจสอบ username ซ้ำจากผู้ใช้ทั้งหมดในระบบ
   const handleCheckUsernameAvailability = async (
     username: string,
     currentUserId?: string
   ): Promise<boolean> => {
     try {
-      console.log(
-        "Checking username availability:",
-        username,
-        "for user ID:",
-        currentUserId
-      );
-
-      // ตรวจสอบใน users array ที่มีอยู่
       const existingUser = users.find(
         (user) =>
           user.username.toLowerCase() === username.toLowerCase() &&
-          user.id !== currentUserId // ไม่นับ user ปัจจุบัน (กรณี edit)
+          user.id !== currentUserId
       );
 
       const isAvailable = !existingUser;
-      console.log("Username availability result:", isAvailable);
-
-      // จำลองการเรียก API (ถ้าต้องการ)
-      // ในการใช้งานจริง อาจจะเรียก API แทน
-      // const response = await fetch('/api/check-username', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ username, currentUserId })
-      // });
-      // const result = await response.json();
-      // return result.isAvailable;
-
-      // เพิ่ม delay เล็กน้อยเพื่อจำลอง API call
       await new Promise((resolve) => setTimeout(resolve, 300));
-
       return isAvailable;
     } catch (error) {
       console.error("Error checking username availability:", error);
@@ -167,13 +182,11 @@ const Users: React.FC = () => {
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    console.log("Users.tsx - Page changed to:", page);
   };
 
   const handleItemsPerPageChange = (items: number) => {
     setItemsPerPage(items);
-    setCurrentPage(1); // Reset to first page when items per page changes
-    console.log("Users.tsx - Items per page changed to:", items);
+    setCurrentPage(1);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -214,7 +227,7 @@ const Users: React.FC = () => {
                   : "bg-white/20 text-white hover:bg-white/30"
               }`}
             >
-              ทั้งหมด ({users.length})
+              ทั้งหมด ({counts.all})
             </button>
             <button
               type="button"
@@ -226,9 +239,7 @@ const Users: React.FC = () => {
               }`}
             >
               <GraduationCap className="w-3.5 h-3.5" />
-              ครูที่ต้องกรอกข้อมูลเค้ก (
-              {users.filter((u) => Boolean(u.teacher_id || u.teacher)).length}
-              )
+              ครูที่ต้องกรอกข้อมูลเค้ก ({counts.teachers})
             </button>
             <button
               type="button"
@@ -239,13 +250,7 @@ const Users: React.FC = () => {
                   : "bg-white/20 text-white hover:bg-white/30"
               }`}
             >
-              ผู้ใช้งานทั่วไป (
-              {
-                users.filter(
-                  (u) => !u.teacher_id && !u.teacher && u.role === "USER"
-                ).length
-              }
-              )
+              ผู้ใช้งานทั่วไป ({counts.regular})
             </button>
             <button
               type="button"
@@ -256,8 +261,7 @@ const Users: React.FC = () => {
                   : "bg-white/20 text-white hover:bg-white/30"
               }`}
             >
-              เจ้าหน้าที่ / ผู้บริหาร (
-              {users.filter((u) => u.role !== "USER").length})
+              เจ้าหน้าที่ / ผู้บริหาร ({counts.staff})
             </button>
           </div>
 
@@ -283,7 +287,7 @@ const Users: React.FC = () => {
         </div>
       ) : (
         <UsersTable
-          users={filteredUsers}
+          users={paginatedUsers}
           onEdit={handleEditUser}
           onDelete={handleDeleteClick}
         />
@@ -294,7 +298,7 @@ const Users: React.FC = () => {
         onClose={() => setIsFormModalOpen(false)}
         onSave={handleSaveUser}
         currentUser={selectedUser || undefined}
-        onCheckUsernameAvailability={handleCheckUsernameAvailability} // เพิ่ม prop นี้
+        onCheckUsernameAvailability={handleCheckUsernameAvailability}
       />
 
       <UserDeleteConfirmModal
@@ -306,7 +310,7 @@ const Users: React.FC = () => {
 
       {!loading && !error && (
         <UsersPagination
-          totalUsers={totalCount}
+          totalUsers={totalFilteredUsers}
           itemsPerPage={itemsPerPage}
           currentPage={currentPage}
           onPageChange={handlePageChange}
