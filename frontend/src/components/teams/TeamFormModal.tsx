@@ -149,54 +149,89 @@ const TeamFormModal: React.FC<TeamFormModalProps> = ({
     return classrooms.filter((cls) => deptIdSet.has(cls.department_id));
   }, [selectedDepartmentIds, classrooms]);
 
-  // Derived available student options based on selected classrooms
-  const availableStudentOptions = useMemo(() => {
+  // Derived all students across all classrooms in the institution
+  const allGlobalStudents = useMemo(() => {
     const list: {
       value: string;
       label: string;
+      studentId?: string;
       classroomName: string;
       classroomId: string;
       departmentName: string;
       departmentId: string;
+      gradeLevelName?: string;
     }[] = [];
 
-    const selectedRoomSet = new Set(formData.classroom_ids ?? []);
-
-    selectedRoomSet.forEach((roomId) => {
-      const cls = classrooms.find((c) => c.id === roomId);
-      if (cls && cls.students && cls.students.length > 0) {
+    classrooms.forEach((cls) => {
+      if (cls && cls.students && Array.isArray(cls.students)) {
         const dept = departments.find((d) => d.id === cls.department_id);
         const deptName = dept ? dept.name : "ไม่ระบุแผนก";
+        const gradeText = cls.grade_level
+          ? `${
+              cls.grade_level.level === "VOCATIONAL"
+                ? "ปวช."
+                : cls.grade_level.level === "HIGHER"
+                ? "ปวส."
+                : cls.grade_level.level
+            }${cls.grade_level.year}`
+          : "";
+
         cls.students.forEach((student) => {
           if (student && student.studentName) {
             list.push({
               value: student.studentName,
               label: student.studentName,
+              studentId: student.studentId,
               classroomName: cls.name,
               classroomId: cls.id,
               departmentName: deptName,
               departmentId: cls.department_id,
+              gradeLevelName: gradeText,
             });
           }
         });
       }
     });
 
-    // Unique by student name
-    return Array.from(new Map(list.map((item) => [item.value, item])).values());
-  }, [formData.classroom_ids, classrooms, departments]);
+    return list;
+  }, [classrooms, departments]);
+
+  // Fast lookup map for student details
+  const studentDetailsMap = useMemo(() => {
+    const map = new Map<string, (typeof allGlobalStudents)[0]>();
+    allGlobalStudents.forEach((s) => {
+      if (!map.has(s.value)) {
+        map.set(s.value, s);
+      }
+    });
+    return map;
+  }, [allGlobalStudents]);
+
+  // Derived available student options based on selected classrooms
+  const availableStudentOptions = useMemo(() => {
+    const selectedRoomSet = new Set(formData.classroom_ids ?? []);
+    if (selectedRoomSet.size === 0) return [];
+    return allGlobalStudents.filter((s) => selectedRoomSet.has(s.classroomId));
+  }, [formData.classroom_ids, allGlobalStudents]);
+
+  // If search query is provided, search across ALL students in the school!
+  // If search query is empty, show students from selected classrooms.
+  const isGlobalSearch = studentSearch.trim().length > 0;
 
   // Filtered student options by search query
   const filteredStudents = useMemo(() => {
-    if (!studentSearch.trim()) return availableStudentOptions;
-    const q = studentSearch.toLowerCase().trim();
-    return availableStudentOptions.filter(
-      (s) =>
-        s.label.toLowerCase().includes(q) ||
-        s.classroomName.toLowerCase().includes(q) ||
-        s.departmentName.toLowerCase().includes(q)
-    );
-  }, [availableStudentOptions, studentSearch]);
+    if (isGlobalSearch) {
+      const q = studentSearch.toLowerCase().trim();
+      return allGlobalStudents.filter(
+        (s) =>
+          s.label.toLowerCase().includes(q) ||
+          (s.studentId && s.studentId.toLowerCase().includes(q)) ||
+          s.classroomName.toLowerCase().includes(q) ||
+          s.departmentName.toLowerCase().includes(q)
+      );
+    }
+    return availableStudentOptions;
+  }, [allGlobalStudents, availableStudentOptions, isGlobalSearch, studentSearch]);
 
   // Group filtered students by Department -> Classroom for clean organized display
   const groupedStudents = useMemo(() => {
@@ -274,15 +309,13 @@ const TeamFormModal: React.FC<TeamFormModalProps> = ({
   const representedDepartmentIds = useMemo(() => {
     const deptIds = new Set<string>();
     selectedStudents.forEach((studentName) => {
-      const studentOpt = availableStudentOptions.find(
-        (s) => s.value === studentName
-      );
+      const studentOpt = studentDetailsMap.get(studentName);
       if (studentOpt) {
         deptIds.add(studentOpt.departmentId);
       }
     });
     return deptIds;
-  }, [selectedStudents, availableStudentOptions]);
+  }, [selectedStudents, studentDetailsMap]);
 
   // Validation errors list with human-readable explanations
   const validationErrors = useMemo(() => {
@@ -460,18 +493,42 @@ const TeamFormModal: React.FC<TeamFormModalProps> = ({
     });
   };
 
-  const handleStudentToggle = (studentName: string) => {
+  const handleStudentToggle = (
+    studentName: string,
+    classroomId?: string,
+    departmentId?: string
+  ) => {
+    // Resolve classroomId and departmentId if not explicitly passed
+    let cId = classroomId;
+    let dId = departmentId;
+    if (!cId || !dId) {
+      const opt = studentDetailsMap.get(studentName);
+      if (opt) {
+        cId = cId || opt.classroomId;
+        dId = dId || opt.departmentId;
+      }
+    }
+
     setFormData((prev) => {
       const currentStudents = (prev.student_member_name || []) as string[];
+      const isSelected = currentStudents.includes(studentName);
 
       if (prev.team_type === "person") {
-        if (currentStudents.includes(studentName)) {
+        if (isSelected) {
           return { ...prev, student_member_name: [] };
         } else {
-          return { ...prev, student_member_name: [studentName] };
+          // Auto-select department and classroom for single person mode
+          if (dId) {
+            setSelectedDepartmentIds([dId]);
+          }
+          return {
+            ...prev,
+            classroom_ids: cId ? [cId] : prev.classroom_ids,
+            student_member_name: [studentName],
+          };
         }
       } else {
-        if (currentStudents.includes(studentName)) {
+        if (isSelected) {
           return {
             ...prev,
             student_member_name: currentStudents.filter(
@@ -479,8 +536,20 @@ const TeamFormModal: React.FC<TeamFormModalProps> = ({
             ),
           };
         } else {
+          // Auto-select department and classroom for team mode
+          if (dId) {
+            setSelectedDepartmentIds((prevDeptIds) =>
+              prevDeptIds.includes(dId!) ? prevDeptIds : [...prevDeptIds, dId!]
+            );
+          }
+          const nextClassroomIds =
+            cId && !(prev.classroom_ids ?? []).includes(cId)
+              ? [...(prev.classroom_ids ?? []), cId]
+              : prev.classroom_ids;
+
           return {
             ...prev,
+            classroom_ids: nextClassroomIds,
             student_member_name: [...currentStudents, studentName],
           };
         }
@@ -488,10 +557,10 @@ const TeamFormModal: React.FC<TeamFormModalProps> = ({
     });
   };
 
-  const handleToggleAllStudentsInClassroom = (roomId: string) => {
+  const handleToggleAllStudentsInClassroom = (roomId: string, deptId?: string) => {
     if (formData.team_type === "person") return;
 
-    const roomStudents = availableStudentOptions
+    const roomStudents = allGlobalStudents
       .filter((s) => s.classroomId === roomId)
       .map((s) => s.value);
 
@@ -512,8 +581,18 @@ const TeamFormModal: React.FC<TeamFormModalProps> = ({
         ).filter((name) => !roomStudents.includes(name)),
       }));
     } else {
+      const cls = classrooms.find((c) => c.id === roomId);
+      const targetDeptId = deptId || cls?.department_id;
+      if (targetDeptId) {
+        setSelectedDepartmentIds((prev) =>
+          prev.includes(targetDeptId) ? prev : [...prev, targetDeptId]
+        );
+      }
       setFormData((prev) => ({
         ...prev,
+        classroom_ids: prev.classroom_ids?.includes(roomId)
+          ? prev.classroom_ids
+          : [...(prev.classroom_ids || []), roomId],
         student_member_name: Array.from(
           new Set([
             ...((prev.student_member_name as string[]) || []),
@@ -903,7 +982,7 @@ const TeamFormModal: React.FC<TeamFormModalProps> = ({
                     type="text"
                     value={studentSearch}
                     onChange={(e) => setStudentSearch(e.target.value)}
-                    placeholder="ค้นหาชื่อนักเรียน หรือห้องเรียน..."
+                    placeholder="พิมพ์ชื่อนักเรียนเพื่อค้นหาข้ามทุกห้อง (เช่น นายสมชาย, ชฟ.1)..."
                     className="w-full h-9 pl-9 pr-8 text-xs rounded-lg bg-background border border-input focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-2xs"
                   />
                   {studentSearch && (
@@ -916,6 +995,18 @@ const TeamFormModal: React.FC<TeamFormModalProps> = ({
                     </button>
                   )}
                 </div>
+
+                {isGlobalSearch && (
+                  <div className="flex items-center justify-between text-[11px] text-muted-foreground bg-primary/5 px-2.5 py-1 rounded border border-primary/20">
+                    <span className="flex items-center gap-1.5 text-primary font-medium">
+                      <Search className="h-3 w-3" />
+                      ผลการค้นหาข้ามทุกห้อง: พบ {filteredStudents.length} คน
+                    </span>
+                    <span className="text-[10px] text-muted-foreground hidden sm:inline">
+                      คลิกเพื่อเลือก (ระบบจะเลือกห้องและแผนกให้อัตโนมัติ)
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Validation Feedback Banner */}
@@ -982,9 +1073,7 @@ const TeamFormModal: React.FC<TeamFormModalProps> = ({
                   </div>
                   <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto pr-1">
                     {selectedStudents.map((name) => {
-                      const sOption = availableStudentOptions.find(
-                        (s) => s.value === name
-                      );
+                      const sOption = studentDetailsMap.get(name);
                       return (
                         <Badge
                           key={name}
@@ -1001,7 +1090,13 @@ const TeamFormModal: React.FC<TeamFormModalProps> = ({
                           )}
                           <button
                             type="button"
-                            onClick={() => handleStudentToggle(name)}
+                            onClick={() =>
+                              handleStudentToggle(
+                                name,
+                                sOption?.classroomId,
+                                sOption?.departmentId
+                              )
+                            }
                             className="hover:bg-destructive/10 hover:text-destructive rounded-full p-0.5 text-muted-foreground transition-colors cursor-pointer"
                             title="นำออก"
                           >
@@ -1016,23 +1111,7 @@ const TeamFormModal: React.FC<TeamFormModalProps> = ({
 
               {/* Student Selection List: Grouped by Dept & Classroom */}
               <div className="flex-1 min-h-0 border rounded-lg overflow-y-auto bg-background p-3">
-                {(formData.classroom_ids ?? []).length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-                    <BookOpen className="h-10 w-10 mb-2 opacity-30" />
-                    <p className="text-sm font-semibold">ยังไม่ได้เลือกห้องเรียน</p>
-                    <p className="text-xs text-muted-foreground/80 mt-1 max-w-xs">
-                      กรุณาเลือกแผนกและห้องเรียนจากคอลัมน์ฝั่งซ้ายก่อนเพื่อแสดงรายชื่อนักเรียน
-                    </p>
-                  </div>
-                ) : availableStudentOptions.length === 0 ? (
-                  <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
-                    <User className="h-10 w-10 mb-2 opacity-30" />
-                    <p className="text-sm font-semibold">ไม่มีนักเรียนในห้องที่เลือก</p>
-                    <p className="text-xs text-muted-foreground/80 mt-1">
-                      ห้องเรียนที่เลือกไว้ยังไม่มีรายชื่อนักเรียนในระบบ
-                    </p>
-                  </div>
-                ) : groupedStudents.length === 0 ? (
+                {isGlobalSearch && groupedStudents.length === 0 ? (
                   <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
                     <Search className="h-10 w-10 mb-2 opacity-30" />
                     <p className="text-sm font-semibold">ไม่พบนักเรียนที่ค้นหา</p>
@@ -1048,6 +1127,34 @@ const TeamFormModal: React.FC<TeamFormModalProps> = ({
                     >
                       ล้างคำค้นหา
                     </Button>
+                  </div>
+                ) : !isGlobalSearch && (formData.classroom_ids ?? []).length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+                    <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                      <Search className="h-6 w-6 text-primary" />
+                    </div>
+                    <p className="text-sm font-semibold text-foreground">
+                      ค้นหาชื่อนักเรียนข้ามทุกห้องได้ทันที
+                    </p>
+                    <p className="text-xs text-muted-foreground/80 mt-1 max-w-sm">
+                      พิมพ์ชื่อนักเรียนในช่องค้นหาด้านบน ระบบจะเลือกห้องและแผนกให้อัตโนมัติ หรือเลือกแผนก/ห้องเรียนจากฝั่งซ้าย
+                    </p>
+                  </div>
+                ) : !isGlobalSearch && availableStudentOptions.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+                    <User className="h-10 w-10 mb-2 opacity-30" />
+                    <p className="text-sm font-semibold">ไม่มีนักเรียนในห้องที่เลือก</p>
+                    <p className="text-xs text-muted-foreground/80 mt-1">
+                      ห้องเรียนที่เลือกไว้ยังไม่มีรายชื่อนักเรียนในระบบ
+                    </p>
+                  </div>
+                ) : groupedStudents.length === 0 ? (
+                  <div className="h-full flex flex-col items-center justify-center p-8 text-center text-muted-foreground">
+                    <Search className="h-10 w-10 mb-2 opacity-30" />
+                    <p className="text-sm font-semibold">ไม่พบนักเรียน</p>
+                    <p className="text-xs text-muted-foreground/80 mt-1">
+                      ไม่พบข้อมูลนักเรียนที่ตรงกับเงื่อนไข
+                    </p>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -1106,7 +1213,8 @@ const TeamFormModal: React.FC<TeamFormModalProps> = ({
                                       type="button"
                                       onClick={() =>
                                         handleToggleAllStudentsInClassroom(
-                                          roomGroup.clsId
+                                          roomGroup.clsId,
+                                          deptGroup.deptId
                                         )
                                       }
                                       className={cn(
@@ -1132,9 +1240,13 @@ const TeamFormModal: React.FC<TeamFormModalProps> = ({
 
                                     return (
                                       <div
-                                        key={student.value}
+                                        key={`${student.classroomId}-${student.value}`}
                                         onClick={() =>
-                                          handleStudentToggle(student.value)
+                                          handleStudentToggle(
+                                            student.value,
+                                            student.classroomId,
+                                            student.departmentId
+                                          )
                                         }
                                         className={cn(
                                           "flex items-center space-x-2 p-2 rounded-md transition-all cursor-pointer border text-xs select-none",
@@ -1144,9 +1256,16 @@ const TeamFormModal: React.FC<TeamFormModalProps> = ({
                                         )}
                                       >
                                         <SimpleCheckbox checked={isChecked} />
-                                        <span className="flex-grow truncate">
-                                          {student.label}
-                                        </span>
+                                        <div className="flex flex-col min-w-0 flex-grow">
+                                          <span className="truncate text-foreground font-medium">
+                                            {student.label}
+                                          </span>
+                                          {isGlobalSearch && (
+                                            <span className="text-[10px] text-muted-foreground truncate">
+                                              {student.classroomName} • {student.departmentName}
+                                            </span>
+                                          )}
+                                        </div>
                                       </div>
                                     );
                                   })}

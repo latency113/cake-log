@@ -91,7 +91,7 @@ const ClassroomCakeSummaryContent: React.FC<
               <br />
               ใบสรุปยอดการสั่งจองเค้ก
             </div>
-            <div className="flex justify-between mb-4">
+            <div className="flex flex-col sm:flex-row justify-between gap-3 mb-4">
               <div>
                 <p className="text-sm">
                   ระดับชั้น:{" "}
@@ -137,7 +137,8 @@ const ClassroomCakeSummaryContent: React.FC<
               </div>
             </div>
 
-            <Table className="border-2 border-gray-800 dark:border-slate-700 print:border-gray-800 border-collapse">
+            <div className="overflow-x-auto w-full print:overflow-visible">
+              <Table className="min-w-[700px] print:min-w-0 border-2 border-gray-800 dark:border-slate-700 print:border-gray-800 border-collapse">
               <TableHeader>
                 <TableRow className="border-b-2 border-gray-800 dark:border-slate-700 print:border-gray-800">
                   <TableHead
@@ -271,8 +272,9 @@ const ClassroomCakeSummaryContent: React.FC<
                 </TableRow>
               </TableBody>
             </Table>
+          </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-4 text-sm">
+          <div className="mt-4 grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-4 text-sm">
               <div>
                 <p>
                   ยอดรวมสุทธิชำระ{" "}

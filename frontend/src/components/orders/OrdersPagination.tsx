@@ -66,13 +66,13 @@ const OrdersPagination: React.FC<OrdersPaginationProps> = ({
   const visiblePageNumbers = generateVisiblePageNumbers();
 
   return (
-    <div className="bg-muted px-6 py-4 border-t border-border">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center text-sm text-foreground">
+    <div className="bg-muted px-4 sm:px-6 py-4 border-t border-border">
+      <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 text-sm text-foreground">
           <span>แสดง</span>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="outline" className="mx-2 px-2 py-1 h-auto text-sm">
+              <Button variant="outline" className="px-2 py-1 h-auto text-sm">
                 {itemsPerPage} รายการต่อหน้า
               </Button>
             </DropdownMenuTrigger>
@@ -88,29 +88,29 @@ const OrdersPagination: React.FC<OrdersPaginationProps> = ({
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          <span className="ml-4 font-medium">
+          <span className="font-medium">
             {startItem}-{endItem} จาก {totalOrders} รายการ
           </span>
         </div>
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2">
           <button
             onClick={() => onPageChange(currentPage - 1)}
             disabled={currentPage === 1}
-            className="px-3 py-1 border border-input rounded-md text-sm hover:bg-secondary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-2 sm:px-3 py-1 border border-input rounded-md text-xs sm:text-sm hover:bg-secondary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             ก่อนหน้า
           </button>
-          <div className="flex space-x-1">
+          <div className="flex gap-1">
             {visiblePageNumbers.map((page, index) =>
               page === "..." ? (
-                <span key={`ellipsis-${index}`} className="px-3 py-1 text-sm text-foreground">
+                <span key={`ellipsis-${index}`} className="px-2 sm:px-3 py-1 text-xs sm:text-sm text-foreground">
                   ...
                 </span>
               ) : (
                 <button
                   key={page}
                   onClick={() => onPageChange(page as number)}
-                  className={`px-3 py-1 rounded-md text-sm ${
+                  className={`px-2.5 sm:px-3 py-1 rounded-md text-xs sm:text-sm ${
                     page === currentPage
                       ? "bg-blue-600 text-white"
                       : "border border-input text-foreground hover:bg-secondary"
@@ -124,7 +124,7 @@ const OrdersPagination: React.FC<OrdersPaginationProps> = ({
           <button
             onClick={() => onPageChange(currentPage + 1)}
             disabled={currentPage === totalPages}
-            className="px-3 py-1 border border-input rounded-md text-sm hover:bg-secondary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-2 sm:px-3 py-1 border border-input rounded-md text-xs sm:text-sm hover:bg-secondary transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             ถัดไป
           </button>

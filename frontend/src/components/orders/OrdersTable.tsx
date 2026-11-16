@@ -1,7 +1,12 @@
 import React, { useState, useMemo } from "react";
 import { Role } from "../../types/common"; // Import Role
 import type { Order, OrderItem, User } from "../../types"; // Import User type
-import { ArrowUp, Pencil, Trash2 } from "lucide-react"; // Import Trash2 for delete icon
+import { ArrowUp, Pencil, Trash2 } from "lucide-react"; // Import icons
+import {
+  TableSwipeGuide,
+  TableDesktopHint,
+  TableMobileSwipeBanner,
+} from "@/components/common/TableSwipeGuide";
 import OrderDetailModal from "./OrderDetailModal";
 // Removed unused import: import OrderEditModal from "./OrderEditModal";
 import {
@@ -79,6 +84,8 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   >(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [currentOrderIndex, setCurrentOrderIndex] = useState<number>(-1); // New state for current order index
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [showSwipeGuide, setShowSwipeGuide] = useState(true);
   // const [isEditModalOpen, setIsEditModalOpen] = useState(false); // No longer needed as edit modal is managed by parent
 
   const handleSort = (column: string) => {
@@ -182,22 +189,23 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
   }, [orders, sortColumn, sortDirection]);
 
   return (
-    <div className="bg-card shadow-md border border-border overflow-hidden">
-      <div className="p-6 border-b border-border">
-        <h2 className="text-xl font-semibold text-foreground flex items-center">
-          <span className="w-2 h-6 bg-blue-500 rounded-full mr-3"></span>
+    <div className="bg-card shadow-sm border border-border overflow-hidden rounded-xl">
+      <div className="p-4 sm:p-6 border-b border-border">
+        <h2 className="text-base sm:text-xl font-semibold text-foreground flex items-center">
+          <span className="w-2 h-5 sm:h-6 bg-blue-500 rounded-full mr-2.5 sm:mr-3"></span>
           รายการคำสั่งซื้อ
-          <span className="ml-auto text-sm text-muted-foreground bg-muted px-3 py-1 rounded-full">
+          {orders.length > 0 && <TableDesktopHint className="ml-3" />}
+          <span className="ml-auto text-xs sm:text-sm text-muted-foreground bg-muted px-2.5 py-0.5 sm:px-3 sm:py-1 rounded-full">
             {orders.length} รายการ
           </span>
         </h2>
       </div>
 
       {orders.length === 0 ? (
-        <div className="text-center py-24">
-          <div className="w-24 h-24 bg-muted rounded-full mx-auto mb-6 flex items-center justify-center">
+        <div className="text-center py-16 sm:py-24 px-4">
+          <div className="w-16 h-16 sm:w-20 sm:h-20 bg-muted rounded-full mx-auto mb-4 sm:mb-6 flex items-center justify-center">
             <svg
-              className="w-12 h-12 text-muted-foreground"
+              className="w-8 h-8 sm:w-10 sm:h-10 text-muted-foreground"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -210,15 +218,41 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
               />
             </svg>
           </div>
-          <h3 className="text-xl font-semibold text-muted-foreground mb-3">
+          <h3 className="text-base sm:text-xl font-semibold text-muted-foreground mb-1.5 sm:mb-3">
             ไม่มีคำสั่งซื้อในขณะนี้
           </h3>
-          <p className="text-muted-foreground text-lg mb-6">
+          <p className="text-xs sm:text-base text-muted-foreground mb-4">
             เพิ่มคำสั่งซื้อแรกของคุณ
           </p>
         </div>
       ) : (
-        <Table>
+        <div className="relative">
+          {/* Full-screen swipe guide overlay on mobile */}
+          <TableSwipeGuide
+            showGuide={showSwipeGuide}
+            onClose={() => setShowSwipeGuide(false)}
+          />
+
+          {/* Mobile hint banner */}
+          <TableMobileSwipeBanner
+            onOpenGuide={() => setShowSwipeGuide(true)}
+          />
+
+          {/* Right edge subtle gradient fade */}
+          <div
+            className={`md:hidden pointer-events-none absolute right-0 top-10 bottom-0 w-8 bg-gradient-to-l from-background/80 to-transparent z-10 transition-opacity duration-300 ${
+              isScrolled ? "opacity-0" : "opacity-100"
+            }`}
+          />
+
+          <div
+            className="overflow-x-auto w-full"
+            onScroll={(e) => {
+              const target = e.currentTarget;
+              setIsScrolled(target.scrollLeft > 25);
+            }}
+          >
+            <Table className="min-w-[900px]">
           <TableHeader>
             <TableRow>
               <SortableHeader
@@ -522,7 +556,9 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
             ))}
           </TableBody>
         </Table>
-      )}
+      </div>
+    </div>
+  )}
 
       {isDetailModalOpen && (
         <OrderDetailModal
@@ -534,7 +570,9 @@ const OrdersTable: React.FC<OrdersTableProps> = ({
         />
       )}
     </div>
-  );
+    
+  )
 };
+
 
 export default OrdersTable;

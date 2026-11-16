@@ -35,39 +35,40 @@ const OrderSearchActionBar: React.FC<OrderSearchActionBarProps> = ({
 }) => {
 
   return (
-    <div className="bg-card rounded-sm shadow-lg border border-border p-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex items-center space-x-4">
-          {/* Search input */}
-          <div className="relative">
-            <input
-              type="text"
-              placeholder="ค้นหาชื่อลูกค้า, เลขที่ออร์เดอร์..."
-              className="pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent w-64 bg-background text-foreground placeholder:text-muted-foreground"
-              value={searchTerm}
-              onChange={onSearchChange}
+    <div className="bg-card rounded-xl shadow-sm border border-border p-3.5 sm:p-5">
+      <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3 w-full">
+        {/* Search input */}
+        <div className="relative flex-1 min-w-0">
+          <input
+            type="text"
+            placeholder="ค้นหาชื่อลูกค้า, เลขที่ออร์เดอร์..."
+            className="w-full pl-10 pr-4 py-2 border border-input rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-xs sm:text-sm bg-background text-foreground placeholder:text-muted-foreground shadow-2xs"
+            value={searchTerm}
+            onChange={onSearchChange}
+          />
+          <svg
+            className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 transform -translate-y-1/2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
             />
-            <svg
-              className="w-5 h-5 text-muted-foreground absolute left-3 top-1/2 transform -translate-y-1/2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-              />
-            </svg>
-          </div>
+          </svg>
+        </div>
 
+        {/* Filter controls */}
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 sm:gap-3 w-full md:w-auto shrink-0">
           <Select
             onValueChange={onFilterChange}
             value={filterTerm}
           >
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="เลือกแผนก" />
+            <SelectTrigger className="w-full md:w-[140px] text-xs sm:text-sm">
+              <SelectValue placeholder="เลือกช่วงเวลา" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">ทั้งหมด</SelectItem>
@@ -76,12 +77,13 @@ const OrderSearchActionBar: React.FC<OrderSearchActionBarProps> = ({
               <SelectItem value="this_month">เดือนนี้</SelectItem>
             </SelectContent>
           </Select>
+
           {/* Department filter */}
           <Select
             onValueChange={onDepartmentFilterChange}
             value={DepartmentFilter}
           >
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-full md:w-[150px] text-xs sm:text-sm">
               <SelectValue placeholder="เลือกแผนก" />
             </SelectTrigger>
             <SelectContent>
@@ -95,22 +97,18 @@ const OrderSearchActionBar: React.FC<OrderSearchActionBarProps> = ({
           </Select>
 
           {/* New filter for My Orders / All Orders */}
-            <Select
-              onValueChange={(value) => onShowUserOrdersOnlyChange(value === "my")}
-              value={showUserOrdersOnly ? "my" : "all"}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="ประเภทคำสั่งซื้อ" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="my">รายการของฉัน</SelectItem>
-                <SelectItem
-                  value="all"
-                >
-                  รายการทั้งหมด
-                </SelectItem>
-              </SelectContent>
-            </Select>
+          <Select
+            onValueChange={(value) => onShowUserOrdersOnlyChange(value === "my")}
+            value={showUserOrdersOnly ? "my" : "all"}
+          >
+            <SelectTrigger className="w-full md:w-[150px] text-xs sm:text-sm">
+              <SelectValue placeholder="ประเภทคำสั่งซื้อ" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="my">รายการของฉัน</SelectItem>
+              <SelectItem value="all">รายการทั้งหมด</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </div>
     </div>

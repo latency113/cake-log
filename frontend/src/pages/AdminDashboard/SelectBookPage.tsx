@@ -143,55 +143,55 @@ const SelectBookPage: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-8 max-w-7xl">
-      <div className="mb-8 text-center">
-        <h1 className="text-3xl font-bold mb-2">เลือกเล่มใบสั่งจอง</h1>
-        <p className="text-muted-foreground mb-6">
+    <div className="container mx-auto px-4 py-6 sm:p-6 md:p-8 max-w-7xl">
+      <div className="mb-6 sm:mb-8 text-center">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-1.5 sm:mb-2">เลือกเล่มใบสั่งจอง</h1>
+        <p className="text-sm sm:text-base text-muted-foreground mb-4 sm:mb-6">
           เล่มสมุดใบสั่งจองแต่ละห้อง (1 เล่มต่อ 1 ห้อง)
         </p>
 
-        <div className="flex flex-col md:flex-row justify-center items-center gap-4">
-          <div className="flex space-x-2">
+        <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 max-w-xl mx-auto">
+          <div className="flex w-full sm:w-auto gap-2 justify-center">
             <Button 
               variant={filter === "all" ? "default" : "outline"} 
               onClick={() => setFilter("all")}
-              className="rounded-full"
+              className="rounded-full flex-1 sm:flex-none text-xs sm:text-sm h-9 px-3.5 sm:px-4"
             >
               สมุดจองทั้งหมด
             </Button>
             <Button 
               variant={filter === "mine" ? "default" : "outline"} 
               onClick={() => setFilter("mine")}
-              className="rounded-full flex items-center"
+              className="rounded-full flex items-center justify-center flex-1 sm:flex-none text-xs sm:text-sm h-9 px-3.5 sm:px-4"
             >
-              <Book className="w-4 h-4 mr-2" />
-              เล่มของคุณ ({myAssignedBooks.length})
+              <Book className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2 shrink-0" />
+              <span>เล่มของคุณ ({myAssignedBooks.length})</span>
             </Button>
           </div>
-          <div className="relative w-full max-w-xs">
+          <div className="relative w-full sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="ค้นหาเลขเล่ม หรือ ห้อง..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-9 rounded-full bg-background text-foreground"
+              className="pl-9 rounded-full bg-background text-foreground h-9 text-xs sm:text-sm"
             />
           </div>
         </div>
       </div>
 
       {filteredBooks.length === 0 ? (
-        <div className="p-12 text-center border-2 border-dashed rounded-xl bg-muted/30">
-          <Book className="w-12 h-12 text-muted-foreground mx-auto mb-4 opacity-20" />
-          <p className="text-muted-foreground">ไม่พบสมุดจองที่ตรงตามเงื่อนไขการค้นหา</p>
+        <div className="p-8 sm:p-12 text-center border-2 border-dashed rounded-xl bg-muted/30">
+          <Book className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mx-auto mb-3 sm:mb-4 opacity-20" />
+          <p className="text-sm sm:text-base text-muted-foreground">ไม่พบสมุดจองที่ตรงตามเงื่อนไขการค้นหา</p>
           {searchTerm && (
-            <Button variant="link" onClick={() => setSearchTerm("")} className="mt-2 text-blue-600 dark:text-blue-400">
+            <Button variant="link" onClick={() => setSearchTerm("")} className="mt-2 text-blue-600 dark:text-blue-400 text-xs sm:text-sm">
               ล้างการค้นหา
             </Button>
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
           {filteredBooks.map((book) => {
             const isFull = book.currentNumber >= book.maxCapacity;
             const isClosed = book.isClosed;
@@ -263,19 +263,19 @@ const SelectBookPage: React.FC = () => {
                       </div>
                     )}
                   </div>
-                  <CardTitle className="mt-4 text-xl">
+                  <CardTitle className="mt-3 sm:mt-4 text-lg sm:text-xl font-bold">
                     เล่มที่ {book.bookNumber}
                   </CardTitle>
-                  <CardDescription className="flex flex-col">
+                  <CardDescription className="flex flex-col text-xs sm:text-sm">
                     {isTaken && (
-                      <span className="font-bold text-blue-600 dark:text-blue-400 text-sm mb-1 ">{roomName}</span>
+                      <span className="font-bold text-blue-600 dark:text-blue-400 mb-1 leading-snug">{roomName}</span>
                     )}
                     <span>เลขที่ {book.startNumber} - {book.endNumber}</span>
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-2">
-                    <div className="flex justify-between text-sm">
+                    <div className="flex justify-between text-xs sm:text-sm">
                       <span className="text-muted-foreground">ใช้ไปแล้ว:</span>
                       <span className="font-medium">
                         {book.currentNumber} / {book.maxCapacity}
@@ -299,7 +299,7 @@ const SelectBookPage: React.FC = () => {
                     </div>
                   </div>
                 </CardContent>
-                <CardFooter className="mt-auto">
+                <CardFooter className="mt-auto pt-2 sm:pt-4">
                   {isFinalized ? (
                     <Button
                       className="w-full text-xs font-semibold"

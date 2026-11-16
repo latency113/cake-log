@@ -38,7 +38,7 @@ function App() {
   return (
     <div className="flex flex-col min-h-screen bg-background font-sans text-foreground">
       <Navbar className="print-hide" /> {/* Add print-hide class */}
-      <div className="flex-grow bg-background p-4 font-sans text-foreground">
+      <div className="flex-grow bg-background p-4 pb-24 md:pb-4 font-sans text-foreground">
         <div className="flex-1 min-w-0">
           <Outlet />
         </div>

@@ -38,6 +38,10 @@ import { finalizeClassroom } from "@/utils/api/data";
 import Swal from "sweetalert2";
 import { useAuth } from "@/contexts/AuthContext";
 import { printSection } from "@/utils/printUtils";
+import {
+  TableSwipeGuide,
+  TableMobileSwipeBanner,
+} from "@/components/common/TableSwipeGuide";
 import "../../styles/print.css";
 
 interface StudentCakeData {
@@ -70,6 +74,7 @@ const ClassroomStudentsPage: React.FC = () => {
   const [isFinalizing, setIsFinalizing] = useState(false);
   const [classroomOrders, setClassroomOrders] = useState<Order[]>([]);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [showSwipeGuide, setShowSwipeGuide] = useState(true);
 
   const {
     summaryData: cakeSummaryData,
@@ -282,8 +287,15 @@ const ClassroomStudentsPage: React.FC = () => {
       ? classroom.teacher.name
       : cakeSummaryData?.[0]?.advisor || "";
 
+  const isFinalized = Boolean(
+    classroom?.isOrderFinalized || cakeSummaryData?.[0]?.isOrderFinalized
+  );
+
+  const isDashboard = typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard");
+  const canPrint = isFinalized || isDashboard;
+
   const handlePrintStudents = () => {
-    if (!isFinalized) {
+    if (!canPrint) {
       showAlertInfo({
         title: "ยังไม่ได้สรุปยอดเค้ก",
         text: "กรุณากด 'สรุปยอดเค้ก' เพื่อยืนยันและสรุปยอดข้อมูลของห้องเรียนนี้ก่อนพิมพ์รายงาน",
@@ -330,6 +342,14 @@ const ClassroomStudentsPage: React.FC = () => {
           .print-only {
             display: block !important;
           }
+          .classroom-student-print-page {
+            page-break-after: always !important;
+            break-after: page !important;
+          }
+          .classroom-student-print-page:last-child {
+            page-break-after: auto !important;
+            break-after: auto !important;
+          }
           table {
             width: 100% !important;
             border-collapse: collapse !important;
@@ -361,7 +381,7 @@ const ClassroomStudentsPage: React.FC = () => {
   };
 
   const handlePrintCakeSummary = () => {
-    if (!isFinalized) {
+    if (!canPrint) {
       showAlertInfo({
         title: "ยังไม่ได้สรุปยอดเค้ก",
         text: "กรุณากด 'สรุปยอดเค้ก' เพื่อยืนยันและสรุปยอดข้อมูลของห้องเรียนนี้ก่อนพิมพ์รายงาน",
@@ -386,10 +406,6 @@ const ClassroomStudentsPage: React.FC = () => {
       }
     );
   };
-
-  const isFinalized = Boolean(
-    classroom?.isOrderFinalized || cakeSummaryData?.[0]?.isOrderFinalized
-  );
 
   const handleFinalizeClassroom = async () => {
     if (!id || !classroom) return;
@@ -451,95 +467,104 @@ const ClassroomStudentsPage: React.FC = () => {
   }
 
   return (
-    <div className="classroom-students-page container max-w-11/12 mx-auto p-4">
+    <div className="classroom-students-page container mx-auto px-3 sm:px-6 py-4 max-w-7xl pb-24 md:pb-8">
       {/* Screen-only content */}
       <div className="screen-only">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8 bg-white dark:bg-slate-900 p-4 rounded-lg shadow-sm border border-slate-200 dark:border-slate-800">
-          <Button
-            onClick={() => {
-              if (window.location.pathname.startsWith("/my-classroom")) {
-                navigate({ to: "/classroom" });
-              } else {
-                window.history.back();
-              }
-            }}
-            variant="ghost"
-            className="w-fit text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
-          >
-            <ArrowLeft className="mr-2 h-4 w-4" /> กลับหน้าห้องเรียน
-          </Button>
+        <div className="flex flex-col gap-3 mb-6 bg-white dark:bg-slate-900 p-3.5 sm:p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-800">
+          <div className="flex items-center justify-between">
+            <Button
+              onClick={() => {
+                if (window.location.pathname.startsWith("/my-classroom")) {
+                  navigate({ to: "/classroom" });
+                } else {
+                  window.history.back();
+                }
+              }}
+              variant="ghost"
+              size="sm"
+              className="text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors text-xs sm:text-sm -ml-2"
+            >
+              <ArrowLeft className="mr-1.5 sm:mr-2 h-4 w-4" /> กลับหน้าห้องเรียน
+            </Button>
 
-          <div className="flex flex-wrap items-center gap-3">
-            {/* Finalize Button / Finalized Badge */}
-            {!isFinalized ? (
-              <Button
-                onClick={handleFinalizeClassroom}
-                disabled={isFinalizing}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md shadow-blue-500/20 gap-2 font-medium"
-              >
-                <Lock className="h-4 w-4" />
-                <span>สรุปยอดเค้ก</span>
-              </Button>
-            ) : (
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs font-semibold shadow-2xs">
-                <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
-                <span>สรุปยอดเค้กแล้ว</span>
+            {isFinalized && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 text-xs font-semibold">
+                <CheckCircle2 className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span>สรุปยอดแล้ว</span>
               </div>
             )}
+          </div>
 
-            {!isFinalized && (
-              <Button
-                onClick={() => setIsAddingStudent(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-500/20"
-              >
-                <UserPlus className="mr-2 h-4 w-4" /> เพิ่มนักเรียนรายบุคคล
-              </Button>
-            )}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+            <div className="flex flex-wrap items-center gap-2">
+              {!isFinalized && (
+                <Button
+                  onClick={handleFinalizeClassroom}
+                  disabled={isFinalizing}
+                  size="sm"
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-sm gap-1.5 font-medium text-xs sm:text-sm flex-1 sm:flex-none justify-center"
+                >
+                  <Lock className="h-3.5 w-3.5" />
+                  <span>สรุปยอดเค้ก</span>
+                </Button>
+              )}
 
-            <div className="h-6 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
+              {!isFinalized && (
+                <Button
+                  onClick={() => setIsAddingStudent(true)}
+                  size="sm"
+                  className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm gap-1.5 text-xs sm:text-sm flex-1 sm:flex-none justify-center"
+                >
+                  <UserPlus className="h-3.5 w-3.5" />
+                  <span>เพิ่มนักเรียน</span>
+                </Button>
+              )}
+            </div>
 
             <div className="flex flex-wrap items-center gap-2">
               <Button
                 onClick={handlePrintStudents}
                 variant="outline"
-                disabled={!isFinalized}
-                className={`gap-2 border-slate-200 dark:border-slate-800 ${
-                  !isFinalized ? "opacity-40 cursor-not-allowed" : ""
+                size="sm"
+                disabled={!canPrint}
+                className={`gap-1.5 border-slate-200 dark:border-slate-800 text-xs sm:text-sm flex-1 sm:flex-none justify-center ${
+                  !canPrint ? "opacity-40 cursor-not-allowed" : ""
                 }`}
                 title={
-                  isFinalized
+                  canPrint
                     ? "พิมพ์รายชื่อนักเรียน (แนวตั้ง A4)"
                     : "กรุณากดสรุปยอดเค้กก่อนพิมพ์รายงาน"
                 }
               >
-                <Printer className="h-4 w-4" />
-                <span className="hidden sm:inline">รายชื่อนักเรียน</span>
+                <Printer className="h-3.5 w-3.5" />
+                <span>พิมพ์รายชื่อ</span>
               </Button>
               <Button
                 onClick={handlePrintCakeSummary}
                 variant="outline"
-                disabled={!isFinalized}
-                className={`gap-2 border-slate-200 dark:border-slate-800 ${
-                  !isFinalized ? "opacity-40 cursor-not-allowed" : ""
+                size="sm"
+                disabled={!canPrint}
+                className={`gap-1.5 border-slate-200 dark:border-slate-800 text-xs sm:text-sm flex-1 sm:flex-none justify-center ${
+                  !canPrint ? "opacity-40 cursor-not-allowed" : ""
                 }`}
                 title={
-                  isFinalized
+                  canPrint
                     ? "พิมพ์สรุปยอดเค้กของห้องเรียน (A4 แนวตั้ง)"
                     : "กรุณากดสรุปยอดเค้กก่อนพิมพ์รายงาน"
                 }
               >
-                <Printer className="h-4 w-4" />
-                <span className="hidden sm:inline">สรุปยอดเค้ก</span>
+                <Printer className="h-3.5 w-3.5" />
+                <span>พิมพ์สรุปยอด</span>
               </Button>
-
-              {!isFinalized && (
-                <span className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5 font-medium bg-amber-50 dark:bg-amber-950/40 px-2.5 py-1.5 rounded-md border border-amber-200 dark:border-amber-800/60">
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0 text-amber-500" />
-                  <span>ต้องสรุปยอดเค้กก่อนจึงจะพิมพ์รายงานได้</span>
-                </span>
-              )}
             </div>
           </div>
+
+          {!canPrint && (
+            <div className="text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1.5 font-medium bg-amber-50 dark:bg-amber-950/40 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-800/60">
+              <AlertCircle className="w-4 h-4 shrink-0 text-amber-500" />
+              <span>ต้องสรุปยอดเค้กก่อนจึงจะพิมพ์รายงานได้</span>
+            </div>
+          )}
         </div>
 
         {isAddingStudent && (
@@ -586,112 +611,146 @@ const ClassroomStudentsPage: React.FC = () => {
           </div>
         )}
 
-        <h1 className="text-2xl font-bold mb-4">
-          รายชื่อนักเรียนในห้อง: {classroom.name} {classroom.department?.name}{" "}
-          {classroom.grade_level
-            ? `${classroom.grade_level.level === "VOCATIONAL"
-              ? "ปวช."
-              : classroom.grade_level.level === "HIGHER"
-                ? "ปวส."
-                : classroom.grade_level.level
-            } ${classroom.grade_level.year}`
-            : "ไม่ระบุระดับชั้น"}{" "}
-          นักเรียนทั้งหมด{" "}
-          {studentsCakeData ? studentsCakeData.students.length : 0} คน
-        </h1>
+        <TableSwipeGuide
+          showGuide={showSwipeGuide}
+          onClose={() => setShowSwipeGuide(false)}
+        />
+
+        <div className="mb-4 sm:mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+            <div>
+              <div className="flex flex-wrap items-center gap-2 mb-1">
+                <h1 className="text-xl sm:text-2xl font-bold text-foreground">
+                  ห้อง {classroom.name}
+                </h1>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300">
+                  {classroom.grade_level
+                    ? `${
+                        classroom.grade_level.level === "VOCATIONAL"
+                          ? "ปวช."
+                          : classroom.grade_level.level === "HIGHER"
+                          ? "ปวส."
+                          : classroom.grade_level.level
+                      } ${classroom.grade_level.year}`
+                    : "ไม่ระบุระดับชั้น"}
+                </span>
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                  {classroom.department?.name}
+                </span>
+              </div>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                รายชื่อนักเรียนและการสั่งจองเค้กประจำห้องเรียน
+              </p>
+            </div>
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-muted rounded-full text-xs sm:text-sm font-medium text-muted-foreground w-fit">
+              <span>นักเรียนทั้งหมด</span>
+              <strong className="text-foreground">
+                {studentsCakeData ? studentsCakeData.students.length : 0}
+              </strong>
+              <span>คน</span>
+            </div>
+          </div>
+        </div>
 
         {studentsCakeData && studentsCakeData.students.length > 0 ? (
           <div id="printable-classroom-students-section-screen">
-            <div className="border border-slate-300 dark:border-slate-800 rounded-lg overflow-hidden shadow-sm bg-card text-card-foreground">
-              <table className="w-full border-collapse">
-                <thead>
-                  <tr className="bg-slate-100 dark:bg-slate-800/80">
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700 dark:text-slate-300 border-b border-r border-slate-300 dark:border-slate-800">
-                      เลขที่
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700 dark:text-slate-300 border-b border-r border-slate-300 dark:border-slate-800">
-                      รหัสนักเรียน
-                    </th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold text-slate-700 dark:text-slate-300 border-b border-r border-slate-300 dark:border-slate-800">
-                      ชื่อ-นามสกุล
-                    </th>
-                    <th className="px-4 py-3 text-right text-sm font-semibold text-slate-700 dark:text-slate-300 border-b border-r border-slate-300 dark:border-slate-800">
-                      จำนวนเค้ก (ปอนด์)
-                    </th>
-                    <th className="px-4 py-3 text-center text-sm font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-300 dark:border-slate-800 w-32">
-                      จัดการ
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {studentsCakeData.students.map((student, index) => (
-                    <tr
-                      key={student.studentId}
-                      className="hover:bg-slate-50 dark:hover:bg-slate-800/50 group transition-colors"
-                    >
-                      <td className="px-4 py-3 text-sm text-slate-900 dark:text-slate-200 border-b border-r border-slate-300 dark:border-slate-800">
-                        {index + 1}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-900 dark:text-slate-200 border-b border-r border-slate-300 dark:border-slate-800">
-                        {student.studentId.replace(/\u200B/g, "")}
-                      </td>
-                      <td
-                        className="px-4 py-3 text-sm text-slate-900 dark:text-slate-200 border-b border-r border-slate-300 dark:border-slate-800 cursor-pointer hover:bg-slate-100/70 dark:hover:bg-slate-800 transition-colors"
-                        onClick={() => handleStudentClick(student.studentName)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">
-                            {student.studentName}
-                          </span>
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleEditStudentName(
-                                student.studentId,
-                                student.studentName,
-                              );
-                            }}
-                            className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <Edit2 size={14} />
-                          </button>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-sm text-slate-900 dark:text-slate-200 text-right font-medium border-b border-r border-slate-300 dark:border-slate-800">
-                        {student.totalPounds}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-center border-b border-slate-300 dark:border-slate-800">
-                        {(user?.role === "SUPERADMIN" || student.studentId.includes("\u200B")) ? (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteStudent(student.studentId)}
-                            className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40"
-                          >
-                            <Trash2 size={16} />
-                          </Button>
-                        ) : (
-                          <span className="text-xs text-muted-foreground">-</span>
-                        )}
-                      </td>
+            <div className="border border-slate-300 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm bg-card text-card-foreground">
+              <TableMobileSwipeBanner
+                onOpenGuide={() => setShowSwipeGuide(true)}
+              />
+
+              <div className="overflow-x-auto w-full">
+                <table className="w-full min-w-[580px] border-collapse">
+                  <thead>
+                    <tr className="bg-slate-100 dark:bg-slate-800/80">
+                      <th className="px-3 sm:px-4 py-3 text-center text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 border-b border-r border-slate-300 dark:border-slate-800 w-14 whitespace-nowrap">
+                        เลขที่
+                      </th>
+                      <th className="px-3 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 border-b border-r border-slate-300 dark:border-slate-800 whitespace-nowrap">
+                        รหัสนักเรียน
+                      </th>
+                      <th className="px-3 sm:px-4 py-3 text-left text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 border-b border-r border-slate-300 dark:border-slate-800 whitespace-nowrap">
+                        ชื่อ-นามสกุล
+                      </th>
+                      <th className="px-3 sm:px-4 py-3 text-right text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 border-b border-r border-slate-300 dark:border-slate-800 whitespace-nowrap">
+                        จำนวนเค้ก (ปอนด์)
+                      </th>
+                      <th className="px-3 sm:px-4 py-3 text-center text-xs sm:text-sm font-semibold text-slate-700 dark:text-slate-300 border-b border-slate-300 dark:border-slate-800 w-24 whitespace-nowrap">
+                        จัดการ
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-                <tfoot>
-                  <tr className="bg-slate-100 dark:bg-slate-800/80 font-bold">
-                    <td
-                      colSpan={3}
-                      className="px-4 py-3 text-sm text-slate-900 dark:text-slate-100 text-right border-r border-slate-300 dark:border-slate-800"
-                    >
-                      รวมจำนวนปอนด์นักเรียนทุกคนในห้อง:
-                    </td>
-                    <td className="px-4 py-3 text-sm text-slate-900 dark:text-slate-100 text-right border-r border-slate-300 dark:border-slate-800">
-                      {studentsCakeData.totalPoundsForClassroom} ปอนด์
-                    </td>
-                    <td className="bg-slate-100 dark:bg-slate-800/80 border-b border-slate-300 dark:border-slate-800"></td>
-                  </tr>
-                </tfoot>
-              </table>
+                  </thead>
+                  <tbody>
+                    {studentsCakeData.students.map((student, index) => (
+                      <tr
+                        key={student.studentId}
+                        className="hover:bg-slate-50 dark:hover:bg-slate-800/50 group transition-colors"
+                      >
+                        <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm text-center text-slate-900 dark:text-slate-200 border-b border-r border-slate-300 dark:border-slate-800">
+                          {index + 1}
+                        </td>
+                        <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm font-mono text-slate-900 dark:text-slate-200 border-b border-r border-slate-300 dark:border-slate-800 whitespace-nowrap">
+                          {student.studentId.replace(/\u200B/g, "")}
+                        </td>
+                        <td
+                          className="px-3 sm:px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-slate-200 border-b border-r border-slate-300 dark:border-slate-800 cursor-pointer hover:bg-slate-100/70 dark:hover:bg-slate-800 transition-colors whitespace-nowrap"
+                          onClick={() => handleStudentClick(student.studentName)}
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline">
+                              {student.studentName}
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleEditStudentName(
+                                  student.studentId,
+                                  student.studentName,
+                                );
+                              }}
+                              className="text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 opacity-60 sm:opacity-0 group-hover:opacity-100 transition-opacity p-1"
+                              title="แก้ไขชื่อนักเรียน"
+                            >
+                              <Edit2 size={14} />
+                            </button>
+                          </div>
+                        </td>
+                        <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-slate-200 text-right font-semibold border-b border-r border-slate-300 dark:border-slate-800 whitespace-nowrap">
+                          {student.totalPounds}
+                        </td>
+                        <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm text-center border-b border-slate-300 dark:border-slate-800">
+                          {(user?.role === "SUPERADMIN" || student.studentId.includes("\u200B")) ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteStudent(student.studentId)}
+                              className="text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950/40 h-8 w-8 p-0"
+                            >
+                              <Trash2 size={15} />
+                            </Button>
+                          ) : (
+                            <span className="text-xs text-muted-foreground">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-slate-100 dark:bg-slate-800/80 font-bold">
+                      <td
+                        colSpan={3}
+                        className="px-3 sm:px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 text-right border-r border-slate-300 dark:border-slate-800 whitespace-nowrap"
+                      >
+                        รวมจำนวนปอนด์นักเรียนทุกคนในห้อง:
+                      </td>
+                      <td className="px-3 sm:px-4 py-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 text-right border-r border-slate-300 dark:border-slate-800 whitespace-nowrap font-bold text-blue-600 dark:text-blue-400">
+                        {studentsCakeData.totalPoundsForClassroom} ปอนด์
+                      </td>
+                      <td className="bg-slate-100 dark:bg-slate-800/80 border-b border-slate-300 dark:border-slate-800"></td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
             </div>
           </div>
         ) : (

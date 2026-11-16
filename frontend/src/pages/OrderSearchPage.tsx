@@ -324,54 +324,59 @@ const OrderSearchPage: React.FC = () => {
   }
 
   return (
-    <div>
+    <div className="container mx-auto px-3 sm:px-6 py-4 max-w-7xl">
       <div className="mb-4">
         <Button
           variant="outline"
-          onClick={() => navigate({ to: "/home", search: {} })}
-          className="flex items-center font-medium"
+          size="sm"
+          onClick={() => {
+            if (window.history.length > 1) {
+              window.history.back();
+            } else {
+              navigate({ to: "/home", search: {} });
+            }
+          }}
+          className="flex items-center font-medium text-xs sm:text-sm"
         >
-
-          <ArrowLeft className="mr-2 h-4 w-4" />
+          <ArrowLeft className="mr-1.5 sm:mr-2 h-4 w-4" />
           ย้อนกลับ
         </Button>
       </div>
 
-      <div className="flex justify-center items-center mb-4">
-        <h2 className="text-2xl font-bold">ค้นหาออเดอร์เค้ก</h2>
+      <div className="flex justify-center items-center mb-4 sm:mb-6">
+        <h2 className="text-xl sm:text-2xl font-bold">ค้นหาออเดอร์เค้ก</h2>
       </div>
-      <div className="flex justify-center">
-        <div className="w-4/5">
-          <OrderSearchActionBar
-            searchTerm={searchTerm}
-            filterTerm={filterTerm}
-            DepartmentFilter={departmentFilter} // Corrected prop name
-            onSearchChange={handleSearchChange}
-            onFilterChange={handleFilterChange}
-            onDepartmentFilterChange={handleDepartmentFilterChange}
-            allDepartments={allDepartments}
-            showUserOrdersOnly={showUserOrdersOnly}
-            onShowUserOrdersOnlyChange={setShowUserOrdersOnly}
-            onShowClassroomSummary={handleShowClassroomSummaryPage} // Navigate to new page
-          />
 
-          <OrdersTable
-            orders={paginatedOrders}
-            onRowClick={handleOrderRowClick}
-            showActions={true}
-            onEditOrder={handleEditOrder}
-            onDeleteOrder={handleDeleteOrder}
-            currentUser={user}
-          />
+      <div className="w-full space-y-4">
+        <OrderSearchActionBar
+          searchTerm={searchTerm}
+          filterTerm={filterTerm}
+          DepartmentFilter={departmentFilter} // Corrected prop name
+          onSearchChange={handleSearchChange}
+          onFilterChange={handleFilterChange}
+          onDepartmentFilterChange={handleDepartmentFilterChange}
+          allDepartments={allDepartments}
+          showUserOrdersOnly={showUserOrdersOnly}
+          onShowUserOrdersOnlyChange={setShowUserOrdersOnly}
+          onShowClassroomSummary={handleShowClassroomSummaryPage} // Navigate to new page
+        />
 
-          <OrdersPagination
-            totalOrders={filteredOrders.length}
-            itemsPerPage={itemsPerPage}
-            currentPage={currentPage}
-            onPageChange={handlePageChange}
-            onItemsPerPageChange={handleItemsPerPageChange}
-          />
-        </div>
+        <OrdersTable
+          orders={paginatedOrders}
+          onRowClick={handleOrderRowClick}
+          showActions={true}
+          onEditOrder={handleEditOrder}
+          onDeleteOrder={handleDeleteOrder}
+          currentUser={user}
+        />
+
+        <OrdersPagination
+          totalOrders={filteredOrders.length}
+          itemsPerPage={itemsPerPage}
+          currentPage={currentPage}
+          onPageChange={handlePageChange}
+          onItemsPerPageChange={handleItemsPerPageChange}
+        />
       </div>
       {selectedOrder && (
         <>
