@@ -304,9 +304,13 @@ export namespace UserService {
       const updatedUser = await UserRepository.update(userId, data);
 
       if (targetUsername) {
+        // findById/update omit the password hash; read it directly for sync
+        const withPassword = await prisma.user.findUnique({
+          where: { id: userId },
+        });
         await syncUpdateAcrossAllDatabases(userId, targetUsername, {
           ...updatedUser,
-          password: data.password || currentUser?.password,
+          password: data.password || withPassword?.password,
         });
       }
 
@@ -366,19 +370,20 @@ export namespace UserService {
     jwt: JWTInstance
   ) {
     const user = await UserRepository.findUserByUsername(username);
+    // Generic message for both cases to avoid user enumeration
     if (!user) {
-      throw new Error("User not found");
+      throw new Error("Invalid credentials");
     }
 
     let isPasswordValid = false;
     try {
       isPasswordValid = await Bun.password.verify(password, user.password);
     } catch (_error) {
-      throw new Error("Invalid password");
+      throw new Error("Invalid credentials");
     }
 
     if (!isPasswordValid) {
-      throw new Error("Invalid password");
+      throw new Error("Invalid credentials");
     }
 
     const payload = {
@@ -387,8 +392,11 @@ export namespace UserService {
       sub: user.id, // ใส่ user id เข้าไปใน token payload
     };
 
-    // สร้าง JWT token
-    const jwtToken = await jwt.sign(payload);
+    // สร้าง JWT token (short-lived; frontend refreshes via /auth/me + refresh token)
+    const jwtToken = await jwt.sign({
+      ...payload,
+      exp: "15m",
+    });
 
     // สร้าง token ในฐานข้อมูล
     const dbToken = await TokenService.generateToken({ user_id: user.id });

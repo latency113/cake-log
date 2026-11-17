@@ -4,6 +4,13 @@ import { getAcademicYear } from "../../../providers/database/database.context";
 import { getClient } from "../../../providers/database/connection-manager";
 
 export namespace InitYearService {
+  // Only a 4-digit year may reach raw SQL (database names / identifiers)
+  const assertValidYear = (year: string): void => {
+    if (!/^[0-9]{4}$/.test(year)) {
+      throw new Error("Invalid academic year format.");
+    }
+  };
+
   // Helper to get a raw client connected to the default DB
   const getAdminClient = () => {
     const originalUrl = process.env.DATABASE_URL;
@@ -75,6 +82,7 @@ export namespace InitYearService {
   };
 
   export const initializeYear = async (year: string) => {
+    assertValidYear(year);
     console.log(`[InitYearService] Starting initialization for year ${year}`);
 
     const originalUrl = process.env.DATABASE_URL;
@@ -261,6 +269,7 @@ ${error.stderr?.toString() || "(empty)"}
   };
 
   export const deleteYear = async (year: string) => {
+    assertValidYear(year);
     // (Existing Delete Logic)
     console.log(`[InitYearService] Deleting database for year ${year}`);
 

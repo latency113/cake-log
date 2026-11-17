@@ -9,15 +9,15 @@ services:
       - ./db-data:/var/lib/postgresql
     environment:
       - POSTGRES_DB=nvccake
-      - POSTGRES_PASSWORD=mysecretpassword
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:?POSTGRES_PASSWORD missing - set it in backend/.env}
       - POSTGRES_USER=postgres
-    ports:
-      - 5432:5432
     healthcheck:
       test: ["CMD", "pg_isready", -U, postgres]
       interval: 10s
       timeout: 5s
       retries: 5
+    # No host port published: app containers reach postgres over the compose network.
+    # If you must connect from the host, bind to localhost only: "127.0.0.1:5432:5432"
     networks:
       - app_net
 
@@ -29,10 +29,10 @@ services:
     container_name: pgadmin
     restart: always
     ports:
-      - "8888:80"
+      - "127.0.0.1:8888:80"
     environment:
       PGADMIN_DEFAULT_EMAIL: admin@nvccake.com
-      PGADMIN_DEFAULT_PASSWORD: adminadmin1234
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?PGADMIN_DEFAULT_PASSWORD missing - set it in backend/.env}
     volumes:
       - ./pgadmin:/var/lib/pgadmin
     networks:

@@ -12,7 +12,7 @@ export namespace TeacherUserService {
     return result;
   }
 
-  export async function createUsersFromTeachers(defaultPassword?: string) {
+  export async function createUsersFromTeachers(defaultPassword: string) {
     const teachers = await TeacherRepository.findAll({ skip: 0, take: 999999 }); // Fetch all teachers
 
     const createdUsers = [];
@@ -41,7 +41,7 @@ export namespace TeacherUserService {
             lastname: lastname,
             username: currentUsername,
             email: `${currentUsername}@example.com`,
-            password: defaultPassword || "password123",
+            password: defaultPassword,
             role: "USER",
             teacher_id: teacher.id,
           });

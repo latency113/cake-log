@@ -4,10 +4,28 @@ import { TokenService } from "../../services/Token/Token.service";
 import { UserRepository } from "../../repository/User/user.repository";
 import prisma from "@/providers/database/database.provider";
 import { auth } from "@/shared/middleware/auth";
+import { rateLimit } from "@/shared/middleware/rate-limit";
 
 export namespace AuthController {
   export const authController = new Elysia({ prefix: "/auth" })
     .use(auth)
+    .use(
+      rateLimit({
+        windowMs: 60_000,
+        max: 10,
+        match: (path, method) =>
+          method === "POST" &&
+          (path.endsWith("/auth/login") || path.endsWith("/auth/register")),
+      }),
+    )
+    .use(
+      rateLimit({
+        windowMs: 60_000,
+        max: 20,
+        match: (path, method) =>
+          method === "GET" && path.includes("/auth/check-username"),
+      }),
+    )
     .post(
       "/login",
       async ({ body, set, jwt: jwtHandler }) => {
@@ -31,6 +49,11 @@ export namespace AuthController {
           set.status = "OK";
           return result;
         } catch (error: any) {
+          // Uniform 401 for bad credentials — no user enumeration, no 500
+          if (error?.message === "Invalid credentials") {
+            set.status = 401;
+            return { message: "Invalid credentials" };
+          }
           console.error(error);
           set.status = 500;
           return error?.message || "Login failed";
@@ -78,7 +101,10 @@ export namespace AuthController {
                   username: tokenRecord.user.username,
                   sub: tokenRecord.user_id,
                 };
-                const newToken = await jwtHandler.sign(newPayload);
+                const newToken = await jwtHandler.sign({
+                  ...newPayload,
+                  exp: "15m",
+                });
                 set.status = 200;
                 set.headers["x-user-role"] = tokenRecord.user.role;
                 set.headers["x-username"] = tokenRecord.user.username;
@@ -345,8 +371,10 @@ export namespace AuthController {
         body: t.Object({
           firstname: t.String(),
           lastname: t.String(),
-          username: t.String(),
-          password: t.String(),
+          // Letters, digits, underscore only — username is used in generated
+          // usernames and displayed broadly
+          username: t.String({ pattern: "^[a-zA-Z0-9_]{3,30}$" }),
+          password: t.String({ minLength: 8 }),
           email: t.Optional(t.Union([t.String(), t.Null()])),
           classroom_id: t.String(),
         }),

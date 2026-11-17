@@ -5,12 +5,26 @@ import { TeacherUserService } from "@/features/services/Teacher/TeacherUser.serv
 import { CakeSettingsService } from "@/features/services/admin/setting.service";
 import { InitYearService } from "@/features/services/admin/init-year.service";
 import { auth } from "@/shared/middleware/auth";
+import { rateLimit } from "@/shared/middleware/rate-limit";
 import { OrderService } from "../../services/Order/Order.service";
 import { ClassroomService } from "../../services/Classroom/Classroom.service";
 import prisma from "@/providers/database/database.provider";
 
 export const adminController = new Elysia()
   .use(auth)
+  .use(
+    // Thwart brute-forcing of the restore/security key endpoints
+    rateLimit({
+      windowMs: 60_000,
+      max: 5,
+      match: (path, method) =>
+        (method === "POST" &&
+          (path.endsWith("/restore-backup") ||
+            path.endsWith("/restore-pre-promotion") ||
+            path.endsWith("/download-backup"))) ||
+        (method === "DELETE" && path.includes("/admin/year/")),
+    }),
+  )
   .post(
     "/backup",
     async ({ body, set }) => {
@@ -102,7 +116,9 @@ export const adminController = new Elysia()
     async ({ body, set }) => {
       try {
         const filePath = await getBackupFilePath(body.fileName, body.key);
-        set.headers["Content-Disposition"] = `attachment; filename="${body.fileName}"`;
+        // Sanitize: raw fileName in a header allows CRLF injection
+        const safeFileName = body.fileName.replace(/[^\w.\-]/g, "_");
+        set.headers["Content-Disposition"] = `attachment; filename="${safeFileName}"`;
         return Bun.file(filePath);
       } catch (error: any) {
         console.error("Download failed:", error);
@@ -153,7 +169,9 @@ export const adminController = new Elysia()
     },
     {
       body: t.Object({
-        defaultPassword: t.Optional(t.String()),
+        // Required with a minimum length — a known default password for every
+        // teacher account would defeat the point of passwords entirely
+        defaultPassword: t.String({ minLength: 8 }),
       }),
       detail: {
         description:
@@ -197,12 +215,10 @@ export const adminController = new Elysia()
         const settings = await CakeSettingsService.getSettings();
         set.status = 200;
         
-        if (settings && user) {
-          const typedUser = user as { role: string };
-          if (typedUser.role !== "SUPERADMIN" && typedUser.role !== "ADMIN") {
-            const { securityKey, ...safeSettings } = settings as any;
-            return safeSettings;
-          }
+        if (settings) {
+          // Never return the security key value itself, only whether one is set
+          const { securityKey, ...safeSettings } = settings as any;
+          return { ...safeSettings, hasSecurityKey: Boolean(securityKey) };
         }
         
         return settings;
@@ -294,11 +310,14 @@ export const adminController = new Elysia()
     async ({ params, set, body }) => {
       try {
         const securityKey = (body as any)?.securityKey;
-        if (securityKey) {
-          if (!(await isKeyValid(securityKey))) {
-            set.status = 400;
-            return { message: "Security Key ไม่ถูกต้อง", error: "Security Key ไม่ถูกต้อง" };
-          }
+
+        // Require the key whenever one is configured (settings or env) —
+        // omitting it must not bypass the check on this destructive endpoint
+        const settings = await CakeSettingsService.getSettings();
+        const keyConfigured = Boolean(settings?.securityKey || process.env.RESTORE_KEY);
+        if (keyConfigured && !(await isKeyValid(securityKey))) {
+          set.status = 400;
+          return { message: "Security Key ไม่ถูกต้อง", error: "Security Key ไม่ถูกต้อง" };
         }
 
         const result = await InitYearService.deleteYear(params.year);

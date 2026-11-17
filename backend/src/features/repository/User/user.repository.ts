@@ -29,6 +29,7 @@ export namespace UserRepository {
 
     return prisma.user.findMany({
       where,
+      omit: { password: true },
       include: {
         orders: true,
         teacher: {
@@ -56,6 +57,7 @@ export namespace UserRepository {
       where: {
         id: userId,
       },
+      omit: { password: true },
       include: {
         teacher: {
           include: {
@@ -86,6 +88,7 @@ export namespace UserRepository {
       data: {
         ...user,
       },
+      omit: { password: true },
     });
   }
 

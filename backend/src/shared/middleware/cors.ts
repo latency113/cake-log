@@ -1,7 +1,13 @@
 import { cors } from "@elysiajs/cors";
 
+// Restrict to known frontend origins (comma-separated in CORS_ORIGIN)
+const allowedOrigins = (process.env.CORS_ORIGIN ?? "http://localhost:5173,http://localhost:4173")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
 export const corsMiddleware = cors({
-  origin: "*",
+  origin: allowedOrigins,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: [
     "Content-Type",

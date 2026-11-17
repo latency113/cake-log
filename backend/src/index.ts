@@ -10,8 +10,11 @@ const port = Number(process.env.PORT) || 3000;
 
 const app = new Elysia()
   .use(corsMiddleware)
-  .use(databaseSelector)
-  .use(
+  .use(databaseSelector);
+
+// Swagger enumerates every endpoint to anonymous visitors — only for development
+if (process.env.NODE_ENV !== "production") {
+  app.use(
     swagger({
       path: "/docs",
       documentation: {
@@ -30,9 +33,10 @@ const app = new Elysia()
         },
       },
     })
-  )
-  .use(mainApp)
-  .listen(port);
+  );
+}
+
+app.use(mainApp).listen(port);
 
 
 logger.info(

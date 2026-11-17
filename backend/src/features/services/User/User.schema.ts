@@ -6,7 +6,8 @@ export const UserSchema = t.Object({
   firstname: t.String(),
   lastname: t.String(),
   username: t.String(),
-  password: t.String(),
+  // Response never contains the password hash; kept optional for legacy payloads
+  password: t.Optional(t.String()),
   email: t.Optional(t.Union([t.String(), t.Null()])),
   role: t.UnionEnum(["SUPERADMIN","ADMIN","OFFICER1","USER","OFFICER2"]),
   createdAt: t.Date(),

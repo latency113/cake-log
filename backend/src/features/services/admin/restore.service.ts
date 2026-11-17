@@ -1,6 +1,8 @@
 import fs from "fs";
 import path from "path";
-import { exec } from "child_process";
+import crypto from "crypto";
+import { execFile } from "child_process";
+import { runPgTool } from "./backup.service";
 import { getDbParams } from "@/shared/utils/db-utils";
 import { getAcademicYear } from "@/providers/database/database.context";
 import { CakeSettingsRepository } from "@/features/repository/CakeSettings/CakeSettings.repository";
@@ -18,39 +20,29 @@ export const isKeyValid = async (key?: string): Promise<boolean> => {
     throw new Error("Security key is not configured in the system.");
   }
 
-  return (
-    (Boolean(configuredKey) && trimmed === configuredKey) ||
-    (Boolean(envKey) && trimmed === envKey)
-  );
+  // Timing-safe comparison: compare SHA-256 digests so key length is not leaked
+  const candidate = crypto.createHash("sha256").update(trimmed).digest();
+  const matches = (expected?: string) => {
+    if (!expected) return false;
+    const expectedBuf = crypto.createHash("sha256").update(expected).digest();
+    return crypto.timingSafeEqual(candidate, expectedBuf);
+  };
+
+  return matches(configuredKey) || matches(envKey);
 };
 
-const findPgTool = (toolName: string): string => {
-  // 1. Check environment variables for explicit path definition
-  const envVarName = toolName === 'pg_dump' ? 'PG_DUMP_PATH' : 'PSQL_PATH';
-  const envPath = process.env[envVarName];
-  console.log(`findPgTool: Checking env var ${envVarName}:`, envPath);
-  if (envPath) {
-    return `"${envPath}"`;
+// Only allow plain backup file names — no separators, no traversal
+const isValidBackupFileName = (fileName: string): boolean =>
+  /^[A-Za-z0-9][A-Za-z0-9._-]*\.sql$/.test(fileName) && !fileName.includes("..");
+
+// Resolve a file inside backupsDir and assert containment (anti path traversal)
+const resolveBackupFile = (backupsDir: string, fileName: string): string => {
+  const targetFile = path.resolve(backupsDir, fileName);
+  const relative = path.relative(path.resolve(backupsDir), targetFile);
+  if (relative.startsWith("..") || path.isAbsolute(relative)) {
+    throw new Error("Invalid backup file path.");
   }
-
-  // 2. Check common paths (Restore fallback for local dev)
-  const commonPaths = [
-    `/Applications/Postgres.app/Contents/Versions/latest/bin/${toolName}`,
-    `/opt/homebrew/bin/${toolName}`,
-    `/usr/local/bin/${toolName}`,
-    `/usr/bin/${toolName}`,
-  ];
-
-  for (const p of commonPaths) {
-    if (fs.existsSync(p)) {
-      console.log(`findPgTool: Found tool at ${p}`);
-      return `"${p}"`;
-    }
-  }
-
-  // 3. Fallback to system PATH
-  console.log(`findPgTool: Falling back to system PATH for ${toolName}`);
-  return toolName;
+  return targetFile;
 };
 
 export const listBackups = async (): Promise<string[]> => {
@@ -65,6 +57,45 @@ export const listBackups = async (): Promise<string[]> => {
     .reverse();
 };
 
+const cleanSchema = async (dbParams: {
+  user: string;
+  password: string;
+  host: string;
+  port: string | number;
+  name: string;
+}): Promise<void> => {
+  await runPgTool(
+    "psql",
+    [
+      "-h", String(dbParams.host),
+      "-p", String(dbParams.port),
+      "-U", dbParams.user,
+      "-d", dbParams.name,
+      "-c", "DROP SCHEMA public CASCADE; CREATE SCHEMA public;",
+    ],
+    dbParams,
+  );
+};
+
+const restoreFromFile = async (
+  dbParams: { user: string; password: string; host: string; port: string | number; name: string },
+  targetFile: string,
+): Promise<void> => {
+  // --set ON_ERROR_STOP=1 to catch internal SQL errors
+  await runPgTool(
+    "psql",
+    [
+      "-h", String(dbParams.host),
+      "-p", String(dbParams.port),
+      "-U", dbParams.user,
+      "-d", dbParams.name,
+      "--set", "ON_ERROR_STOP=1",
+      "-f", targetFile,
+    ],
+    dbParams,
+  );
+};
+
 export const performRestore = async (fileName?: string, key?: string): Promise<string> => {
   if (!(await isKeyValid(key))) {
     throw new Error("Invalid security key for restoration.");
@@ -72,12 +103,16 @@ export const performRestore = async (fileName?: string, key?: string): Promise<s
 
   const currentYear = getAcademicYear();
   const { user, password, name, host, port } = getDbParams(currentYear);
+  const dbParams = { user, password, host, port, name };
 
   const backupsDir = path.join(process.cwd(), "backups");
   let targetFile: string;
 
   if (fileName) {
-    targetFile = path.join(backupsDir, fileName);
+    if (!isValidBackupFileName(fileName)) {
+      throw new Error("Invalid backup file name.");
+    }
+    targetFile = resolveBackupFile(backupsDir, fileName);
     if (!fs.existsSync(targetFile)) {
       throw new Error(`Backup file not found: ${fileName}`);
     }
@@ -96,59 +131,37 @@ export const performRestore = async (fileName?: string, key?: string): Promise<s
     targetFile = path.join(backupsDir, yearMatchingFiles[0] || allFiles[0]);
   }
 
-  const psqlPath = findPgTool('psql');
-  
-  // 1. Clean the database
-  const cleanCommand = `PGPASSWORD=${password} ${psqlPath} -h ${host} -p ${port} -U ${user} -d ${name} -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"`;
-  
-  await new Promise((resolve, reject) => {
-    console.log(`Executing Clean Command on ${name}...`);
-    exec(cleanCommand, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Clean failed: ${error}`);
-        reject(new Error(`Database clean failed: ${error.message}\n${stderr}`));
-        return;
-      }
-      resolve(stdout);
-    });
-  });
+  console.log(`Executing Clean Command on ${name}...`);
+  await cleanSchema(dbParams);
 
-  // 2. Restore from backup
-  // Added --set ON_ERROR_STOP=1 to catch internal SQL errors
-  const restoreCommand = `PGPASSWORD=${password} ${psqlPath} -h ${host} -p ${port} -U ${user} -d ${name} --set ON_ERROR_STOP=1 -f "${targetFile}"`;
+  console.log(`Executing Restore Command to ${name} from ${targetFile}...`);
+  try {
+    await restoreFromFile(dbParams, targetFile);
+  } catch (error: any) {
+    console.error(`Restore failed: ${error}`);
+    throw new Error(`Database restore failed: ${error.message}`);
+  }
 
-  return new Promise((resolve, reject) => {
-    console.log(`Executing Restore Command to ${name} from ${targetFile}...`);
-    exec(restoreCommand, async (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Restore failed: ${error}`);
-        // If restore failed, we don't proceed to migrations
-        reject(new Error(`Database restore failed: ${error.message}\n${stderr}`));
-        return;
+  try {
+    console.log(`Running Prisma Migrations on ${name}...`);
+    // We try to run migrations, but if it fails with "already exists" errors,
+    // it often means the schema is already correct from the restore.
+    try {
+      await runMigrations(name);
+    } catch (migrationError: any) {
+      console.warn("Migration warning (might be non-critical if schema is already up to date):", migrationError.message);
+      // If the error is about already existing objects (like 'Role'), we consider the restore successful
+      if (migrationError.message.includes("already exists") || migrationError.message.includes("P3018")) {
+        console.log("Detected existing schema objects, skipping migration sync but continuing...");
+      } else {
+        throw migrationError;
       }
-      
-      try {
-        console.log(`Running Prisma Migrations on ${name}...`);
-        // We try to run migrations, but if it fails with "already exists" errors, 
-        // it often means the schema is already correct from the restore.
-        try {
-          await runMigrations(name);
-        } catch (migrationError: any) {
-          console.warn("Migration warning (might be non-critical if schema is already up to date):", migrationError.message);
-          // If the error is about already existing objects (like 'Role'), we consider the restore successful
-          if (migrationError.message.includes("already exists") || migrationError.message.includes("P3018")) {
-             console.log("Detected existing schema objects, skipping migration sync but continuing...");
-          } else {
-             throw migrationError;
-          }
-        }
-        resolve(`PostgreSQL restore successful to ${name} from ${path.basename(targetFile)}`);
-      } catch (migrationError: any) {
-        console.error("Migration failed:", migrationError);
-        reject(new Error(`Restore successful but migration failed: ${migrationError.message}`));
-      }
-    });
-  });
+    }
+    return `PostgreSQL restore successful to ${name} from ${path.basename(targetFile)}`;
+  } catch (migrationError: any) {
+    console.error("Migration failed:", migrationError);
+    throw new Error(`Restore successful but migration failed: ${migrationError.message}`);
+  }
 };
 
 export const performRestorePrePromotion = async (key?: string): Promise<string> => {
@@ -158,6 +171,7 @@ export const performRestorePrePromotion = async (key?: string): Promise<string> 
 
   const currentYear = getAcademicYear();
   const { user, password, name, host, port } = getDbParams(currentYear);
+  const dbParams = { user, password, host, port, name };
 
   const backupsDir = path.join(process.cwd(), "backups");
 
@@ -175,47 +189,25 @@ export const performRestorePrePromotion = async (key?: string): Promise<string> 
   const latestBackupFile = path.join(backupsDir, backupFiles[0]);
   console.log(`Restoring from: ${latestBackupFile}`);
 
-  const psqlPath = findPgTool('psql');
-  
-  // 1. Clean the database
-  const cleanCommand = `PGPASSWORD=${password} ${psqlPath} -h ${host} -p ${port} -U ${user} -d ${name} -c "DROP SCHEMA public CASCADE; CREATE SCHEMA public;"`;
-  
-  await new Promise((resolve, reject) => {
-    console.log(`Executing Clean Command on ${name}...`);
-    exec(cleanCommand, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Clean failed: ${error}`);
-        reject(new Error(`Database clean failed: ${error.message}\n${stderr}`));
-        return;
-      }
-      if (stderr) console.warn(`Clean stderr: ${stderr}`);
-      resolve(stdout);
-    });
-  });
+  console.log(`Executing Clean Command on ${name}...`);
+  await cleanSchema(dbParams);
 
-  // 2. Restore from backup
-  const restoreCommand = `PGPASSWORD=${password} ${psqlPath} -h ${host} -p ${port} -U ${user} -d ${name} -f "${latestBackupFile}"`;
+  console.log(`Executing Restore Command to ${name}...`);
+  try {
+    await restoreFromFile(dbParams, latestBackupFile);
+  } catch (error: any) {
+    console.error(`Restore failed: ${error}`);
+    throw new Error(`Database restore failed: ${error.message}`);
+  }
 
-  return new Promise((resolve, reject) => {
-    console.log(`Executing Restore Command to ${name}...`);
-    exec(restoreCommand, async (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Restore failed: ${error}`);
-        reject(new Error(`Database restore failed: ${error.message}\n${stderr}`));
-        return;
-      }
-      if (stderr) console.warn(`Restore stderr: ${stderr}`);
-      
-      try {
-        console.log(`Running Prisma Migrations on ${name}...`);
-        await runMigrations(name);
-        resolve(`PostgreSQL restore successful to ${name} from ${latestBackupFile} and migrations applied!`);
-      } catch (migrationError: any) {
-        console.error("Migration failed:", migrationError);
-        reject(new Error(`Restore successful but migration failed: ${migrationError.message}`));
-      }
-    });
-  });
+  try {
+    console.log(`Running Prisma Migrations on ${name}...`);
+    await runMigrations(name);
+    return `PostgreSQL restore successful to ${name} from ${latestBackupFile} and migrations applied!`;
+  } catch (migrationError: any) {
+    console.error("Migration failed:", migrationError);
+    throw new Error(`Restore successful but migration failed: ${migrationError.message}`);
+  }
 };
 
 const runMigrations = (dbName: string): Promise<void> => {
@@ -227,16 +219,22 @@ const runMigrations = (dbName: string): Promise<void> => {
   const migrationUrl = urlObj.toString();
 
   return new Promise((resolve, reject) => {
-    exec(`DATABASE_URL=${migrationUrl} bun x prisma migrate deploy`, (error, stdout, stderr) => {
-      if (error) {
-        console.error(`Migration error: ${error}`);
-        reject(error);
-        return;
-      }
-      if (stderr) console.warn(`Migration stderr: ${stderr}`);
-      console.log(`Migration stdout: ${stdout}`);
-      resolve();
-    });
+    // No shell: DATABASE_URL passed via env, argv as array
+    execFile(
+      "bun",
+      ["x", "prisma", "migrate", "deploy"],
+      { env: { ...process.env, DATABASE_URL: migrationUrl } },
+      (error, stdout, stderr) => {
+        if (error) {
+          console.error(`Migration error: ${error}`);
+          reject(error);
+          return;
+        }
+        if (stderr) console.warn(`Migration stderr: ${stderr}`);
+        console.log(`Migration stdout: ${stdout}`);
+        resolve();
+      },
+    );
   });
 };
 
@@ -246,18 +244,11 @@ export const getBackupFilePath = async (fileName: string, key?: string): Promise
   }
 
   const backupsDir = path.join(process.cwd(), "backups");
-  const targetFile = path.join(backupsDir, fileName);
+  const targetFile = resolveBackupFile(backupsDir, fileName);
 
   if (!fs.existsSync(targetFile)) {
     throw new Error(`Backup file not found: ${fileName}`);
   }
 
-  // Security check: ensure the file is within the backups directory
-  const relative = path.relative(backupsDir, targetFile);
-  if (relative.startsWith('..') || path.isAbsolute(relative)) {
-    throw new Error("Invalid backup file path.");
-  }
-
   return targetFile;
 };
-

@@ -8,8 +8,15 @@ export namespace OrderController {
     .use(auth)
     .post(
       "/",
-      async ({ body, set }) => {
+      async ({ body, set, user }) => {
         try {
+          // Non-privileged users can only create orders for themselves
+          const role = (user as { role?: string })?.role;
+          const privileged =
+            role === "SUPERADMIN" || role === "ADMIN" || role === "OFFICER1" || role === "OFFICER2";
+          if (!privileged) {
+            (body as { user_id: string }).user_id = (user as { sub?: string }).sub as string;
+          }
           const newOrder = await OrderService.create(body);
           set.status = 201;
           return { newOrder, message: "Order has been created" };
@@ -127,8 +134,26 @@ export namespace OrderController {
     )
     .patch(
       "/:orderId",
-      async ({ params: { orderId }, body, set }) => {
+      async ({ params: { orderId }, body, set, user }) => {
         try {
+          // Ownership check: plain users may only update their own orders and
+          // may not re-attribute an order to a different user
+          const role = (user as { role?: string })?.role;
+          const privileged =
+            role === "SUPERADMIN" || role === "ADMIN" || role === "OFFICER1" || role === "OFFICER2";
+          const existingOrder = await OrderService.findById(orderId);
+          if (!existingOrder) {
+            set.status = "Not Found";
+            return "Order not found";
+          }
+          if (!privileged) {
+            const userId = (user as { sub?: string })?.sub;
+            if (existingOrder.user_id !== userId) {
+              set.status = 403;
+              return "Forbidden";
+            }
+            delete (body as { user_id?: string }).user_id;
+          }
           const updatedOrder = await OrderService.update(orderId, body);
           return { updatedOrder, message: "Order has been updated" };
         } catch (error) {
@@ -161,6 +186,7 @@ export namespace OrderController {
             message: t.String(),
           }),
           400: t.String(),
+          403: t.String(),
           404: t.String(),
           409: t.String(),
           500: t.String(),

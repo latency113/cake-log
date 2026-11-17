@@ -1,8 +1,47 @@
 import { Elysia } from "elysia";
+import crypto from "crypto";
 import { databaseContext } from "../../providers/database/database.context";
 import { getClient } from "../../providers/database/connection-manager";
 
 let cachedActiveYear: string = "2569";
+
+// Verify HS256 JWT signature synchronously. onRequest must stay sync (see note
+// below), so we cannot await jwt.verify(); this manual HMAC check is equivalent
+// for HS256 and rejects forged/unverified payloads.
+const verifyJwtSync = (token: string): { role?: string } | null => {
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  const [headerB64, payloadB64, signatureB64] = parts;
+
+  try {
+    const header = JSON.parse(Buffer.from(headerB64, "base64url").toString());
+    if (header.alg !== "HS256") return null;
+  } catch {
+    return null;
+  }
+
+  const secret = process.env.JWT_SECRET;
+  if (!secret) return null;
+  const expected = crypto
+    .createHmac("sha256", secret)
+    .update(`${headerB64}.${payloadB64}`)
+    .digest("base64url");
+  const sigBuf = Buffer.from(signatureB64);
+  const expBuf = Buffer.from(expected);
+  if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
+    return null;
+  }
+
+  try {
+    const payload = JSON.parse(Buffer.from(payloadB64, "base64url").toString());
+    if (typeof payload.exp === "number" && Date.now() / 1000 > payload.exp) {
+      return null;
+    }
+    return payload;
+  } catch {
+    return null;
+  }
+};
 
 // Initialize cachedActiveYear from DB at startup asynchronously
 (async () => {
@@ -51,14 +90,10 @@ export const databaseSelector = new Elysia()
     let userRole: string | null = null;
 
     if (authHeader && authHeader.startsWith("Bearer ")) {
-      try {
-        const parts = authHeader.slice(7).split(".");
-        if (parts.length === 3) {
-          const payload = JSON.parse(Buffer.from(parts[1], "base64url").toString());
-          userRole = payload.role;
-        }
-      } catch {
-        // ignore invalid token
+      const token = authHeader.slice(7);
+      const payload = verifyJwtSync(token);
+      if (payload) {
+        userRole = payload.role ?? null;
       }
     }
 

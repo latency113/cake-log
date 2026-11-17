@@ -1,12 +1,20 @@
 import { Elysia } from "elysia";
 import { jwt } from "@elysiajs/jwt";
 
+// Fail fast: never run with a missing or known default secret (would allow token forgery)
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  throw new Error(
+    "JWT_SECRET is missing or too short (min 32 chars). Refusing to start with a weak/default secret."
+  );
+}
+
 export const auth = (app: Elysia) =>
   app
     .use(
       jwt({
         name: "jwt",
-        secret: process.env.JWT_SECRET || "supersecret",
+        secret: JWT_SECRET,
       })
     )
     .derive(async ({ jwt, headers }) => {
