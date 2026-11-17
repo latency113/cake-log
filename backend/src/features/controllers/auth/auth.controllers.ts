@@ -184,7 +184,16 @@ export namespace AuthController {
             include: {
               department: true,
               grade_level: true,
-              teacher: true,
+              teacher: {
+                include: {
+                  users: {
+                    select: {
+                      id: true,
+                      username: true,
+                    },
+                  },
+                },
+              },
             },
             orderBy: [
               {
@@ -207,7 +216,24 @@ export namespace AuthController {
               },
             ],
           });
-          return classrooms;
+
+          const classroomsWithStatus = classrooms.map((cls) => {
+            const hasAccount = Boolean(
+              cls.teacher?.users && cls.teacher.users.length > 0
+            );
+            return {
+              ...cls,
+              teacher: cls.teacher
+                ? {
+                    ...cls.teacher,
+                    hasAccount,
+                    isRegistered: hasAccount,
+                  }
+                : null,
+            };
+          });
+
+          return classroomsWithStatus;
         } catch (error) {
           console.error("Error fetching classrooms for register:", error);
           set.status = 500;
@@ -246,7 +272,13 @@ export namespace AuthController {
           // Verify classroom exists and retrieve its teacher_id
           const classroom = await prisma.classroom.findUnique({
             where: { id: classroom_id },
-            include: { teacher: true },
+            include: {
+              teacher: {
+                include: {
+                  users: true,
+                },
+              },
+            },
           });
 
           if (!classroom) {
@@ -254,9 +286,21 @@ export namespace AuthController {
             return { message: "ไม่พบห้องเรียนที่เลือก" };
           }
 
-          if (!classroom.teacher_id) {
+          if (!classroom.teacher_id || !classroom.teacher) {
             set.status = 400;
             return { message: "ห้องเรียนนี้ยังไม่ได้กำหนดครูประจำชั้นในระบบ" };
+          }
+
+          // Check if this teacher already has an account in User table
+          const existingTeacherUser = await prisma.user.findFirst({
+            where: { teacher_id: classroom.teacher_id },
+          });
+
+          if (existingTeacherUser || (classroom.teacher.users && classroom.teacher.users.length > 0)) {
+            set.status = 409;
+            return {
+              message: `ครูประจำชั้น/ที่ปรึกษา (${classroom.teacher.name}) มีบัญชีผู้ใช้งานในระบบแล้ว ไม่สามารถลงทะเบียนซ้ำได้ เพื่อป้องกันการสวมสิทธิ์ หากลืมรหัสผ่านกรุณาติดต่อผู้ดูแลระบบ`,
+            };
           }
 
           const existingUser = await UserRepository.findUserByUsername(username);

@@ -54,6 +54,12 @@ export interface AuthClassroom {
   teacher?: {
     id: string;
     name: string;
+    hasAccount?: boolean;
+    isRegistered?: boolean;
+    users?: {
+      id: string;
+      username?: string;
+    }[];
   };
 }
 

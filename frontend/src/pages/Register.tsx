@@ -14,6 +14,7 @@ import {
   AlertCircle,
   Sparkles,
   Info,
+  ShieldAlert,
 } from "lucide-react";
 import InputField from "../components/common/InputField";
 import type { InputChangeEvent } from "@/types";
@@ -86,6 +87,16 @@ export const formatClassroomLabel = (c: AuthClassroom): string => {
   const level = c.grade_level?.level === "VOCATIONAL" ? "ปวช." : "ปวส.";
   const year = c.grade_level?.year || "";
   return `${dept} ${level} ${year} ห้อง ${c.name}`;
+};
+
+// Check if teacher is already registered with an account in the system
+export const checkIsTeacherRegistered = (
+  teacher?: AuthClassroom["teacher"]
+): boolean => {
+  if (!teacher) return false;
+  if (teacher.hasAccount || teacher.isRegistered) return true;
+  if (teacher.users && teacher.users.length > 0) return true;
+  return false;
 };
 
 const Register: React.FC = () => {
@@ -280,6 +291,17 @@ const Register: React.FC = () => {
     return classrooms.find((c) => c.id === selectedClassroomId);
   }, [classrooms, selectedClassroomId]);
 
+  // Check if matched or selected teacher is already registered in the system
+  const isTeacherAlreadyRegistered = useMemo(() => {
+    if (isManualSelection) {
+      return checkIsTeacherRegistered(selectedClassroom?.teacher);
+    }
+    if (matchingClassrooms.length > 0) {
+      return matchingClassrooms.some((c) => checkIsTeacherRegistered(c.teacher));
+    }
+    return false;
+  }, [isManualSelection, selectedClassroom, matchingClassrooms]);
+
   // Debounced username check
   const [isCheckingUsername, setIsCheckingUsernameState] = useState(false);
 
@@ -359,12 +381,13 @@ const Register: React.FC = () => {
     formData.confirmPassword &&
     formData.password === formData.confirmPassword;
 
-  const hasValidClassroom = Boolean(
-    isManualSelection
-      ? selectedClassroomId && selectedClassroom?.teacher?.id
-      : (matchingClassrooms.length === 1 && matchingClassrooms[0]?.teacher?.id) ||
-        (matchingClassrooms.length > 1 && selectedClassroomId && selectedClassroom?.teacher?.id)
-  );
+  const hasValidClassroom =
+    Boolean(
+      isManualSelection
+        ? selectedClassroomId && selectedClassroom?.teacher?.id
+        : (matchingClassrooms.length === 1 && matchingClassrooms[0]?.teacher?.id) ||
+          (matchingClassrooms.length > 1 && selectedClassroomId && selectedClassroom?.teacher?.id)
+    ) && !isTeacherAlreadyRegistered;
 
   const isFormValid =
     formData.firstname.trim() !== "" &&
@@ -374,11 +397,20 @@ const Register: React.FC = () => {
     !usernameError &&
     formData.password.length >= 6 &&
     isPasswordMatching &&
-    hasValidClassroom;
+    hasValidClassroom &&
+    !isTeacherAlreadyRegistered;
 
   // Handle Submit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isTeacherAlreadyRegistered) {
+      showAlertError({
+        title: "ไม่สามารถลงทะเบียนได้",
+        text: "ครูท่านนี้มีบัญชีผู้ใช้งานในระบบแล้ว เพื่อป้องกันการสวมสิทธิ์จึงไม่สามารถลงทะเบียนซ้ำได้ หากลืมรหัสผ่านกรุณาติดต่อผู้ดูแลระบบ",
+      });
+      return;
+    }
 
     const fn = formData.firstname.trim();
     const ln = formData.lastname.trim();
@@ -675,122 +707,264 @@ const Register: React.FC = () => {
 
                     {/* State B: Single Classroom Match Found */}
                     {matchingClassrooms.length === 1 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="p-3.5 rounded-lg bg-emerald-50/90 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 space-y-2.5"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
-                            <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                            <span>ตรวจพบห้องเรียนที่คุณเป็นครูที่ปรึกษา</span>
-                          </div>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">
-                            เชื่อมต่อสำเร็จ
-                          </span>
-                        </div>
-
-                        <div className="p-3 rounded-md bg-white dark:bg-slate-900 border border-emerald-100 dark:border-emerald-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
-                          <div className="flex items-center gap-3">
-                            <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-bold shrink-0">
-                              <UserCheck className="w-4 h-4" />
+                      isTeacherAlreadyRegistered ? (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-3.5 rounded-lg bg-rose-50/90 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 space-y-2.5"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-rose-800 dark:text-rose-300">
+                              <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                              <span>ครูที่ปรึกษาท่านนี้มีบัญชีในระบบแล้ว</span>
                             </div>
-                            <div>
-                              <p className="text-[10px] uppercase font-semibold text-emerald-600 dark:text-emerald-400">
-                                ครูที่ปรึกษาในระบบ
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200">
+                              ลงทะเบียนแล้ว
+                            </span>
+                          </div>
+
+                          <div className="p-3 rounded-md bg-white dark:bg-slate-900 border border-rose-100 dark:border-rose-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-full bg-rose-100 dark:bg-rose-950 flex items-center justify-center text-rose-700 dark:text-rose-300 font-bold shrink-0">
+                                <ShieldAlert className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase font-semibold text-rose-600 dark:text-rose-400">
+                                  ครูที่ปรึกษาในระบบ
+                                </p>
+                                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                                  {matchingClassrooms[0].teacher?.name}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="text-left sm:text-right text-xs">
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                                ห้องเรียนที่เชื่อมต่อ
                               </p>
-                              <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                                {matchingClassrooms[0].teacher?.name}
+                              <p className="font-bold text-slate-700 dark:text-slate-300">
+                                {formatClassroomLabel(matchingClassrooms[0])}
                               </p>
                             </div>
                           </div>
 
-                          <div className="text-left sm:text-right text-xs">
-                            <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                              ห้องเรียนที่เชื่อมต่อ
+                          <div className="p-2.5 rounded-md bg-rose-100/60 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/40 text-xs text-rose-900 dark:text-rose-200 space-y-1">
+                            <p className="font-semibold flex items-center gap-1.5">
+                              <AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                              ตรวจพบว่าครูท่านนี้มีบัญชีผู้ใช้งานในระบบแล้ว
                             </p>
-                            <p className="font-bold text-emerald-700 dark:text-emerald-400">
-                              {formatClassroomLabel(matchingClassrooms[0])}
+                            <p className="text-[11.5px] leading-relaxed text-rose-800/90 dark:text-rose-300/90">
+                              เพื่อป้องกันการสวมสิทธิ์ ระบบไม่อนุญาตให้ลงทะเบียนซ้ำ หากท่านเป็นเจ้าของชื่อนี้กรุณาเข้าสู่ระบบ หรือติดต่อผู้ดูแลระบบหากลืมรหัสผ่าน
                             </p>
                           </div>
-                        </div>
 
-                        <div className="flex justify-end pt-1">
-                          <button
-                            type="button"
-                            onClick={() => setIsManualSelection(true)}
-                            className="text-[11px] text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 underline"
-                          >
-                            ไม่ใช่ห้องเรียนของคุณ? คลิกเลือกห้องเรียนด้วยตนเอง
-                          </button>
-                        </div>
-                      </motion.div>
+                          <div className="flex items-center justify-between pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setIsManualSelection(true)}
+                              className="text-[11px] text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 underline"
+                            >
+                              ไม่ใช่ชื่อของคุณ? คลิกเลือกห้องเรียนด้วยตนเอง
+                            </button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => navigate({ to: "/login" })}
+                              className="text-xs h-7.5 bg-rose-600 hover:bg-rose-700 text-white cursor-pointer"
+                            >
+                              เข้าสู่ระบบ
+                            </Button>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-3.5 rounded-lg bg-emerald-50/90 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/60 space-y-2.5"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800 dark:text-emerald-300">
+                              <CheckCircle className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                              <span>ตรวจพบห้องเรียนที่คุณเป็นครูที่ปรึกษา</span>
+                            </div>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-100 text-emerald-800 dark:bg-emerald-900/60 dark:text-emerald-200">
+                              เชื่อมต่อสำเร็จ
+                            </span>
+                          </div>
+
+                          <div className="p-3 rounded-md bg-white dark:bg-slate-900 border border-emerald-100 dark:border-emerald-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-bold shrink-0">
+                                <UserCheck className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase font-semibold text-emerald-600 dark:text-emerald-400">
+                                  ครูที่ปรึกษาในระบบ
+                                </p>
+                                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                                  {matchingClassrooms[0].teacher?.name}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="text-left sm:text-right text-xs">
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                                ห้องเรียนที่เชื่อมต่อ
+                              </p>
+                              <p className="font-bold text-emerald-700 dark:text-emerald-400">
+                                {formatClassroomLabel(matchingClassrooms[0])}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex justify-end pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setIsManualSelection(true)}
+                              className="text-[11px] text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 underline"
+                            >
+                              ไม่ใช่ห้องเรียนของคุณ? คลิกเลือกห้องเรียนด้วยตนเอง
+                            </button>
+                          </div>
+                        </motion.div>
+                      )
                     )}
 
                     {/* State C: Multiple Classrooms Match Found */}
                     {matchingClassrooms.length > 1 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="p-3.5 rounded-lg bg-blue-50/90 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 space-y-3"
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2 text-xs font-semibold text-blue-900 dark:text-blue-300">
-                            <School className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                            <span>ตรวจพบครูที่ปรึกษา: {matchingClassrooms[0].teacher?.name}</span>
+                      isTeacherAlreadyRegistered ? (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-3.5 rounded-lg bg-rose-50/90 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/60 space-y-2.5"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-rose-800 dark:text-rose-300">
+                              <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                              <span>ครูที่ปรึกษาท่านนี้มีบัญชีในระบบแล้ว</span>
+                            </div>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200">
+                              ลงทะเบียนแล้ว
+                            </span>
                           </div>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200">
-                            เป็นที่ปรึกษา {matchingClassrooms.length} ห้อง
-                          </span>
-                        </div>
 
-                        {/* Informative Hint for Multi-classroom Advisors */}
-                        <div className="flex items-start gap-2.5 p-3 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 shadow-2xs">
-                          <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-                          <div className="space-y-1.5 leading-relaxed">
-                            <p className="font-semibold text-amber-950 dark:text-amber-100">
-                              💡 สมัครเพียง 1 บัญชีเท่านั้น (ไม่ต้องสมัครใหม่แยกตามห้องเรียน)
+                          <div className="p-3 rounded-md bg-white dark:bg-slate-900 border border-rose-100 dark:border-rose-900/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+                            <div className="flex items-center gap-3">
+                              <div className="w-9 h-9 rounded-full bg-rose-100 dark:bg-rose-950 flex items-center justify-center text-rose-700 dark:text-rose-300 font-bold shrink-0">
+                                <ShieldAlert className="w-4 h-4" />
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase font-semibold text-rose-600 dark:text-rose-400">
+                                  ครูที่ปรึกษาในระบบ
+                                </p>
+                                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                                  {matchingClassrooms[0].teacher?.name}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="text-left sm:text-right text-xs">
+                              <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                                ห้องเรียนที่เป็นที่ปรึกษา
+                              </p>
+                              <p className="font-bold text-slate-700 dark:text-slate-300">
+                                ทั้งหมด {matchingClassrooms.length} ห้องเรียน
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="p-2.5 rounded-md bg-rose-100/60 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/40 text-xs text-rose-900 dark:text-rose-200 space-y-1">
+                            <p className="font-semibold flex items-center gap-1.5">
+                              <AlertCircle className="w-3.5 h-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+                              ตรวจพบว่าครูท่านนี้มีบัญชีผู้ใช้งานในระบบแล้ว
                             </p>
-                            <p className="text-[11.5px] text-amber-900/90 dark:text-amber-200/90">
-                              • <span className="font-semibold">ต้องเลือกห้องไหน?</span> ให้เลือกห้องเรียนใดห้องหนึ่งที่คุณเป็นครูที่ปรึกษาเพื่อใช้เป็นห้องเริ่มต้นสำหรับการลงทะเบียนได้เลย
-                            </p>
-                            <p className="text-[11.5px] text-amber-900/90 dark:text-amber-200/90">
-                              • <span className="font-semibold">ดูแลได้ครบทุกห้อง:</span> เมื่อเข้าสู่ระบบ บัญชีนี้จะเชื่อมกับชื่อครูของคุณโดยอัตโนมัติ ทำให้คุณสามารถจัดการยอดเค้กและเลือกรับสมุดจองของ<span className="font-semibold text-amber-950 dark:text-amber-100 underline decoration-amber-400">ครบทั้ง {matchingClassrooms.length} ห้องเรียน</span>ได้ในบัญชีเดียวทันที
+                            <p className="text-[11.5px] leading-relaxed text-rose-800/90 dark:text-rose-300/90">
+                              ครูที่ปรึกษาท่านนี้ได้ลงทะเบียนบัญชีไว้แล้วในระบบ เพื่อป้องกันการสวมสิทธิ์จึงไม่สามารถลงทะเบียนซ้ำได้ หากท่านเป็นเจ้าของชื่อนี้กรุณาเข้าสู่ระบบ หรือติดต่อผู้ดูแลระบบหากลืมรหัสผ่าน
                             </p>
                           </div>
-                        </div>
 
-                        <div className="space-y-1.5">
-                          <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 ml-0.5">
-                            เลือกห้องเรียนเริ่มต้นสำหรับการลงทะเบียน *
-                          </label>
-                          <Select
-                            value={selectedClassroomId}
-                            onValueChange={setSelectedClassroomId}
-                          >
-                            <SelectTrigger className="w-full h-11 sm:h-12 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-sm text-sm">
-                              <SelectValue placeholder="เลือกห้องเรียนเริ่มต้น" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {matchingClassrooms.map((c) => (
-                                <SelectItem key={c.id} value={c.id}>
-                                  {formatClassroomLabel(c)}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
+                          <div className="flex items-center justify-between pt-1">
+                            <button
+                              type="button"
+                              onClick={() => setIsManualSelection(true)}
+                              className="text-[11px] text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 underline"
+                            >
+                              ไม่ใช่ชื่อของคุณ? คลิกเลือกห้องเรียนด้วยตนเอง
+                            </button>
+                            <Button
+                              type="button"
+                              size="sm"
+                              onClick={() => navigate({ to: "/login" })}
+                              className="text-xs h-7.5 bg-rose-600 hover:bg-rose-700 text-white cursor-pointer"
+                            >
+                              เข้าสู่ระบบ
+                            </Button>
+                          </div>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="p-3.5 rounded-lg bg-blue-50/90 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 space-y-3"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-blue-900 dark:text-blue-300">
+                              <School className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                              <span>ตรวจพบครูที่ปรึกษา: {matchingClassrooms[0].teacher?.name}</span>
+                            </div>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200">
+                              เป็นที่ปรึกษา {matchingClassrooms.length} ห้อง
+                            </span>
+                          </div>
 
-                        <div className="flex justify-end pt-0.5">
-                          <button
-                            type="button"
-                            onClick={() => setIsManualSelection(true)}
-                            className="text-[11px] text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 underline"
-                          >
-                            ไม่ใช่ห้องเรียนของคุณ? คลิกเลือกห้องเรียนด้วยตนเอง
-                          </button>
-                        </div>
-                      </motion.div>
+                          {/* Informative Hint for Multi-classroom Advisors */}
+                          <div className="flex items-start gap-2.5 p-3 rounded-md bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/60 text-xs text-amber-900 dark:text-amber-200 shadow-2xs">
+                            <Info className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+                            <div className="space-y-1.5 leading-relaxed">
+                              <p className="font-semibold text-amber-950 dark:text-amber-100">
+                                💡 สมัครเพียง 1 บัญชีเท่านั้น (ไม่ต้องสมัครใหม่แยกตามห้องเรียน)
+                              </p>
+                              <p className="text-[11.5px] text-amber-900/90 dark:text-amber-200/90">
+                                • <span className="font-semibold">ต้องเลือกห้องไหน?</span> ให้เลือกห้องเรียนใดห้องหนึ่งที่คุณเป็นครูที่ปรึกษาเพื่อใช้เป็นห้องเริ่มต้นสำหรับการลงทะเบียนได้เลย
+                              </p>
+                              <p className="text-[11.5px] text-amber-900/90 dark:text-amber-200/90">
+                                • <span className="font-semibold">ดูแลได้ครบทุกห้อง:</span> เมื่อเข้าสู่ระบบ บัญชีนี้จะเชื่อมกับชื่อครูของคุณโดยอัตโนมัติ ทำให้คุณสามารถจัดการยอดเค้กและเลือกรับสมุดจองของ<span className="font-semibold text-amber-950 dark:text-amber-100 underline decoration-amber-400">ครบทั้ง {matchingClassrooms.length} ห้องเรียน</span>ได้ในบัญชีเดียวทันที
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="space-y-1.5">
+                            <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 ml-0.5">
+                              เลือกห้องเรียนเริ่มต้นสำหรับการลงทะเบียน *
+                            </label>
+                            <Select
+                              value={selectedClassroomId}
+                              onValueChange={setSelectedClassroomId}
+                            >
+                              <SelectTrigger className="w-full h-11 sm:h-12 bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-sm text-sm">
+                                <SelectValue placeholder="เลือกห้องเรียนเริ่มต้น" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {matchingClassrooms.map((c) => (
+                                  <SelectItem key={c.id} value={c.id}>
+                                    {formatClassroomLabel(c)}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          </div>
+
+                          <div className="flex justify-end pt-0.5">
+                            <button
+                              type="button"
+                              onClick={() => setIsManualSelection(true)}
+                              className="text-[11px] text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 underline"
+                            >
+                              ไม่ใช่ห้องเรียนของคุณ? คลิกเลือกห้องเรียนด้วยตนเอง
+                            </button>
+                          </div>
+                        </motion.div>
+                      )
                     )}
 
                     {/* State D: Name entered but no advisor matched */}
@@ -912,37 +1086,87 @@ const Register: React.FC = () => {
 
                     {/* Homeroom Teacher Preview Card */}
                     {selectedClassroom && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 5 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="mt-3 p-3.5 rounded-md bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
-                      >
-                        <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-bold shrink-0">
-                            <UserCheck className="w-5 h-5" />
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                                ครูประจำชั้น
-                              </span>
+                      checkIsTeacherRegistered(selectedClassroom.teacher) ? (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mt-3 p-3.5 rounded-md bg-rose-50/90 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-800/50 space-y-2.5 shadow-xs"
+                        >
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2 text-xs font-semibold text-rose-800 dark:text-rose-300">
+                              <ShieldAlert className="w-4 h-4 text-rose-600 dark:text-rose-400" />
+                              <span>ครูประจำชั้นท่านนี้มีบัญชีในระบบแล้ว</span>
                             </div>
-                            <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
-                              {selectedClassroom.teacher?.name || "ยังไม่มีข้อมูลครูประจำชั้น"}
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-rose-100 text-rose-800 dark:bg-rose-900/60 dark:text-rose-200">
+                              ลงทะเบียนแล้ว
+                            </span>
+                          </div>
+
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <div className="w-10 h-10 rounded-full bg-rose-100 dark:bg-rose-950 flex items-center justify-center text-rose-700 dark:text-rose-300 font-bold shrink-0">
+                                <ShieldAlert className="w-5 h-5" />
+                              </div>
+                              <div>
+                                <span className="text-[10px] uppercase font-semibold text-rose-600 dark:text-rose-400">
+                                  ครูประจำชั้น
+                                </span>
+                                <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                                  {selectedClassroom.teacher?.name || "ยังไม่มีข้อมูลครูประจำชั้น"}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="text-left sm:text-right text-xs text-slate-500 dark:text-slate-400">
+                              <p className="font-medium text-slate-700 dark:text-slate-300">
+                                {selectedClassroom.department?.name}
+                              </p>
+                              <p>
+                                {selectedClassroom.grade_level?.level === "VOCATIONAL" ? "ปวช." : "ปวส."}{" "}
+                                {selectedClassroom.grade_level?.year} ห้อง {selectedClassroom.name}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="p-2.5 rounded-md bg-rose-100/60 dark:bg-rose-950/50 border border-rose-200 dark:border-rose-900/40 text-xs text-rose-900 dark:text-rose-200 space-y-1">
+                            <p className="text-[11.5px] leading-relaxed">
+                              ห้องเรียนนี้มีครูประจำชั้นที่ลงทะเบียนในระบบแล้ว ไม่สามารถลงทะเบียนซ้ำได้ เพื่อป้องกันการสวมสิทธิ์ หากท่านเป็นเจ้าของชื่อนี้กรุณาเข้าสู่ระบบ หรือติดต่อผู้ดูแลระบบหากลืมรหัสผ่าน
                             </p>
                           </div>
-                        </div>
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          initial={{ opacity: 0, y: 5 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mt-3 p-3.5 rounded-md bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-800/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs"
+                        >
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-full bg-emerald-100 dark:bg-emerald-950 flex items-center justify-center text-emerald-700 dark:text-emerald-300 font-bold shrink-0">
+                              <UserCheck className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                                  ครูประจำชั้น
+                                </span>
+                              </div>
+                              <p className="text-sm font-bold text-slate-900 dark:text-slate-100">
+                                {selectedClassroom.teacher?.name || "ยังไม่มีข้อมูลครูประจำชั้น"}
+                              </p>
+                            </div>
+                          </div>
 
-                        <div className="text-left sm:text-right text-xs text-slate-500 dark:text-slate-400">
-                          <p className="font-medium text-slate-700 dark:text-slate-300">
-                            {selectedClassroom.department?.name}
-                          </p>
-                          <p>
-                            {selectedClassroom.grade_level?.level === "VOCATIONAL" ? "ปวช." : "ปวส."}{" "}
-                            {selectedClassroom.grade_level?.year} ห้อง {selectedClassroom.name}
-                          </p>
-                        </div>
-                      </motion.div>
+                          <div className="text-left sm:text-right text-xs text-slate-500 dark:text-slate-400">
+                            <p className="font-medium text-slate-700 dark:text-slate-300">
+                              {selectedClassroom.department?.name}
+                            </p>
+                            <p>
+                              {selectedClassroom.grade_level?.level === "VOCATIONAL" ? "ปวช." : "ปวส."}{" "}
+                              {selectedClassroom.grade_level?.year} ห้อง {selectedClassroom.name}
+                            </p>
+                          </div>
+                        </motion.div>
+                      )
                     )}
                   </motion.div>
                 )}
@@ -954,6 +1178,20 @@ const Register: React.FC = () => {
                   <UserPlus className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                   <span>2. ข้อมูลบัญชีผู้ใช้งานสำหรับเข้าสู่ระบบ</span>
                 </div>
+
+                {isTeacherAlreadyRegistered && (
+                  <div className="p-3.5 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900/50 text-xs text-rose-800 dark:text-rose-300 flex items-start gap-2.5">
+                    <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="font-semibold text-rose-900 dark:text-rose-200">
+                        ไม่อนุญาตให้สร้างบัญชีผู้ใช้ใหม่
+                      </p>
+                      <p className="text-[11.5px] text-rose-800/90 dark:text-rose-300/90 mt-0.5 leading-relaxed">
+                        ครูท่านนี้มีบัญชีผู้ใช้งานในระบบแล้ว เพื่อป้องกันการสวมสิทธิ์ กรุณาเข้าสู่ระบบด้วยบัญชีเดิม หรือติดต่อผู้ดูแลระบบหากต้องการรีเซ็ตรหัสผ่าน
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Username */}
                 <div className="space-y-1">
@@ -1064,26 +1302,37 @@ const Register: React.FC = () => {
 
               {/* Submit Button */}
               <div className="pt-2 space-y-4">
-                <button
-                  type="submit"
-                  disabled={!isFormValid || isSubmitting || isCheckingUsername}
-                  className="w-full bg-blue-600 text-white h-12 rounded-sm font-medium text-base
-                       hover:bg-blue-700 active:bg-blue-800 transition-all duration-200
-                       disabled:opacity-50 disabled:cursor-not-allowed
-                       flex items-center justify-center gap-2 shadow-md shadow-blue-600/10"
-                >
-                  {isSubmitting ? (
-                    <span className="flex items-center gap-2">
-                      <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
-                      กำลังลงทะเบียนและเชื่อมต่อข้อมูล...
-                    </span>
-                  ) : (
-                    <>
-                      <UserPlus className="w-5 h-5" />
-                      <span>ยืนยันการสมัครสมาชิก</span>
-                    </>
-                  )}
-                </button>
+                {isTeacherAlreadyRegistered ? (
+                  <button
+                    type="button"
+                    onClick={() => navigate({ to: "/login" })}
+                    className="w-full bg-rose-600 hover:bg-rose-700 text-white h-12 rounded-sm font-medium text-base transition-all duration-200 flex items-center justify-center gap-2 shadow-md shadow-rose-600/10 cursor-pointer"
+                  >
+                    <ArrowLeft className="w-5 h-5" />
+                    <span>ครูท่านนี้ลงทะเบียนแล้ว — ไปที่หน้าเข้าสู่ระบบ</span>
+                  </button>
+                ) : (
+                  <button
+                    type="submit"
+                    disabled={!isFormValid || isSubmitting || isCheckingUsername}
+                    className="w-full bg-blue-600 text-white h-12 rounded-sm font-medium text-base
+                         hover:bg-blue-700 active:bg-blue-800 transition-all duration-200
+                         disabled:opacity-50 disabled:cursor-not-allowed
+                         flex items-center justify-center gap-2 shadow-md shadow-blue-600/10"
+                  >
+                    {isSubmitting ? (
+                      <span className="flex items-center gap-2">
+                        <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin"></div>
+                        กำลังลงทะเบียนและเชื่อมต่อข้อมูล...
+                      </span>
+                    ) : (
+                      <>
+                        <UserPlus className="w-5 h-5" />
+                        <span>ยืนยันการสมัครสมาชิก</span>
+                      </>
+                    )}
+                  </button>
+                )}
 
                 {/* Link back to login */}
                 <div className="text-center text-sm text-slate-500 dark:text-slate-400 pt-1">
