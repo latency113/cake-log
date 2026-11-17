@@ -257,16 +257,19 @@ export const getSalesData = async (): Promise<DashboardSummary> => {
     // Import these dynamically to avoid circular dependencies if they also import from here
     const { getAllOrders } = await import("./orders");
     const { getProducts } = await import("./products");
+    const { getTeams } = await import("./teams");
 
     // Fetch all resources in parallel
-    const [allOrders, departmentsResponse, allClassrooms, allProducts] = await Promise.all([
+    const [allOrders, departmentsResponse, allClassrooms, allProducts, teamsResponse] = await Promise.all([
       getAllOrders(1, 5000),
       getDepartments(1, 9999),
       getClassrooms(1, 999),
       getProducts(),
+      getTeams(1, 9999).catch(() => ({ data: [] })),
     ]);
 
     const allDepartments = departmentsResponse.data;
+    const allTeams = teamsResponse?.data || [];
 
     const departmentMap = new Map(
       allDepartments.map((department) => [department.id, department.name])
@@ -279,12 +282,42 @@ export const getSalesData = async (): Promise<DashboardSummary> => {
     );
 
     let totalSalesAmount = 0;
+    let totalPoundsAll = 0;
     const rawDepartmentSales: { [key: string]: number } = {};
     const rawDepartmentCakeQuantities: { [key: string]: number } = {};
     const rawDepartmentPounds: { [key: string]: number } = {};
     const aggregatedSalesMap: { [key: string]: SalesRecord } = {};
     const dailySalesMap: { [date: string]: number } = {};
     const dailyPoundsMap: { [date: string]: number } = {};
+
+    // Track product metrics
+    const rawProductStats: {
+      [productId: string]: {
+        name: string;
+        quantity: number;
+        pounds: number;
+        price: number;
+      };
+    } = {};
+
+    allProducts.forEach((p) => {
+      rawProductStats[p.id] = {
+        name: p.name,
+        quantity: 0,
+        pounds: 0,
+        price: 0,
+      };
+    });
+
+    // Track fulfillment metrics
+    let completedOrders = 0;
+    let preparedOrders = 0;
+    let pendingOrders = 0;
+    let cancelledOrders = 0;
+    let pickedUpPounds = 0;
+
+    // Track team orders
+    const teamOrderSales: { [teamId: string]: { pounds: number; baht: number } } = {};
 
     // Initialize raw department metrics
     allDepartments.forEach((department) => {
@@ -295,15 +328,46 @@ export const getSalesData = async (): Promise<DashboardSummary> => {
 
     // Single-pass iteration through all orders
     allOrders.forEach((order) => {
+      const isCancelled = order.status === "cancelled";
+      const isCompleted = order.status === "complete" || Boolean(order.picked_up_at);
+      const isPrepared = Boolean(order.officer_prepare_id) && !isCompleted && !isCancelled;
+
+      if (isCancelled) {
+        cancelledOrders++;
+      } else if (isCompleted) {
+        completedOrders++;
+      } else if (isPrepared) {
+        preparedOrders++;
+      } else {
+        pendingOrders++;
+      }
+
       const pickupDate = new Date(order.pickup_date);
       const saleDate = pickupDate.toISOString().split("T")[0];
 
-      totalSalesAmount += order.totalPrice;
-      dailySalesMap[saleDate] = (dailySalesMap[saleDate] || 0) + order.totalPrice;
+      if (!isCancelled) {
+        totalSalesAmount += order.totalPrice;
+        dailySalesMap[saleDate] = (dailySalesMap[saleDate] || 0) + order.totalPrice;
+      }
 
       let orderTotalPounds = 0;
       order.order_items.forEach((item) => {
-        orderTotalPounds += item.pound * item.quantity;
+        const itemPounds = item.pound * item.quantity;
+        orderTotalPounds += itemPounds;
+
+        if (!isCancelled) {
+          if (!rawProductStats[item.product_id]) {
+            rawProductStats[item.product_id] = {
+              name: productMap.get(item.product_id) || "เค้ก",
+              quantity: 0,
+              pounds: 0,
+              price: 0,
+            };
+          }
+          rawProductStats[item.product_id].quantity += item.quantity;
+          rawProductStats[item.product_id].pounds += itemPounds;
+          rawProductStats[item.product_id].price += item.subtotal;
+        }
 
         const productName = productMap.get(item.product_id) || "Unknown Product";
         const key = `${productName}|${saleDate}`;
@@ -345,26 +409,40 @@ export const getSalesData = async (): Promise<DashboardSummary> => {
         record.totalPrice += item.subtotal;
       });
 
-      dailyPoundsMap[saleDate] = (dailyPoundsMap[saleDate] || 0) + orderTotalPounds;
+      if (!isCancelled) {
+        totalPoundsAll += orderTotalPounds;
+        dailyPoundsMap[saleDate] = (dailyPoundsMap[saleDate] || 0) + orderTotalPounds;
 
-      let effectiveDepartmentId = order.department_id;
-      if (!effectiveDepartmentId && order.classroom_id) {
-        effectiveDepartmentId = classroomToDepartmentMap.get(order.classroom_id as string) as string | undefined;
-      }
+        if (isCompleted) {
+          pickedUpPounds += orderTotalPounds;
+        }
 
+        if (order.team_id) {
+          if (!teamOrderSales[order.team_id]) {
+            teamOrderSales[order.team_id] = { pounds: 0, baht: 0 };
+          }
+          teamOrderSales[order.team_id].pounds += orderTotalPounds;
+          teamOrderSales[order.team_id].baht += order.totalPrice;
+        }
 
-      if (effectiveDepartmentId) {
-        const departmentName =
-          departmentMap.get(effectiveDepartmentId) ||
-          `Unknown Department (${effectiveDepartmentId})`;
-        rawDepartmentSales[departmentName] =
-          (rawDepartmentSales[departmentName] || 0) + order.totalPrice;
-        order.order_items.forEach((item) => {
-          rawDepartmentCakeQuantities[departmentName] =
-            (rawDepartmentCakeQuantities[departmentName] || 0) + item.quantity;
-        });
-        rawDepartmentPounds[departmentName] =
-          (rawDepartmentPounds[departmentName] || 0) + orderTotalPounds;
+        let effectiveDepartmentId = order.department_id;
+        if (!effectiveDepartmentId && order.classroom_id) {
+          effectiveDepartmentId = classroomToDepartmentMap.get(order.classroom_id as string) as string | undefined;
+        }
+
+        if (effectiveDepartmentId) {
+          const departmentName =
+            departmentMap.get(effectiveDepartmentId) ||
+            `Unknown Department (${effectiveDepartmentId})`;
+          rawDepartmentSales[departmentName] =
+            (rawDepartmentSales[departmentName] || 0) + order.totalPrice;
+          order.order_items.forEach((item) => {
+            rawDepartmentCakeQuantities[departmentName] =
+              (rawDepartmentCakeQuantities[departmentName] || 0) + item.quantity;
+          });
+          rawDepartmentPounds[departmentName] =
+            (rawDepartmentPounds[departmentName] || 0) + orderTotalPounds;
+        }
       }
     });
 
@@ -374,7 +452,57 @@ export const getSalesData = async (): Promise<DashboardSummary> => {
       .map(([name, totalPounds]) => ({ name, totalPounds }))
       .sort((a, b) => b.totalPounds - a.totalPounds);
 
-    const topDepartments = sortedDepartments.slice(0, 3);
+    const topDepartments = sortedDepartments.slice(0, 5);
+
+    // Build Top Teams
+    const topTeams = allTeams
+      .map((t) => {
+        const orderStats = teamOrderSales[t.id];
+        const pounds = Math.max(t.total_sales_pounds || 0, orderStats?.pounds || 0);
+        const baht = Math.max(t.total_sales_baht || 0, orderStats?.baht || 0);
+        const deptName = t.departments?.[0]?.name;
+
+        return {
+          id: t.id,
+          name: t.name,
+          team_type: t.team_type as "team" | "person",
+          total_sales_pounds: pounds,
+          total_sales_baht: baht,
+          student_member_name: t.student_member_name,
+          departmentName: deptName,
+        };
+      })
+      .sort((a, b) => b.total_sales_pounds - a.total_sales_pounds);
+
+    // Build Product Breakdown
+    const productBreakdown = Object.entries(rawProductStats)
+      .map(([id, stats]) => ({
+        id,
+        name: stats.name,
+        totalQuantity: stats.quantity,
+        totalPounds: stats.pounds,
+        totalPrice: stats.price,
+        percentage: totalPoundsAll > 0 ? Math.round((stats.pounds / totalPoundsAll) * 100) : 0,
+      }))
+      .sort((a, b) => b.totalPounds - a.totalPounds);
+
+    // Build Fulfillment Stats
+    const totalOrdersCount = allOrders.length;
+    const activeOrders = totalOrdersCount - cancelledOrders;
+    const fulfillmentRate =
+      activeOrders > 0 ? Math.round((completedOrders / activeOrders) * 100) : 0;
+
+    const fulfillmentStats = {
+      totalOrders: totalOrdersCount,
+      completedOrders,
+      preparedOrders,
+      pendingOrders,
+      cancelledOrders,
+      fulfillmentRate,
+      totalPounds: totalPoundsAll,
+      pickedUpPounds,
+      remainingPounds: Math.max(0, totalPoundsAll - pickedUpPounds),
+    };
 
     const dailySales = Object.entries(dailySalesMap)
       .map(([date, amount]) => ({ date, amount }))
@@ -383,8 +511,6 @@ export const getSalesData = async (): Promise<DashboardSummary> => {
     const dailyPounds = Object.entries(dailyPoundsMap)
       .map(([date, pounds]) => ({ date, pounds }))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-    const totalOrdersCount = allOrders.length;
 
     const departmentPounds = Object.entries(rawDepartmentPounds)
       .map(([name, totalPounds]) => ({
@@ -402,17 +528,19 @@ export const getSalesData = async (): Promise<DashboardSummary> => {
       }))
       .sort((a, b) => b.totalQuantity - a.totalQuantity);
 
-
     return {
       totalSalesAmount,
       totalOrdersCount,
       topDepartments,
+      topTeams,
+      productBreakdown,
+      fulfillmentStats,
       salesRecords,
       dailySales,
-      dailyPounds, // Added dailyPounds
-      departmentPounds, // Changed from departmentSales
+      dailyPounds,
+      departmentPounds,
       departmentCakeQuantities,
-      allProducts, // Added
+      allProducts,
     };
   } catch (error) {
     console.error("Error in getSalesData:", error);

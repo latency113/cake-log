@@ -42,6 +42,37 @@ export interface DailySalesRecord {
   totalPound5P: number;
 }
 
+export interface TopTeamItem {
+  id: string;
+  name: string;
+  team_type: "team" | "person";
+  total_sales_pounds: number;
+  total_sales_baht: number;
+  student_member_name?: string[];
+  departmentName?: string;
+}
+
+export interface ProductBreakdownItem {
+  id: string;
+  name: string;
+  totalQuantity: number;
+  totalPounds: number;
+  totalPrice: number;
+  percentage: number;
+}
+
+export interface FulfillmentStats {
+  totalOrders: number;
+  completedOrders: number;
+  preparedOrders: number;
+  pendingOrders: number;
+  cancelledOrders: number;
+  fulfillmentRate: number;
+  totalPounds: number;
+  pickedUpPounds: number;
+  remainingPounds: number;
+}
+
 export interface DashboardSummary {
   totalSalesAmount: number;
   totalOrdersCount: number;
@@ -49,9 +80,12 @@ export interface DashboardSummary {
     name: string;
     totalPounds: number;
   }[];
+  topTeams: TopTeamItem[];
+  productBreakdown: ProductBreakdownItem[];
+  fulfillmentStats: FulfillmentStats;
   salesRecords: SalesRecord[];
-  dailySales: { date: string; amount: number; }[];
-  dailyPounds: { date: string; pounds: number; }[];
+  dailySales: { date: string; amount: number }[];
+  dailyPounds: { date: string; pounds: number }[];
   departmentPounds: {
     id: string;
     name: string;
@@ -62,5 +96,5 @@ export interface DashboardSummary {
     name: string;
     totalQuantity: number;
   }[];
-  allProducts: Product[]; // Added for dynamic product handling
+  allProducts: Product[];
 }
