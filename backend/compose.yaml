@@ -1,5 +1,6 @@
 services:
   app:
+    image: decem122/backend-app:latest
     build:
       context: .
       dockerfile: Dockerfile

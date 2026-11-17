@@ -1,26 +1,27 @@
-FROM --platform=linux/amd64 oven/bun:1 AS builder
+# Stage 1: Builder
+FROM oven/bun:1 AS builder
 WORKDIR /app
-COPY ./package.json ./bun.lock ./
-COPY .env .env
-RUN bun i
+
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
+
 COPY . .
 RUN bun x prisma generate
 RUN bun run build
-# CMD [ "bun", "start" ]
 
-FROM --platform=linux/amd64 oven/bun:1 AS app
+# Stage 2: Production App
+FROM oven/bun:1 AS app
 WORKDIR /app
-COPY ./package.json ./bun.lock ./
-COPY .env .env
-RUN bun install
-RUN apt-get update && apt-get install -y ca-certificates gnupg2 curl lsb-release --no-install-recommends && \
-    install -m 0755 -d /etc/apt/keyrings && \
-    curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /etc/apt/keyrings/postgresql.asc && \
-    echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/postgresql.asc] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | tee /etc/apt/sources.list.d/pgdg.list >/dev/null && \
-    apt-get update && \
-    apt-get install -y postgresql-client-18
+
+# ติดตั้ง postgresql-client
+RUN apt-get update && apt-get install -y postgresql-client --no-install-recommends && rm -rf /var/lib/apt/lists/*
+
+COPY package.json bun.lock ./
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/src/providers/database/generated ./src/providers/database/generated
+
 EXPOSE 3001
-COPY --from=builder /app/dist /app/dist
-COPY --from=builder /app/prisma /app/prisma
-COPY --from=builder /app/src/providers/database/generated /app/src/providers/database/generated
+ENV PORT=3001
 CMD [ "bun", "start" ]

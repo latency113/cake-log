@@ -11,7 +11,7 @@
     "test:watch": "bun --watch test",
     "test:coverage": "bun test --coverage",
     "lint": "bun x --bun biome lint",
-    "prepare": "husky install",
+    "prepare": "husky install || true",
     "commit": "cz"
   },
   "dependencies": {
