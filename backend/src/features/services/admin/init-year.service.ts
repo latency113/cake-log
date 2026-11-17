@@ -1,6 +1,7 @@
 import { PrismaClient } from "../../../providers/database/generated/client"; // Import directly
 import { $ } from "bun";
 import { getAcademicYear } from "../../../providers/database/database.context";
+import { getClient } from "../../../providers/database/connection-manager";
 
 export namespace InitYearService {
   // Helper to get a raw client connected to the default DB
@@ -287,6 +288,40 @@ ${error.stderr?.toString() || "(empty)"}
       console.log(
         `[InitYearService] Database ${targetDbName} deleted successfully.`,
       );
+
+      // --- Cleanup: the year database is gone, so stop pointing at it ---
+
+      // 1. Evict the cached Prisma client for this year (it now points to a dropped DB)
+      const { removeClient } = await import(
+        "@/providers/database/connection-manager"
+      );
+      await removeClient(year);
+
+      // 2. If the deleted year was the active year, roll back to the fallback year
+      //    both in the in-memory cache and in the default DB's CakeSettings
+      //    (otherwise every request keeps resolving to the dropped database,
+      //    even after a server restart, because startup re-reads it from CakeSettings)
+      const { getActiveAcademicYear, setActiveAcademicYearCache } =
+        await import("@/shared/middleware/database-selector");
+
+      if (getActiveAcademicYear() === year) {
+        const fallbackYear = "2569";
+        setActiveAcademicYearCache(fallbackYear);
+
+        const defaultClient = getClient();
+        const settings = await defaultClient.cakeSettings.findFirst();
+        if (settings) {
+          await defaultClient.cakeSettings.update({
+            where: { id: settings.id },
+            data: { academicYear: fallbackYear, currentYear: fallbackYear },
+          });
+        }
+
+        console.log(
+          `[InitYearService] Active year ${year} was deleted. Reset active year to ${fallbackYear}.`,
+        );
+      }
+
       return { success: true, message: `Database for year ${year} deleted.` };
     } catch (error: any) {
       console.error(`[InitYearService] Failed to delete database:`, error);

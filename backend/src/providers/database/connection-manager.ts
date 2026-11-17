@@ -65,6 +65,26 @@ export const getClient = (requestedYear?: string): PrismaClient => {
   return client;
 };
 
+/**
+ * Evicts the cached client for a specific year (e.g. after its database was dropped).
+ */
+export const removeClient = async (year: string): Promise<void> => {
+  const key = sanitizeYear(year);
+  if (!key) return;
+
+  const client = clients.get(key);
+  if (!client) return;
+
+  // Delete first so concurrent getClient() calls don't reuse a dying client
+  clients.delete(key);
+
+  try {
+    await client.$disconnect();
+  } catch (e) {
+    console.error(`[ConnectionManager] Error disconnecting client ${key}`, e);
+  }
+};
+
 export const disconnectAllClients = async (): Promise<void> => {
   for (const [key, client] of clients.entries()) {
     try {

@@ -12,8 +12,24 @@ let cachedActiveYear: string = "2569";
       orderBy: { updatedAt: "desc" },
       select: { academicYear: true },
     });
-    if (settings?.academicYear) {
-      cachedActiveYear = settings.academicYear;
+    let year = settings?.academicYear;
+
+    // Guard: don't trust a year whose database no longer exists (e.g. it was deleted)
+    if (year && year !== "current" && process.env.DATABASE_URL) {
+      const dbName = new URL(process.env.DATABASE_URL).pathname.split("/")[1];
+      const exists = await client.$queryRawUnsafe<{ count: number }[]>(
+        `SELECT 1 as count FROM pg_database WHERE datname='${dbName}_${year}'`,
+      );
+      if (exists.length === 0) {
+        console.warn(
+          `[DatabaseSelector] Saved academicYear ${year} has no database, falling back to 2569`,
+        );
+        year = undefined;
+      }
+    }
+
+    if (year) {
+      cachedActiveYear = year;
     }
   } catch {
     // Fallback to "2569"
