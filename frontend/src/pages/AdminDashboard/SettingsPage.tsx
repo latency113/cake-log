@@ -109,7 +109,7 @@ const SettingsPage: React.FC = () => {
   const [backups, setBackups] = useState<string[]>([]);
   const [isLoadingBackups, setIsLoadingBackups] = useState(false);
   const [backupTag, setBackupTag] = useState("");
-  const [originalSecurityKey, setOriginalSecurityKey] = useState<string | null>(null);
+  const [hasSecurityKey, setHasSecurityKey] = useState(false);
 
   // Security Key change states
   const [currentKeyInput, setCurrentKeyInput] = useState("");
@@ -142,7 +142,7 @@ const SettingsPage: React.FC = () => {
       setConfirmKeyInput("");
       setKeyError("");
       if (settings) {
-        setOriginalSecurityKey(settings.securityKey || null);
+        setHasSecurityKey(Boolean(settings.hasSecurityKey || settings.securityKey));
         setCakeSettings({
         ...settings,
         academicYear: settings.academicYear || (new Date().getFullYear() + 543).toString(),
@@ -415,16 +415,8 @@ const SettingsPage: React.FC = () => {
     });
 
     if (result.isConfirmed) {
-      const securityKey = result.value;
-      
-      if (originalSecurityKey && securityKey !== originalSecurityKey) {
-        Swal.fire({
-          icon: 'error',
-          title: 'ข้อผิดพลาด',
-          text: 'Security Key ไม่ถูกต้อง'
-        });
-        return;
-      }
+      // Key verification happens server-side; a wrong key returns an error
+      // from the API which is surfaced below
 
       Swal.fire({
         title: "กำลังลบข้อมูล...",
@@ -543,14 +535,8 @@ const SettingsPage: React.FC = () => {
     if (result.isConfirmed) {
       const securityKey = result.value;
 
-      if (originalSecurityKey && securityKey !== originalSecurityKey) {
-        Swal.fire({
-          icon: 'error',
-          title: 'ข้อผิดพลาด',
-          text: 'Security Key ไม่ถูกต้อง'
-        });
-        return;
-      }
+      // Key verification happens server-side; a wrong key returns an error
+      // from the API which is surfaced below
 
       Swal.fire({
         title: "กำลังลบข้อมูล...",
@@ -792,7 +778,7 @@ const SettingsPage: React.FC = () => {
                         ใช้สำหรับยืนยันเมื่อทำการสำรองข้อมูล, กู้คืนข้อมูล หรือล้างข้อมูลในระบบ
                       </p>
                     </div>
-                    {originalSecurityKey && (
+                    {hasSecurityKey && (
                       <Badge
                         variant="outline"
                         className="w-fit bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 text-xs py-1 px-2.5"
@@ -804,7 +790,7 @@ const SettingsPage: React.FC = () => {
                   </div>
 
                   <div className="bg-muted/30 dark:bg-muted/15 p-5 rounded-xl border border-border space-y-4 max-w-2xl">
-                    {originalSecurityKey ? (
+                    {hasSecurityKey ? (
                       <>
                         <div className="space-y-2">
                           <Label htmlFor="currentSecurityKey" className="text-sm font-medium flex items-center gap-1.5">
@@ -1308,20 +1294,15 @@ const SettingsPage: React.FC = () => {
     }
 
     // Validate Security Key if changing
-    let keyToSave = originalSecurityKey;
+    // (the old key itself is verified server-side; the client only checks
+    // that it was provided and that new/confirm match)
+    let keyToSave: string | undefined = undefined;
 
     if (newKeyInput || currentKeyInput || confirmKeyInput) {
-      if (originalSecurityKey) {
-        if (!currentKeyInput) {
-          setKeyError("กรุณากรอกรหัสผ่านเดิมเพื่อยืนยันการเปลี่ยนรหัส");
-          showToastError({ title: "ข้อผิดพลาด", text: "กรุณากรอกรหัสผ่านเดิม" });
-          return;
-        }
-        if (currentKeyInput !== originalSecurityKey) {
-          setKeyError("รหัสผ่านเดิมไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง");
-          showToastError({ title: "ข้อผิดพลาด", text: "รหัสผ่านเดิมไม่ถูกต้อง" });
-          return;
-        }
+      if (hasSecurityKey && !currentKeyInput) {
+        setKeyError("กรุณากรอกรหัสผ่านเดิมเพื่อยืนยันการเปลี่ยนรหัส");
+        showToastError({ title: "ข้อผิดพลาด", text: "กรุณากรอกรหัสผ่านเดิม" });
+        return;
       }
 
       if (!newKeyInput) {
@@ -1352,7 +1333,9 @@ const SettingsPage: React.FC = () => {
 
     const settingsData: Partial<ICakeSettings> = {
       ...cakeSettings,
-      securityKey: keyToSave || undefined,
+      securityKey: keyToSave,
+      // Only sent when changing the key; verified against the stored key
+      currentSecurityKey: keyToSave ? currentKeyInput : undefined,
       isMaintenanceMode: Boolean(cakeSettings.isMaintenanceMode),
       maintenanceMessage: cakeSettings.maintenanceMessage || "",
       // Ensure dates are sent in ISO format if they are provided
@@ -1383,7 +1366,7 @@ const SettingsPage: React.FC = () => {
       });
 
       // Directly update the local state with the returned settings for immediate UI reflection
-      setOriginalSecurityKey(savedSettings.data.securityKey || keyToSave || null);
+      setHasSecurityKey(Boolean(savedSettings.data.hasSecurityKey ?? keyToSave));
       setCurrentKeyInput("");
       setNewKeyInput("");
       setConfirmKeyInput("");
@@ -1402,17 +1385,24 @@ const SettingsPage: React.FC = () => {
     fetchBackups();
     } catch (err: any) {
       console.error("Error saving cake settings:", err);
+      const isKeyMismatch = err.response?.data?.error === "SECURITY_KEY_MISMATCH";
       Swal.fire({
         icon: "error",
         title: "ข้อผิดพลาด!",
-        text:
-          err.response?.data?.error ||
-          "เกิดข้อผิดพลาดในการบันทึกการตั้งค่าเค้ก",
+        text: isKeyMismatch
+          ? "รหัสผ่านเดิม (Security Key) ไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง"
+          : err.response?.data?.message ||
+            "เกิดข้อผิดพลาดในการบันทึกการตั้งค่าเค้ก",
       });
-      showToastError({
-        title: "Error",
-        text: "เกิดข้อผิดพลาดในการบันทึกการตั้งค่าเค้ก",
-      });
+      if (isKeyMismatch) {
+        setKeyError("รหัสผ่านเดิมไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง");
+        showToastError({ title: "ข้อผิดพลาด", text: "รหัสผ่านเดิมไม่ถูกต้อง" });
+      } else {
+        showToastError({
+          title: "Error",
+          text: "เกิดข้อผิดพลาดในการบันทึกการตั้งค่าเค้ก",
+        });
+      }
     }
   }
 };

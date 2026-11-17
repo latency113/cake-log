@@ -239,8 +239,17 @@ export const adminController = new Elysia()
       try {
         const updatedSettings = await CakeSettingsService.createSettings(body);
         set.status = 200;
-        return { message: "Cake settings updated successfully", data: updatedSettings };
+        // Never echo the security key value back
+        const { securityKey, ...safeSettings } = (updatedSettings ?? {}) as any;
+        return {
+          message: "Cake settings updated successfully",
+          data: { ...safeSettings, hasSecurityKey: Boolean(securityKey) },
+        };
       } catch (error: any) {
+        if (error?.message === "SECURITY_KEY_MISMATCH") {
+          set.status = 400;
+          return { message: "รหัสผ่านเดิม (Security Key) ไม่ถูกต้อง", error: "SECURITY_KEY_MISMATCH" };
+        }
         console.error("Failed to update cake settings:", error);
         set.status = 500;
         return { message: "Failed to update cake settings", error: error.message };
@@ -256,6 +265,10 @@ export const adminController = new Elysia()
         pickupEndTime: t.Optional(t.String()),
         reporterName: t.Optional(t.String()),
         securityKey: t.Optional(t.String()),
+        // Required server-side verification of the old key when changing it
+        currentSecurityKey: t.Optional(t.String()),
+        // Echoed back by GET /cake-settings, never stored
+        hasSecurityKey: t.Optional(t.Boolean()),
         isMaintenanceMode: t.Optional(t.Boolean()),
         maintenanceMessage: t.Optional(t.String()),
       }),

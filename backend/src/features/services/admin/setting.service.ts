@@ -13,6 +13,22 @@ export namespace CakeSettingsService {
     console.log("CakeSettingsService.createSettings: Data received:", data);
     const formattedData: any = { ...data };
 
+    // Fields that must never reach the DB schema
+    const currentSecurityKey = formattedData.currentSecurityKey;
+    delete formattedData.currentSecurityKey;
+    delete formattedData.hasSecurityKey;
+
+    // When setting/changing the security key, require the current key first
+    // (verified server-side — the plaintext key is never sent to the client)
+    if (formattedData.securityKey !== undefined) {
+      const { isKeyValid } = await import("./restore.service");
+      const existing = await CakeSettingsRepository.getCakeSettings();
+      const keyConfigured = Boolean(existing?.securityKey || process.env.RESTORE_KEY);
+      if (keyConfigured && !(await isKeyValid(currentSecurityKey))) {
+        throw new Error("SECURITY_KEY_MISMATCH");
+      }
+    }
+
     if (formattedData.pickupStartDate) {
       formattedData.pickupStartDate = new Date(formattedData.pickupStartDate);
     } else if (formattedData.pickupStartDate === "") {

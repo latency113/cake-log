@@ -25,6 +25,10 @@ export interface ICakeSettings {
   pickupEndTime?: string;
   reporterName?: string;
   securityKey?: string;
+  // Returned by GET/POST /admin/cake-settings instead of the key value itself
+  hasSecurityKey?: boolean;
+  // Sent when changing the security key (verified server-side)
+  currentSecurityKey?: string;
   isMaintenanceMode?: boolean;
   maintenanceMessage?: string | null;
   createdAt: string;
