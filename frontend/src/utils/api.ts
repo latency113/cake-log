@@ -37,8 +37,12 @@ api.interceptors.request.use((config) => {
   const year = (isAdmin && storedYear) ? storedYear : (storedYear || "2569");
   config.headers["x-academic-year"] = year;
 
+  // Send the refresh token only where the backend consumes it:
+  // /auth/me (token refresh) and /auth/logout (revocation).
+  // Sending it on every request multiplies leak surface (logs, proxies).
   const refreshToken = localStorage.getItem("refresh_token");
-  if (refreshToken) {
+  const requestUrl = typeof config.url === "string" ? config.url : "";
+  if (refreshToken && (requestUrl.includes("/auth/me") || requestUrl.includes("/auth/logout"))) {
     config.headers["x-refresh-token"] = refreshToken;
   }
 
