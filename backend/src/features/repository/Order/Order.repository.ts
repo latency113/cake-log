@@ -52,23 +52,28 @@ export namespace OrderRepository {
     skip: number;
     take: number;
     search?: string;
+    classroom_id?: string;
   }) {
-    const where = options.search
-      ? {
-          OR: [
-            {
-              customerName: {
-                contains: options.search,
-              },
-            },
-            {
-              advisor: {
-                contains: options.search,
-              },
-            },
-          ],
-        }
-      : {};
+    const where: any = {};
+
+    if (options.search) {
+      where.OR = [
+        {
+          customerName: {
+            contains: options.search,
+          },
+        },
+        {
+          advisor: {
+            contains: options.search,
+          },
+        },
+      ];
+    }
+
+    if (options.classroom_id) {
+      where.classroom_id = options.classroom_id;
+    }
 
     return prisma.order.findMany({
       where,
@@ -216,23 +221,27 @@ export namespace OrderRepository {
     });
   }
 
-  export async function countAll(search?: string) {
-    const where = search
-      ? {
-          OR: [
-            {
-              customerName: {
-                contains: search,
-              },
-            },
-            {
-              advisor: {
-                contains: search,
-              },
-            },
-          ],
-        }
-      : {};
+  export async function countAll(search?: string, classroom_id?: string) {
+    const where: any = {};
+
+    if (search) {
+      where.OR = [
+        {
+          customerName: {
+            contains: search,
+          },
+        },
+        {
+          advisor: {
+            contains: search,
+          },
+        },
+      ];
+    }
+
+    if (classroom_id) {
+      where.classroom_id = classroom_id;
+    }
 
     return prisma.order.count({
       where,

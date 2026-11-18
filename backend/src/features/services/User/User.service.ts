@@ -392,10 +392,10 @@ export namespace UserService {
       sub: user.id, // ใส่ user id เข้าไปใน token payload
     };
 
-    // สร้าง JWT token (short-lived; frontend refreshes via /auth/me + refresh token)
+    // สร้าง JWT token (valid for 1 hour; frontend refreshes via /auth/me + refresh token)
     const jwtToken = await jwt.sign({
       ...payload,
-      exp: "15m",
+      exp: "1h",
     });
 
     // สร้าง token ในฐานข้อมูล

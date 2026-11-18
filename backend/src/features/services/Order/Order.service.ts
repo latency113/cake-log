@@ -84,16 +84,22 @@ export namespace OrderService {
   }
 
   export async function findAll(
-    options: { page?: number; itemsPerPage?: number; search?: string } = {}
+    options: {
+      page?: number;
+      itemsPerPage?: number;
+      search?: string;
+      classroom_id?: string;
+    } = {}
   ) {
     const page = options.page ?? 1;
     const itemsPerPage = options.itemsPerPage ?? 10;
     const search = options.search;
+    const classroom_id = options.classroom_id;
 
     const { skip, take } = getPaginationParams(page, itemsPerPage);
     const [orders, total] = await Promise.all([
-      OrderRepository.findAll({ skip, take, search }),
-      OrderRepository.countAll(search),
+      OrderRepository.findAll({ skip, take, search, classroom_id }),
+      OrderRepository.countAll(search, classroom_id),
     ]);
 
     return buildPaginatedResponse(orders, total, page, itemsPerPage);

@@ -58,14 +58,16 @@ export namespace OrderController {
           ? Number(query.itemsPerPage)
           : 10;
         const search = query.search;
+        const classroom_id = query.classroom_id;
 
         const result = await OrderService.findAll({
           page,
           itemsPerPage,
           search,
+          classroom_id,
         });
 
-        if (result.data.length === 0 && search !== undefined) {
+        if (result.data.length === 0 && search !== undefined && classroom_id === undefined) {
           set.status = "Not Found";
           return {
             message: "No order found matching your search query.",
@@ -79,6 +81,7 @@ export namespace OrderController {
           page: t.Optional(t.Numeric()),
           itemsPerPage: t.Optional(t.Numeric()),
           search: t.Optional(t.String()),
+          classroom_id: t.Optional(t.String()),
         }),
         response: {
           200: t.Object({
