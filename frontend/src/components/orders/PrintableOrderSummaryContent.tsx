@@ -9,6 +9,7 @@ import type {
 import { calculateCakeItemTotals } from "../../utils/calculations";
 import { getCakeSettings } from "../../utils/api/settings";
 import type { ICakeSettings } from "../../types/cake";
+import AutoShrinkText from "../common/AutoShrinkText";
 
 const getDisplayName = (id: string, data: { id: string; name: string }[]) => {
   const item = data.find((d) => d.id === id);
@@ -187,31 +188,39 @@ const PrintableOrderSummaryContent: React.FC<PrintableContentProps> = ({
 
       {/* 2. ส่วนข้อมูลผู้สั่งและห้องเรียน (แถวที่ 1) */}
       <div className="flex items-center gap-3 mb-3 text-sm">
-        <div className="flex items-center flex-[4] min-w-0">
+        <div className="flex items-center flex-[1.3] min-w-0">
           <span className="font-bold shrink-0 whitespace-nowrap">ชื่อ-สกุล:</span>
-          <span className={`${underlineBorderClass} flex-1 ml-1.5 px-2 truncate font-medium`}>
-            {formData.customerName || "-"}
+          <span className={`${underlineBorderClass} flex-1 min-w-0 ml-1.5 px-2 font-medium`}>
+            <AutoShrinkText
+              text={formData.customerName || "-"}
+              maxFontSize={14}
+              minFontSize={9}
+            />
           </span>
         </div>
 
-        <div className="flex items-center flex-[2] min-w-0">
+        <div className="flex items-center shrink-0">
           <span className="font-bold shrink-0 whitespace-nowrap">ระดับชั้น:</span>
-          <span className={`${underlineBorderClass} flex-1 ml-1.5 px-1 text-center font-medium truncate`}>
+          <span className={`${underlineBorderClass} ml-1.5 px-2 text-center font-medium whitespace-nowrap min-w-[44px]`}>
             {gradeLevelText}
           </span>
         </div>
 
-        <div className="flex items-center flex-[2] min-w-0">
+        <div className="flex items-center shrink-0">
           <span className="font-bold shrink-0 whitespace-nowrap">ห้อง:</span>
-          <span className={`${underlineBorderClass} flex-1 ml-1.5 px-1 text-center font-medium truncate`}>
+          <span className={`${underlineBorderClass} ml-1.5 px-2 text-center font-medium whitespace-nowrap min-w-[32px]`}>
             {roomText}
           </span>
         </div>
 
-        <div className="flex items-center flex-[4] min-w-0">
+        <div className="flex items-center flex-1 min-w-0">
           <span className="font-bold shrink-0 whitespace-nowrap">แผนก:</span>
-          <span className={`${underlineBorderClass} flex-1 ml-1.5 px-2 truncate font-medium`}>
-            {departmentText}
+          <span className={`${underlineBorderClass} flex-1 min-w-0 ml-1.5 px-2 font-medium`}>
+            <AutoShrinkText
+              text={departmentText}
+              maxFontSize={14}
+              minFontSize={9}
+            />
           </span>
         </div>
       </div>
@@ -220,15 +229,19 @@ const PrintableOrderSummaryContent: React.FC<PrintableContentProps> = ({
       <div className="flex items-center gap-6 mb-3 text-sm">
         <div className="flex items-center flex-1 min-w-0">
           <span className="font-bold shrink-0 whitespace-nowrap">เบอร์โทร:</span>
-          <span className={`${underlineBorderClass} flex-1 ml-1.5 px-2 font-medium truncate`}>
+          <span className={`${underlineBorderClass} flex-1 ml-1.5 px-2 font-medium whitespace-nowrap`}>
             {formData.phone || "-"}
           </span>
         </div>
 
         <div className="flex items-center flex-1 min-w-0">
           <span className="font-bold shrink-0 whitespace-nowrap">ครูที่ปรึกษา:</span>
-          <span className={`${underlineBorderClass} flex-1 ml-1.5 px-2 font-medium truncate`}>
-            {formData.advisor || "-"}
+          <span className={`${underlineBorderClass} flex-1 min-w-0 ml-1.5 px-2 font-medium`}>
+            <AutoShrinkText
+              text={formData.advisor || "-"}
+              maxFontSize={14}
+              minFontSize={9}
+            />
           </span>
         </div>
       </div>

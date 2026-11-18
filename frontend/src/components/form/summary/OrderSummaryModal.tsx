@@ -10,6 +10,7 @@ import type {
 import { calculateCakeItemTotals } from "../../../utils/calculations";
 import { getCakeSettings } from "../../../utils/api/settings"; // Import getCakeSettings
 import type { ICakeSettings } from "../../../types/cake"; // Import ICakeSettings
+import AutoShrinkText from "../../common/AutoShrinkText";
 
 interface OrderSummaryModalProps {
   isOpen: boolean;
@@ -121,10 +122,14 @@ const OrderSummaryModal: React.FC<OrderSummaryModalProps> = ({
               </div>
             </div>
             <div className="grid grid-cols-3 gap-4 mb-6 text-sm">
-              <div className="flex">
-                <span className="font-semibold ">ชื่อ-สกุล:</span>
-                <span className="border-b border-gray-400 flex-1 px-2">
-                  {formData.customerName || ""}
+              <div className="flex items-center min-w-0">
+                <span className="font-semibold shrink-0 whitespace-nowrap">ชื่อ-สกุล:</span>
+                <span className="border-b border-gray-400 flex-1 min-w-0 px-2">
+                  <AutoShrinkText
+                    text={formData.customerName || ""}
+                    maxFontSize={14}
+                    minFontSize={9}
+                  />
                 </span>
               </div>
               {/* ระดับชั้น ห้อง */}
@@ -152,12 +157,18 @@ const OrderSummaryModal: React.FC<OrderSummaryModalProps> = ({
                   </span>
                 </div>
               </div>
-              <div className="flex">
-                <span className="font-semibold">แผนก:</span>
-                <span className="border-b border-gray-400 flex-1 px-2 truncate">
-                  {formData.department_id
-                    ? getDisplayName(formData.department_id, departmentsData)
-                    : ""}
+              <div className="flex items-center min-w-0">
+                <span className="font-semibold shrink-0 whitespace-nowrap">แผนก:</span>
+                <span className="border-b border-gray-400 flex-1 min-w-0 px-2">
+                  <AutoShrinkText
+                    text={
+                      formData.department_id
+                        ? getDisplayName(formData.department_id, departmentsData)
+                        : ""
+                    }
+                    maxFontSize={14}
+                    minFontSize={9}
+                  />
                 </span>
               </div>
             </div>
