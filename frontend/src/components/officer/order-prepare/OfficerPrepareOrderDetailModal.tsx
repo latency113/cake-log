@@ -173,6 +173,8 @@ const OfficerPrepareOrderDetailModal: React.FC<OfficerPrepareOrderDetailModalPro
         <title>ใบสั่งซื้อเค้ก</title>
         <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
         <style>
+          @import url('https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
           @page {
             size: A4 portrait;
             margin: 0;
@@ -182,9 +184,10 @@ const OfficerPrepareOrderDetailModal: React.FC<OfficerPrepareOrderDetailModalPro
             print-color-adjust: exact !important;
             color-adjust: exact !important;
             box-sizing: border-box;
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
           }
           body {
-            font-family: 'Noto Sans Thai', 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
             margin: 0;
             padding: 8mm 12mm;
             background-color: #ffffff !important;

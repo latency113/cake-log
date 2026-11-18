@@ -28,7 +28,7 @@ const TeamLeaderboard: React.FC<TeamLeaderboardProps> = ({ teams }) => {
 
   const renderTable = (teamList: TeamWithRelations[], title: string) => {
     return (
-      <div className="mb-8">
+      <div className="mb-8 team-leaderboard-section">
         <h3 className="text-xl font-semibold mb-4">{title}</h3>
         <div className="rounded-md border overflow-x-auto">
           <Table>
@@ -62,7 +62,7 @@ const TeamLeaderboard: React.FC<TeamLeaderboardProps> = ({ teams }) => {
                     <span>ที่ {index + 1}</span>
                   </TableCell>
                   <TableCell>{team.name}</TableCell>
-                  <TableCell>
+                  <TableCell className="student-member-cell">
                     {(team.student_member_name ?? []).length > 0
                       ? (team.student_member_name ?? []).map((name, index) => (
                           <React.Fragment key={index}>

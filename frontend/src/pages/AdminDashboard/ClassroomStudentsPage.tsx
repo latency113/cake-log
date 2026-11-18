@@ -7,6 +7,7 @@ import {
 import type { Classroom } from "../../types/classroom";
 import type { Order } from "../../types/order";
 import { getOrdersByClassroom } from "../../utils/api/orders";
+import { api } from "@/utils/api";
 import OrderDetailModal from "@/components/orders/OrderDetailModal";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -124,7 +125,7 @@ const ClassroomStudentsPage: React.FC = () => {
     }
   };
 
-  const handleStudentClick = (studentName: string) => {
+  const handleStudentClick = async (studentName: string) => {
     const normalize = (str: string) => (str || '').replace(/\s+/g, '').trim();
 
     const targetName = studentName.trim();
@@ -146,6 +147,26 @@ const ClassroomStudentsPage: React.FC = () => {
         const normalizedOrder = normalize(order.customerName);
         return nameParts.some(part => normalizedOrder.includes(normalize(part)));
       });
+    }
+
+    // 3. Fallback: ถ้ายังไม่เจอใน classroomOrders ให้ลองค้นหาผ่าน API โดยตรง
+    if (studentOrders.length === 0) {
+      try {
+        const cleanName = targetName.replace(/^(นาย|นางสาว|นาง|ด\.ช\.|ด\.ญ\.)\s*/, "").trim();
+        const searchRes = await api.get("/orders", {
+          params: { search: cleanName || targetName, itemsPerPage: 10 },
+        });
+        const resData = searchRes.data?.data || searchRes.data || [];
+        const matched = (Array.isArray(resData) ? resData : []).filter((order: any) => {
+          if (!order.customerName) return false;
+          return normalize(order.customerName).includes(normalize(cleanName || targetName));
+        });
+        if (matched.length > 0) {
+          studentOrders = matched;
+        }
+      } catch (err) {
+        console.error("Fallback order search error:", err);
+      }
     }
 
     if (studentOrders.length > 0) {
@@ -278,10 +299,6 @@ const ClassroomStudentsPage: React.FC = () => {
     }
   };
 
-  const academicYear =
-    localStorage.getItem("academicYear") ||
-    (new Date().getFullYear() + 543).toString();
-
   const advisorName =
     classroom?.teacher
       ? classroom.teacher.name
@@ -292,13 +309,23 @@ const ClassroomStudentsPage: React.FC = () => {
   );
 
   const isDashboard = typeof window !== "undefined" && window.location.pathname.startsWith("/dashboard");
-  const canPrint = isFinalized || isDashboard;
+  const hasStudents = Boolean(studentsCakeData && studentsCakeData.students.length > 0);
+  const canPrintStudents = hasStudents && (isFinalized || isDashboard);
+  const canPrintCakeSummary = isFinalized || isDashboard;
 
   const handlePrintStudents = () => {
-    if (!canPrint) {
+    if (!isFinalized && !isDashboard) {
       showAlertInfo({
         title: "ยังไม่ได้สรุปยอดเค้ก",
-        text: "กรุณากด 'สรุปยอดเค้ก' เพื่อยืนยันและสรุปยอดข้อมูลของห้องเรียนนี้ก่อนพิมพ์รายงาน",
+        text: "กรุณากด 'สรุปยอดเค้ก' เพื่อยืนยันและสรุปยอดข้อมูลของห้องเรียนนี้ก่อนพิมพ์รายชื่อ",
+      });
+      return;
+    }
+
+    if (!hasStudents) {
+      showAlertInfo({
+        title: "ไม่มีรายชื่อนักเรียน",
+        text: "ไม่พบรายชื่อนักเรียนในห้องเรียนนี้",
       });
       return;
     }
@@ -320,11 +347,11 @@ const ClassroomStudentsPage: React.FC = () => {
         orientation: "portrait",
         paperSize: "A4",
         scale: 0.96,
-        margin: "6mm 10mm 6mm 10mm",
+        margin: "8mm 10mm 8mm 10mm",
         customStyles: `
           @page {
             size: A4 portrait !important;
-            margin: 6mm 10mm 6mm 10mm !important;
+            margin: 8mm 10mm 8mm 10mm !important;
           }
           body {
             font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
@@ -336,6 +363,7 @@ const ClassroomStudentsPage: React.FC = () => {
           #printable-classroom-students-section {
             display: block !important;
             width: 100% !important;
+            box-sizing: border-box !important;
             margin: 0 !important;
             padding: 0 !important;
           }
@@ -343,6 +371,8 @@ const ClassroomStudentsPage: React.FC = () => {
             display: block !important;
           }
           .classroom-student-print-page {
+            width: 100% !important;
+            box-sizing: border-box !important;
             page-break-after: always !important;
             break-after: page !important;
           }
@@ -353,6 +383,8 @@ const ClassroomStudentsPage: React.FC = () => {
           table {
             width: 100% !important;
             border-collapse: collapse !important;
+            table-layout: fixed !important;
+            box-sizing: border-box !important;
             page-break-inside: auto !important;
           }
           thead {
@@ -364,14 +396,13 @@ const ClassroomStudentsPage: React.FC = () => {
           }
           th, td {
             border: 1px solid #000 !important;
+            box-sizing: border-box !important;
+          }
+          th:last-child, td:last-child {
+            border-right: 1px solid #000 !important;
           }
           th {
-            background-color: #f1f5f9 !important;
-            -webkit-print-color-adjust: exact !important;
-            print-color-adjust: exact !important;
-          }
-          tfoot tr {
-            background-color: #f8fafc !important;
+            background-color: #fff !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
@@ -381,7 +412,7 @@ const ClassroomStudentsPage: React.FC = () => {
   };
 
   const handlePrintCakeSummary = () => {
-    if (!canPrint) {
+    if (!canPrintCakeSummary) {
       showAlertInfo({
         title: "ยังไม่ได้สรุปยอดเค้ก",
         text: "กรุณากด 'สรุปยอดเค้ก' เพื่อยืนยันและสรุปยอดข้อมูลของห้องเรียนนี้ก่อนพิมพ์รายงาน",
@@ -526,14 +557,16 @@ const ClassroomStudentsPage: React.FC = () => {
                 onClick={handlePrintStudents}
                 variant="outline"
                 size="sm"
-                disabled={!canPrint}
+                disabled={!canPrintStudents}
                 className={`gap-1.5 border-slate-200 dark:border-slate-800 text-xs sm:text-sm flex-1 sm:flex-none justify-center ${
-                  !canPrint ? "opacity-40 cursor-not-allowed" : ""
+                  !canPrintStudents ? "opacity-40 cursor-not-allowed" : ""
                 }`}
                 title={
-                  canPrint
-                    ? "พิมพ์รายชื่อนักเรียน (แนวตั้ง A4)"
-                    : "กรุณากดสรุปยอดเค้กก่อนพิมพ์รายงาน"
+                  !hasStudents
+                    ? "ไม่มีรายชื่อนักเรียนในห้องเรียนนี้"
+                    : !canPrintStudents
+                    ? "กรุณากดสรุปยอดเค้กก่อนพิมพ์รายชื่อ"
+                    : "พิมพ์รายชื่อนักเรียน (แนวตั้ง A4)"
                 }
               >
                 <Printer className="h-3.5 w-3.5" />
@@ -543,14 +576,14 @@ const ClassroomStudentsPage: React.FC = () => {
                 onClick={handlePrintCakeSummary}
                 variant="outline"
                 size="sm"
-                disabled={!canPrint}
+                disabled={!canPrintCakeSummary}
                 className={`gap-1.5 border-slate-200 dark:border-slate-800 text-xs sm:text-sm flex-1 sm:flex-none justify-center ${
-                  !canPrint ? "opacity-40 cursor-not-allowed" : ""
+                  !canPrintCakeSummary ? "opacity-40 cursor-not-allowed" : ""
                 }`}
                 title={
-                  canPrint
+                  canPrintCakeSummary
                     ? "พิมพ์สรุปยอดเค้กของห้องเรียน (A4 แนวตั้ง)"
-                    : "กรุณากดสรุปยอดเค้กก่อนพิมพ์รายงาน"
+                    : "กรุณากดสรุปยอดเค้กก่อนพิมพ์รายงานสรุปยอด"
                 }
               >
                 <Printer className="h-3.5 w-3.5" />
@@ -559,10 +592,10 @@ const ClassroomStudentsPage: React.FC = () => {
             </div>
           </div>
 
-          {!canPrint && (
+          {!isFinalized && !isDashboard && (
             <div className="text-xs text-amber-700 dark:text-amber-400 flex items-center gap-1.5 font-medium bg-amber-50 dark:bg-amber-950/40 px-3 py-2 rounded-lg border border-amber-200 dark:border-amber-800/60">
               <AlertCircle className="w-4 h-4 shrink-0 text-amber-500" />
-              <span>ต้องสรุปยอดเค้กก่อนจึงจะพิมพ์รายงานได้</span>
+              <span>ต้องสรุปยอดเค้กก่อนจึงจะพิมพ์รายชื่อและรายงานสรุปยอดได้</span>
             </div>
           )}
         </div>
@@ -776,8 +809,8 @@ const ClassroomStudentsPage: React.FC = () => {
         <ClassroomStudentPrintReport
           classroom={classroom}
           studentsCakeData={studentsCakeData}
+          classroomOrders={classroomOrders}
           printId="printable-classroom-students-section"
-          academicYear={academicYear}
           advisorName={advisorName}
         />
       )}

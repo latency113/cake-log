@@ -46,7 +46,7 @@ export const printSection = (
   }
 
   const orientation = options?.orientation ?? "landscape";
-  const paperSize = options?.paperSize ? `${options.paperSize} ` : "";
+  const paperSize = options?.paperSize ? `${options.paperSize} ` : "A4 ";
   const scale = options?.scale
     ? options.scale > 1
       ? options.scale / 100
@@ -56,8 +56,10 @@ export const printSection = (
 
   const printSpecificStyles = `
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
       @page {
-        size: ${paperSize}${orientation};
+        size: ${paperSize}${orientation} !important;
         margin: ${margin};
       }
       @media print {
@@ -65,15 +67,25 @@ export const printSection = (
           width: 100% !important;
           margin: 0 !important;
           padding: 0 !important;
+          font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
           ${scale !== undefined ? `zoom: ${scale} !important;` : ""}
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
+        }
+        * {
+          font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         }
         .print\\:hidden, .screen-only, [data-no-print] {
           display: none !important;
         }
       }
-      ${scale !== undefined ? `body { zoom: ${scale}; }` : ""}
+      body {
+        font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        ${scale !== undefined ? `zoom: ${scale};` : ""}
+      }
+      * {
+        font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+      }
       ${options?.customStyles || ""}
     </style>
   `;

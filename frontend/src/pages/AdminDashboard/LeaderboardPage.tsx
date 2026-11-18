@@ -68,16 +68,20 @@ const LeaderboardPage: React.FC = () => {
       document.head.appendChild(printStyle);
     }
     printStyle.innerHTML = `
+      @import url('https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
       @page {
-        size: landscape;
+        size: A4 landscape;
         margin: 5mm;
       }
       @media print {
+        html, body, #root, * {
+          font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+        }
         html, body {
           width: 100% !important;
           margin: 0 !important;
           padding: 0 !important;
-          zoom: 0.97 !important;
+          zoom: 1 !important;
           -webkit-print-color-adjust: exact !important;
           print-color-adjust: exact !important;
         }
@@ -105,16 +109,20 @@ const LeaderboardPage: React.FC = () => {
       const printStyle = document.createElement("style");
       printStyle.id = styleId;
       printStyle.innerHTML = `
+        @import url('https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
         @page {
-          size: landscape;
+          size: A4 landscape;
           margin: 5mm;
         }
         @media print {
+          html, body, #root, * {
+            font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+          }
           html, body {
             width: 100% !important;
             margin: 0 !important;
             padding: 0 !important;
-            zoom: 0.97 !important;
+            zoom: 1 !important;
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
           }
@@ -274,13 +282,13 @@ const LeaderboardPage: React.FC = () => {
         </div>
 
         <div id="printable-team-leaderboard" className="mb-8">
-          <div className="flex items-center justify-between mb-4">
-            <div>
-              <h2 className="text-2xl font-semibold text-center">รายงานยอดการจำหน่ายเค้กปีใหม่ พ.ศ.{displayNewYear} ใบสั่งจอง (ประจำปีการศึกษา {displayAcademicYear})</h2>
-              <h2 className="text-2xl font-semibold text-foreground">
-                อันดับยอดขายทีม
-              </h2>
-            </div>
+          <div className="team-leaderboard-header w-full text-center mb-4">
+            <h2 className="text-2xl font-semibold text-center">
+              รายงานยอดการจำหน่ายเค้กปีใหม่ พ.ศ.{displayNewYear} ใบสั่งจอง (ประจำปีการศึกษา {displayAcademicYear})
+            </h2>
+            <h2 className="text-2xl font-semibold text-center text-foreground">
+              อันดับยอดขายทีม
+            </h2>
           </div>
           <TeamLeaderboard teams={teams} />
         </div>

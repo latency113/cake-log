@@ -100,16 +100,45 @@ export const getOrdersByClassroom = async (classroomId: string): Promise<Order[]
       productMap.set(product.id!, product.name);
     });
 
-    const response = await api.get(`/orders`, {
-      params: { 
-        classroom_id: classroomId, 
-        _expand: "department,order_items,user",
-        itemsPerPage: 1000 // ดึงข้อมูลมาทั้งหมดเพื่อป้องกันปัญหา Pagination
+    let rawOrders: any[] = [];
+    let page = 1;
+    let totalPages = 1;
+
+    // Fetch orders with classroom_id and loop pages if backend returns multiple pages
+    do {
+      const response = await api.get(`/orders`, {
+        params: { 
+          classroom_id: classroomId, 
+          _expand: "department,order_items,user",
+          itemsPerPage: 1000,
+          page,
+        }
+      });
+      
+      const response_data = response.data ?? {};
+      const data = Array.isArray(response_data) ? response_data : response_data.data || [];
+      rawOrders = rawOrders.concat(data);
+
+      const meta = response_data.meta_data;
+      if (meta && typeof meta.totalPages === "number") {
+        totalPages = meta.totalPages;
+      } else {
+        totalPages = 1;
       }
-    });
-    
-    const response_data = response.data ?? {};
-    const orders: Order[] = (Array.isArray(response_data) ? response_data : response_data.data || []).map((order: any) => {
+      page++;
+    } while (page <= totalPages);
+
+    // Filter to ensure only orders for this classroom are included (in case remote backend does not filter by classroom_id)
+    const hasOtherClassrooms = rawOrders.some(
+      (o: any) => o.classroom_id && o.classroom_id !== classroomId
+    );
+    const filteredOrders = hasOtherClassrooms
+      ? rawOrders.filter(
+          (o: any) => o.classroom_id === classroomId || o.classroom?.id === classroomId
+        )
+      : rawOrders;
+
+    const orders: Order[] = filteredOrders.map((order: any) => {
       const enrichedOrderItems = (order.order_items ?? []).map((item: any) => ({
         ...item,
         productName: productMap.get(item.product_id) || "Unknown Product"

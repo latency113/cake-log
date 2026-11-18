@@ -457,6 +457,7 @@ const ClassroomsReport: React.FC = () => {
   const handlePrintClassroomsReport = () => {
     printSection("printable-classrooms-section", "รายงานผลการเข้าร่วมกิจกรรม", {
       orientation: "landscape",
+      paperSize: "A4",
       margin: "8mm 12mm",
       customStyles: `
         .print-table-wrapper {

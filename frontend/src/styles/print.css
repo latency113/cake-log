@@ -1,4 +1,14 @@
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap');
+
+@page {
+  size: A4;
+}
+
 @media print {
+  html, body, #root, * {
+    font-family: 'Sarabun', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
+  }
+
   .first-summary-content {
     page-break-before: avoid !important;
     margin-top: 0 !important;
@@ -43,144 +53,6 @@
   [class*="print:hidden"],
   .print\:hidden {
     display: none !important;
-  }
-
-  /* Force a page break after the charts section */
-  #printable-charts-section {
-    page-break-after: always;
-  }
-
-  /* --- Styles for Charts Section Table --- */
-  #printable-department-pounds-table {
-    display: block !important;
-    flex: 0 0 auto;
-    width: 100%;
-    margin-bottom: 15px; /* Add some space from charts */
-  }
-  
-  #printable-department-pounds-table h2 {
-    font-size: 14pt !important;
-    text-align: center;
-    margin: 0 0 10px 0;
-    color: #000;
-    line-height: 1;
-  }
-
-  #printable-department-pounds-table table {
-    width: 100%;
-    border-collapse: collapse;
-    /* เปลี่ยนเป็น auto เพื่อให้ช่องยืดหดตามความยาวชื่อแผนก */
-    table-layout: auto !important; 
-  }
-
-  #printable-department-pounds-table th,
-  #printable-department-pounds-table td {
-    border: 1.5px solid #000;
-    text-align: center;
-    vertical-align: middle;
-    /* ปรับการตัดคำ */
-    word-wrap: break-word;
-    word-break: normal; 
-    padding: 4px 2px;
-  }
-  
-  #printable-department-pounds-table th {
-    font-size: 9.5pt !important; 
-    white-space: normal !important;
-    height: auto !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
-  
-  #printable-department-pounds-table td {
-     background-color: #ffffff !important;
-     color: #000000 !important;
-     font-size: 11pt !important;
-     font-weight: 700 !important;
-     -webkit-print-color-adjust: exact !important;
-     print-color-adjust: exact !important;
-  }
-
-  /* --- Styles for Team Leaderboard Section --- */
-  #printable-team-leaderboard {
-    width: 100% !important;
-  }
-
-  #printable-team-leaderboard > div:last-child {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 10mm !important;
-    width: 100% !important;
-  }
-
-  #printable-team-leaderboard > div > h2 {
-    font-size: 15pt !important;
-    text-align: center !important;
-    margin-bottom: 5mm !important;
-    color: #000 !important;
-  }
-
-  #printable-team-leaderboard .mb-8 h3 {
-    font-size: 15pt !important;
-    font-weight: bold !important;
-    margin-bottom: 3mm !important;
-    color: #000 !important;
-  }
-
-  #printable-team-leaderboard table {
-    width: 100% !important;
-    border-collapse: collapse !important;
-    font-size: 15pt !important;
-    table-layout: fixed !important; 
-  }
-
-  #printable-team-leaderboard th,
-  #printable-team-leaderboard td {
-    border: 1px solid #000 !important;
-    padding: 6px 4px !important;
-    text-align: center !important;
-    vertical-align: middle !important;
-    word-wrap: break-word;
-    word-break: break-word;
-  }
-  
-  #printable-team-leaderboard th {
-    background-color: #f0f0f0 !important;
-    font-weight: bold !important;
-    font-size: 15pt !important;
-    white-space: normal !important;
-    height: auto !important;
-  }
-
-  /* Column widths for team leaderboard */
-  #printable-team-leaderboard th:nth-child(1),
-  #printable-team-leaderboard td:nth-child(1) { width: 6% !important; }
-  #printable-team-leaderboard th:nth-child(2),
-  #printable-team-leaderboard td:nth-child(2) { width: 20% !important; text-align: left !important; padding-left: 8px !important; white-space: normal !important; }
-  #printable-team-leaderboard th:nth-child(3),
-  #printable-team-leaderboard td:nth-child(3) { width: 20% !important; white-space: normal !important; }
-  #printable-team-leaderboard th:nth-child(4),
-  #printable-team-leaderboard td:nth-child(4) { width: 5% !important; }
-  #printable-team-leaderboard th:nth-child(5),
-  #printable-team-leaderboard td:nth-child(5) { width: 8% !important; }
-  #printable-team-leaderboard th:nth-child(6),
-  #printable-team-leaderboard td:nth-child(6) { width: 14% !important; white-space: normal !important; font-size: 9pt !important; }
-  #printable-team-leaderboard th:nth-child(n+7),
-  #printable-team-leaderboard td:nth-child(n+7) { width: 10% !important; white-space: normal !important; }
-
-  /* Hide icons within the team leaderboard when printing */
-  #printable-team-leaderboard svg {
-    display: none !important;
-  }
-
-  /* Reset ShadCN/Tailwind values */
-  #printable-team-leaderboard .rounded-md,
-  #printable-team-leaderboard .border,
-  #printable-team-leaderboard .shadow-sm,
-  #printable-team-leaderboard .shadow {
-    border-radius: 0 !important;
-    border: none !important;
-    box-shadow: none !important; /* Ensure shadows are also removed */
   }
 
   /* Hide SweetAlert2 dialogs when printing */
@@ -238,16 +110,15 @@
     max-width: none !important;
     margin: 0 !important;
     padding: 0 !important;
-    height: 100vh !important;
     display: flex !important;
     flex-direction: column !important;
   }
   
   /* Force a page break after the charts section */
   #printable-charts-section {
-    page-break-after: always;
+    page-break-after: always !important;
+    break-after: page !important;
     width: 100% !important;
-    height: calc(100vh - 200px) !important;
     margin: 0 !important;
     padding: 0 !important;
     display: flex !important;
@@ -259,39 +130,21 @@
     display: none !important;
   }
 
-  /* Make the Department Sales Bar Chart (จำนวนปอนด์) larger when printing */
-  #printable-charts-section > div:nth-child(2) {
-    flex: 1 !important;
-    min-height: 100% !important;
-    margin-bottom: 0 !important;
-    width: 100% !important;
-  }
-
-  /* Ensure the chart canvas fills the container */
-  #printable-charts-section canvas {
-    max-height: 100% !important;
-  }
-
-  .print-large-chart canvas {
-    height: 40vh !important; /* Force canvas height */
-    width: 100% !important;
-    min-height: 60vh !important;
-  }
-
-  /* --- Styles for Department Pounds Table --- */
+  /* --- Styles for Department Pounds Table (Page 1 Top) --- */
   #printable-department-pounds-table {
     display: block !important;
     flex: 0 0 auto;
-    width: 100%;
-    margin-bottom: 15px;
+    width: 100% !important;
+    margin-bottom: 0 !important;
   }
   
   #printable-department-pounds-table h2 {
     font-size: 14pt !important;
+    font-weight: bold !important;
     text-align: center;
-    margin: 0 0 10px 0;
+    margin: 0 0 6px 0;
     color: #000;
-    line-height: 1;
+    line-height: 1.2;
   }
 
   #printable-department-pounds-table table {
@@ -302,16 +155,17 @@
 
   #printable-department-pounds-table th,
   #printable-department-pounds-table td {
-    border: 1.5px solid #000;
+    border: 1.5px solid #000 !important;
     text-align: center;
     vertical-align: middle;
     word-wrap: break-word;
     word-break: normal;
-    padding: 4px 2px;
+    padding: 4px 2px !important;
   }
   
   #printable-department-pounds-table th {
-    font-size: 9.5pt !important;
+    font-size: 10pt !important;
+    font-weight: bold !important;
     white-space: normal !important;
     height: auto !important;
     -webkit-print-color-adjust: exact !important;
@@ -321,49 +175,111 @@
   #printable-department-pounds-table td {
      background-color: #ffffff !important;
      color: #000000 !important;
-     font-size: 11pt !important;
+     font-size: 11.5pt !important;
      font-weight: 700 !important;
      -webkit-print-color-adjust: exact !important;
      print-color-adjust: exact !important;
   }
 
-  /* --- Styles for Team Leaderboard Section --- */
+  /* Make the Department Sales Bar Chart (จำนวนปอนด์) larger and shift down */
+  #printable-charts-section > div:nth-child(2) {
+    display: block !important;
+    margin-top: 15mm !important; /* เลื่อนกราฟลงมาตามคำขอ */
+    margin-bottom: 0 !important;
+    width: 100% !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    background: transparent !important;
+  }
+
+  #printable-charts-section > div:nth-child(2) h2 {
+    font-size: 14pt !important;
+    font-weight: bold !important;
+    color: #000 !important;
+    margin-bottom: 2px !important;
+  }
+
+  #printable-charts-section > div:nth-child(2) p {
+    font-size: 10pt !important;
+    color: #333 !important;
+    margin-bottom: 6px !important;
+  }
+
+  #printable-charts-section .chart-canvas-container,
+  #printable-charts-section > div:nth-child(2) > div:last-child {
+    height: 450px !important;
+    min-height: 450px !important;
+    width: 100% !important;
+    position: relative !important;
+  }
+
+  #printable-charts-section canvas {
+    height: 450px !important;
+    max-height: 450px !important;
+    width: 100% !important;
+  }
+
+  /* --- Styles for Team Leaderboard Section (Page 2) --- */
   #printable-team-leaderboard {
     width: 100% !important;
+    page-break-before: auto !important;
+    break-before: auto !important;
+  }
+
+  #printable-team-leaderboard .team-leaderboard-header,
+  #printable-team-leaderboard > div:first-child {
+    width: 100% !important;
+    text-align: center !important;
+    display: block !important;
+    margin: 0 auto 3mm auto !important;
+  }
+
+  #printable-team-leaderboard .team-leaderboard-header h2,
+  #printable-team-leaderboard > div:first-child h2 {
+    font-size: 15pt !important;
+    font-weight: bold !important;
+    text-align: center !important;
+    width: 100% !important;
+    margin: 0 0 1.5mm 0 !important;
+    line-height: 1.25 !important;
+    color: #000 !important;
   }
 
   #printable-team-leaderboard > div:last-child {
     display: flex !important;
     flex-direction: column !important;
-    gap: 10mm !important;
+    gap: 2mm !important;
     width: 100% !important;
   }
 
-  #printable-team-leaderboard > div > h2 {
-    font-size: 15pt !important;
-    text-align: center !important;
-    margin-bottom: 5mm !important;
-    color: #000 !important;
+  #printable-team-leaderboard .team-leaderboard-section {
+    margin-bottom: 2mm !important;
+    page-break-inside: auto !important;
+    break-inside: auto !important;
   }
 
-  #printable-team-leaderboard .mb-8 h3 {
-    font-size: 10pt !important;
+  #printable-team-leaderboard h3 {
+    font-size: 10.5pt !important;
     font-weight: bold !important;
-    margin-bottom: 3mm !important;
+    margin: 2px 0 3px 0 !important;
     color: #000 !important;
   }
 
   #printable-team-leaderboard table {
     width: 100% !important;
     border-collapse: collapse !important;
-    font-size: 10pt !important;
+    font-size: 8.5pt !important;
+    line-height: 1.15 !important;
     table-layout: fixed !important; 
+    page-break-inside: auto !important;
+    break-inside: auto !important;
   }
 
   #printable-team-leaderboard th,
   #printable-team-leaderboard td {
     border: 1px solid #000 !important;
-    padding: 6px 4px !important;
+    padding: 2.5px 3px !important;
     text-align: center !important;
     vertical-align: middle !important;
     word-wrap: break-word;
@@ -373,26 +289,35 @@
   #printable-team-leaderboard th {
     background-color: #f0f0f0 !important;
     font-weight: bold !important;
-    font-size: 10pt !important;
+    font-size: 9pt !important;
     white-space: normal !important;
     height: auto !important;
   }
 
+  #printable-team-leaderboard td {
+    font-size: 8.5pt !important;
+  }
+
+  #printable-team-leaderboard .student-member-cell {
+    font-size: 8pt !important;
+    line-height: 1.12 !important;
+  }
+
   /* Column widths for team leaderboard */
   #printable-team-leaderboard th:nth-child(1),
-  #printable-team-leaderboard td:nth-child(1) { width: 6% !important; }
+  #printable-team-leaderboard td:nth-child(1) { width: 5% !important; }
   #printable-team-leaderboard th:nth-child(2),
-  #printable-team-leaderboard td:nth-child(2) { width: 20% !important; text-align: left !important; padding-left: 8px !important; white-space: normal !important; }
+  #printable-team-leaderboard td:nth-child(2) { width: 18% !important; text-align: left !important; padding-left: 5px !important; white-space: normal !important; font-weight: 600 !important; }
   #printable-team-leaderboard th:nth-child(3),
-  #printable-team-leaderboard td:nth-child(3) { width: 20% !important; white-space: normal !important; }
+  #printable-team-leaderboard td:nth-child(3) { width: 24% !important; white-space: normal !important; }
   #printable-team-leaderboard th:nth-child(4),
   #printable-team-leaderboard td:nth-child(4) { width: 5% !important; }
   #printable-team-leaderboard th:nth-child(5),
   #printable-team-leaderboard td:nth-child(5) { width: 8% !important; }
   #printable-team-leaderboard th:nth-child(6),
-  #printable-team-leaderboard td:nth-child(6) { width: 14% !important; white-space: normal !important; font-size: 9pt !important; }
+  #printable-team-leaderboard td:nth-child(6) { width: 16% !important; white-space: normal !important; font-size: 8.5pt !important; }
   #printable-team-leaderboard th:nth-child(n+7),
-  #printable-team-leaderboard td:nth-child(n+7) { width: 10% !important; white-space: normal !important; }
+  #printable-team-leaderboard td:nth-child(n+7) { width: 8% !important; white-space: normal !important; }
 
   /* Hide icons within the team leaderboard */
   #printable-team-leaderboard svg {

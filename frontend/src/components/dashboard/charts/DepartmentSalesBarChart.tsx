@@ -114,9 +114,9 @@ const DepartmentSalesBarChart: React.FC<DepartmentSalesBarChartProps> = ({
           pointStyle: "circle",
           padding: 20,
           font: {
-            size: 12,
-            family: "Noto Sans Thai",
-            weight: 500,
+            size: 13,
+            family: "'Sarabun', 'Noto Sans Thai', sans-serif",
+            weight: 600,
           },
           color: chartTextColor,
         },
@@ -137,11 +137,11 @@ const DepartmentSalesBarChart: React.FC<DepartmentSalesBarChartProps> = ({
         titleFont: {
           size: 14,
           weight: 600,
-          family: "Noto Sans Thai",
+          family: "'Sarabun', 'Noto Sans Thai', sans-serif",
         },
         bodyFont: {
           size: 13,
-          family: "Noto Sans Thai",
+          family: "'Sarabun', 'Noto Sans Thai', sans-serif",
         },
         callbacks: {
           title: function (context: TooltipItem<"bar">[]) {
@@ -165,9 +165,9 @@ const DepartmentSalesBarChart: React.FC<DepartmentSalesBarChartProps> = ({
           return new Intl.NumberFormat("th-TH").format(value);
         },
         font: {
-          size: isMobile ? 10 : 11,
+          size: isMobile ? 10 : 13.5,
           weight: 'bold' as const,
-          family: "Noto Sans Thai",
+          family: "'Sarabun', 'Noto Sans Thai', sans-serif",
         },
         // Only show background if not on mobile to save space
         backgroundColor: isMobile ? undefined : 'rgba(255, 255, 255, 0.8)',
@@ -185,8 +185,9 @@ const DepartmentSalesBarChart: React.FC<DepartmentSalesBarChartProps> = ({
         ticks: {
           color: chartTextColor,
           font: {
-            size: isMobile ? 10 : 12,
-            family: "Noto Sans Thai",
+            size: isMobile ? 10 : 13,
+            family: "'Sarabun', 'Noto Sans Thai', sans-serif",
+            weight: 600,
           },
           padding: 8,
           maxRotation: isMobile ? 0 : 45,
@@ -197,9 +198,9 @@ const DepartmentSalesBarChart: React.FC<DepartmentSalesBarChartProps> = ({
           text: isMobile ? "จำนวนปอนด์" : "แผนก",
           color: chartTextColor,
           font: {
-            size: 14,
-            weight: 600,
-            family: "Noto Sans Thai",
+            size: 15,
+            weight: 'bold' as const,
+            family: "'Sarabun', 'Noto Sans Thai', sans-serif",
           },
           padding: {
             top: 10,
@@ -216,8 +217,8 @@ const DepartmentSalesBarChart: React.FC<DepartmentSalesBarChartProps> = ({
         ticks: {
           color: chartTextColor,
           font: {
-            size: isMobile ? 10 : 12,
-            family: "Noto Sans Thai",
+            size: isMobile ? 10 : 13,
+            family: "'Sarabun', 'Noto Sans Thai', sans-serif",
           },
           padding: 8,
           callback: function (tickValue: string | number) {
@@ -233,9 +234,9 @@ const DepartmentSalesBarChart: React.FC<DepartmentSalesBarChartProps> = ({
           text: isMobile ? "แผนก" : "จำนวนปอนด์",
           color: chartTextColor,
           font: {
-            size: 14,
-            weight: 600,
-            family: "Noto Sans Thai",
+            size: 15,
+            weight: 'bold' as const,
+            family: "'Sarabun', 'Noto Sans Thai', sans-serif",
           },
           padding: {
             bottom: 10,
@@ -274,7 +275,7 @@ const DepartmentSalesBarChart: React.FC<DepartmentSalesBarChartProps> = ({
         </div>
       </div>
       
-      <div className="flex-1 min-h-[350px] relative">
+      <div className="flex-1 min-h-[350px] relative chart-canvas-container">
         {departmentPounds.length > 0 ? (
           <Bar data={chartData} options={chartOptions as any} plugins={[ChartDataLabels]} />
         ) : (
