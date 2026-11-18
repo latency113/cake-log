@@ -1,9 +1,28 @@
 import axios from "axios";
 
-export const API_URL = `${import.meta.env.VITE_APP_API_URL}`;
+const envApiUrl = import.meta.env.VITE_APP_API_URL || "";
+
+// In development, route through Vite proxy (/api/v1) if targeting a remote backend to avoid CORS issues
+export const API_URL = (() => {
+  if (
+    import.meta.env.DEV &&
+    import.meta.env.VITE_DISABLE_PROXY !== "true" &&
+    envApiUrl.startsWith("http") &&
+    !envApiUrl.includes("localhost:5173")
+  ) {
+    try {
+      const url = new URL(envApiUrl);
+      return url.pathname.replace(/\/+$/, "") || "/api/v1";
+    } catch {
+      return "/api/v1";
+    }
+  }
+  return envApiUrl;
+})();
 
 export const api = axios.create({
   baseURL: API_URL,
+  withCredentials: true,
 });
 
 api.interceptors.request.use((config) => {
@@ -37,15 +56,6 @@ api.interceptors.request.use((config) => {
   const year = (isAdmin && storedYear) ? storedYear : (storedYear || "2569");
   config.headers["x-academic-year"] = year;
 
-  // Send the refresh token only where the backend consumes it:
-  // /auth/me (token refresh) and /auth/logout (revocation).
-  // Sending it on every request multiplies leak surface (logs, proxies).
-  const refreshToken = localStorage.getItem("refresh_token");
-  const requestUrl = typeof config.url === "string" ? config.url : "";
-  if (refreshToken && (requestUrl.includes("/auth/me") || requestUrl.includes("/auth/logout"))) {
-    config.headers["x-refresh-token"] = refreshToken;
-  }
-
   return config;
 });
 
@@ -54,35 +64,34 @@ api.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // If error is 401 and not already retrying
-    if (error.response?.status === 401 && !originalRequest._retry && !originalRequest.url.includes('/auth/login')) {
+    // If error is 401 and not already retrying (skip /auth/login and /auth/me to avoid loops)
+    if (
+      error.response?.status === 401 &&
+      !originalRequest._retry &&
+      !originalRequest.url.includes('/auth/login') &&
+      !originalRequest.url.includes('/auth/me')
+    ) {
       originalRequest._retry = true;
 
       try {
-        const refreshToken = localStorage.getItem("refresh_token");
-        if (refreshToken) {
-          // Attempt to refresh token by calling /auth/me
-          // The request interceptor will automatically include the x-refresh-token
-          const response = await axios.get(`${API_URL}/auth/me`, {
-            headers: {
-              'x-refresh-token': refreshToken
-            }
-          });
+        // Refresh token is sent automatically via HttpOnly cookie
+        const response = await axios.get(`${API_URL}/auth/me`, {
+          withCredentials: true,
+        });
 
-          if (response.data && response.data.access_token) {
-            const newToken = response.data.access_token;
-            localStorage.setItem("access_token", newToken);
-            
-            // Update the original request's Authorization header
-            originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
-            
-            // Retry the original request with the new token
-            return api(originalRequest);
-          }
+        if (response.data && response.data.access_token) {
+          const newToken = response.data.access_token;
+          localStorage.setItem("access_token", newToken);
+
+          // Update the original request's Authorization header
+          originalRequest.headers["Authorization"] = `Bearer ${newToken}`;
+
+          // Retry the original request with the new token
+          return api(originalRequest);
         }
       } catch (refreshError) {
         console.error("Token refresh failed:", refreshError);
-        // If refresh fails, clear tokens and redirect to login
+        // If refresh fails, clear token and redirect to login
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
         if (!window.location.pathname.includes('/login')) {
