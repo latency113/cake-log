@@ -87,9 +87,13 @@ const Login: React.FC = () => {
     } catch (error: any) {
       console.error("Login error:", error);
       const serverMessage = error?.response?.data?.message;
+      const errorMessage =
+        !serverMessage || serverMessage === "Invalid credentials"
+          ? "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง"
+          : serverMessage;
       showAlertError({
         title: "เข้าสู่ระบบไม่สำเร็จ",
-        text: serverMessage || "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง",
+        text: errorMessage,
       });
     } finally {
       setIsLoading(false);
