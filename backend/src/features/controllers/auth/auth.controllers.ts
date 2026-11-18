@@ -6,6 +6,21 @@ import prisma from "@/providers/database/database.provider";
 import { auth } from "@/shared/middleware/auth";
 import { rateLimit } from "@/shared/middleware/rate-limit";
 
+const REFRESH_TOKEN_COOKIE = "refresh_token";
+const REFRESH_TOKEN_MAX_AGE = 7 * 24 * 60 * 60;
+
+const getRefreshCookieOptions = () => {
+  const isProd = process.env.NODE_ENV === "production";
+  const sameSite = (process.env.COOKIE_SAMESITE as "lax" | "strict" | "none") || "lax";
+  return {
+    httpOnly: true,
+    secure: isProd || sameSite === "none",
+    sameSite,
+    path: "/",
+    maxAge: REFRESH_TOKEN_MAX_AGE,
+  };
+};
+
 export namespace AuthController {
   export const authController = new Elysia({ prefix: "/auth" })
     .use(auth)
@@ -28,7 +43,7 @@ export namespace AuthController {
     )
     .post(
       "/login",
-      async ({ body, set, jwt: jwtHandler }) => {
+      async ({ body, set, jwt: jwtHandler, cookie }) => {
         try {
           const { username, password } = body;
           const result = await UserService.login(username, password, jwtHandler);
@@ -46,8 +61,16 @@ export namespace AuthController {
             }
           }
 
+          cookie[REFRESH_TOKEN_COOKIE].set({
+            value: result.refresh_token,
+            ...getRefreshCookieOptions(),
+          });
+
           set.status = "OK";
-          return result;
+          return {
+            access_token: result.access_token,
+            user: result.user,
+          };
         } catch (error: any) {
           // Uniform 401 for bad credentials — no user enumeration, no 500
           if (error?.message === "Invalid credentials") {
@@ -67,7 +90,6 @@ export namespace AuthController {
         response: {
           200: t.Object({
             access_token: t.String(),
-            refresh_token: t.String(),
             user: t.Object({
               id: t.String(),
               username: t.String(),
@@ -87,9 +109,11 @@ export namespace AuthController {
     )
     .get(
       "/me",
-      async ({ jwt: jwtHandler, set, headers, user }) => {
+      async ({ jwt: jwtHandler, set, headers, cookie, user }) => {
         try {
-          const refreshToken = headers["x-refresh-token"];
+          const cookieRefresh = cookie[REFRESH_TOKEN_COOKIE]?.value;
+          const refreshToken =
+            typeof cookieRefresh === "string" ? cookieRefresh : headers["x-refresh-token"];
 
           // If no valid access token, attempt refresh token recovery
           if (!user) {
@@ -103,7 +127,7 @@ export namespace AuthController {
                 };
                 const newToken = await jwtHandler.sign({
                   ...newPayload,
-                  exp: "15m",
+                  exp: "1h",
                 });
                 set.status = 200;
                 set.headers["x-user-role"] = tokenRecord.user.role;
@@ -113,6 +137,7 @@ export namespace AuthController {
                   access_token: newToken,
                 };
               }
+              cookie[REFRESH_TOKEN_COOKIE].remove();
             }
             set.status = 401;
             return { message: "Unauthorized" };
@@ -172,15 +197,16 @@ export namespace AuthController {
     )
     .post(
       "/logout",
-      async ({ headers, set }) => {
+      async ({ headers, cookie, set }) => {
         try {
-          const refreshToken = headers["x-refresh-token"];
-          if (!refreshToken) {
-            set.status = 400;
-            return { message: "Refresh token missing" };
-          }
+          const cookieRefresh = cookie[REFRESH_TOKEN_COOKIE]?.value;
+          const refreshToken =
+            typeof cookieRefresh === "string" ? cookieRefresh : headers["x-refresh-token"];
 
-          await TokenService.revokeToken(refreshToken);
+          if (refreshToken) {
+            await TokenService.revokeToken(refreshToken);
+          }
+          cookie[REFRESH_TOKEN_COOKIE].remove();
           set.status = 200;
           return { message: "Logged out successfully" };
         } catch (error) {

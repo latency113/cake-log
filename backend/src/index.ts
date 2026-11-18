@@ -1,6 +1,7 @@
 import swagger from "@elysiajs/swagger";
 import { Elysia } from "elysia";
 import { corsMiddleware } from "./shared/middleware/cors";
+import { securityHeaders } from "./shared/middleware/security-headers";
 import { databaseSelector } from "./shared/middleware/database-selector";
 import { app as mainApp } from "./features/controllers";
 import logger from "./providers/logger/logger.provider";
@@ -10,6 +11,7 @@ const port = Number(process.env.PORT) || 3000;
 
 const app = new Elysia()
   .use(corsMiddleware)
+  .use(securityHeaders)
   .use(databaseSelector);
 
 // Swagger enumerates every endpoint to anonymous visitors — only for development
