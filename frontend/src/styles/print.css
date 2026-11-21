@@ -232,24 +232,24 @@
     width: 100% !important;
     text-align: center !important;
     display: block !important;
-    margin: 0 auto 3mm auto !important;
+    margin: 0 auto 1.5mm auto !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   #printable-team-leaderboard .team-leaderboard-header h2,
   #printable-team-leaderboard > div:first-child h2 {
-    font-size: 15pt !important;
+    font-size: 11.5pt !important;
     font-weight: bold !important;
     text-align: center !important;
     width: 100% !important;
-    margin: 0 0 1.5mm 0 !important;
-    line-height: 1.25 !important;
+    margin: 0 0 0.5mm 0 !important;
+    line-height: 1.2 !important;
     color: #000 !important;
   }
 
   #printable-team-leaderboard > div:last-child {
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 2mm !important;
+    display: block !important;
     width: 100% !important;
   }
 
@@ -259,18 +259,25 @@
     break-inside: auto !important;
   }
 
+  #printable-team-leaderboard [data-slot="table-container"],
+  #printable-team-leaderboard .overflow-x-auto {
+    overflow: visible !important;
+  }
+
   #printable-team-leaderboard h3 {
-    font-size: 10.5pt !important;
+    font-size: 9pt !important;
     font-weight: bold !important;
-    margin: 2px 0 3px 0 !important;
+    margin: 1mm 0 1.5mm 0 !important;
     color: #000 !important;
+    page-break-after: avoid !important;
+    break-after: avoid !important;
   }
 
   #printable-team-leaderboard table {
     width: 100% !important;
     border-collapse: collapse !important;
-    font-size: 8.5pt !important;
-    line-height: 1.15 !important;
+    font-size: 7.5pt !important;
+    line-height: 1.1 !important;
     table-layout: fixed !important; 
     page-break-inside: auto !important;
     break-inside: auto !important;
@@ -279,7 +286,7 @@
   #printable-team-leaderboard th,
   #printable-team-leaderboard td {
     border: 1px solid #000 !important;
-    padding: 2.5px 3px !important;
+    padding: 1.5px 3px !important;
     text-align: center !important;
     vertical-align: middle !important;
     word-wrap: break-word;
@@ -289,35 +296,31 @@
   #printable-team-leaderboard th {
     background-color: #f0f0f0 !important;
     font-weight: bold !important;
-    font-size: 9pt !important;
+    font-size: 8pt !important;
     white-space: normal !important;
     height: auto !important;
   }
 
   #printable-team-leaderboard td {
-    font-size: 8.5pt !important;
+    font-size: 7.5pt !important;
   }
 
   #printable-team-leaderboard .student-member-cell {
-    font-size: 8pt !important;
-    line-height: 1.12 !important;
+    font-size: 7.5pt !important;
+    line-height: 1.1 !important;
   }
 
-  /* Column widths for team leaderboard */
-  #printable-team-leaderboard th:nth-child(1),
-  #printable-team-leaderboard td:nth-child(1) { width: 5% !important; }
-  #printable-team-leaderboard th:nth-child(2),
-  #printable-team-leaderboard td:nth-child(2) { width: 18% !important; text-align: left !important; padding-left: 5px !important; white-space: normal !important; font-weight: 600 !important; }
-  #printable-team-leaderboard th:nth-child(3),
-  #printable-team-leaderboard td:nth-child(3) { width: 24% !important; white-space: normal !important; }
-  #printable-team-leaderboard th:nth-child(4),
-  #printable-team-leaderboard td:nth-child(4) { width: 5% !important; }
-  #printable-team-leaderboard th:nth-child(5),
-  #printable-team-leaderboard td:nth-child(5) { width: 8% !important; }
-  #printable-team-leaderboard th:nth-child(6),
-  #printable-team-leaderboard td:nth-child(6) { width: 16% !important; white-space: normal !important; font-size: 8.5pt !important; }
-  #printable-team-leaderboard th:nth-child(n+7),
-  #printable-team-leaderboard td:nth-child(n+7) { width: 8% !important; white-space: normal !important; }
+  /* Column widths for team leaderboard (driven by th under table-layout: fixed to stay safe with rowSpan) */
+  #printable-team-leaderboard th:nth-child(1) { width: 5% !important; }
+  #printable-team-leaderboard th:nth-child(2) { width: 18% !important; }
+  #printable-team-leaderboard td.leaderboard-col-team { text-align: left !important; padding-left: 5px !important; white-space: normal !important; font-weight: 600 !important; }
+  #printable-team-leaderboard th:nth-child(3) { width: 24% !important; }
+  #printable-team-leaderboard td.student-member-cell { white-space: normal !important; text-align: left !important; padding-left: 5px !important; }
+  #printable-team-leaderboard th:nth-child(4) { width: 5% !important; }
+  #printable-team-leaderboard th:nth-child(5) { width: 8% !important; }
+  #printable-team-leaderboard th:nth-child(6) { width: 16% !important; }
+  #printable-team-leaderboard td.leaderboard-col-dept { white-space: normal !important; font-size: 8.5pt !important; }
+  #printable-team-leaderboard th:nth-child(n+7) { width: 8% !important; }
 
   /* Hide icons within the team leaderboard */
   #printable-team-leaderboard svg {
