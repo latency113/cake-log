@@ -55,5 +55,11 @@ export function formatLogValue(field: string, value: unknown): string {
       return `฿${num.toLocaleString("th-TH")}`;
     }
   }
+  if (field.includes("ปอนด์")) {
+    const num = Number(value);
+    if (!Number.isNaN(num)) {
+      return num === 0 ? "ไม่มี" : `${num} ก้อน`;
+    }
+  }
   return String(value);
 }
