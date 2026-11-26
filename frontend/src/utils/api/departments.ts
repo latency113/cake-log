@@ -1,12 +1,15 @@
 import { api } from "../api";
 import type { Department } from "../../types/department";
+import { getCachedOrFetch, invalidateApiCache } from "../apiCache";
 
 export const getDepartments = async (page: number = 1, itemsPerPage: number = 9999): Promise<{ data: Department[]; meta_data: any }> => {
   try {
-    const response = await api.get("/departments", {
-      params: { page, itemsPerPage },
+    return await getCachedOrFetch(`departments:${page}:${itemsPerPage}`, async () => {
+      const response = await api.get("/departments", {
+        params: { page, itemsPerPage },
+      });
+      return response.data;
     });
-    return response.data;
   } catch (error) {
     console.error("Error fetching departments:", error);
     throw error;
@@ -16,6 +19,7 @@ export const getDepartments = async (page: number = 1, itemsPerPage: number = 99
 export const createDepartment = async (departmentData: Omit<Department, 'id'>): Promise<Department> => {
   try {
     const response = await api.post("/departments", departmentData);
+    invalidateApiCache("departments:");
     return response.data.data;
   } catch (error) {
     console.error("Error creating department:", error);
@@ -26,6 +30,7 @@ export const createDepartment = async (departmentData: Omit<Department, 'id'>): 
 export const updateDepartment = async (id: string, departmentData: Partial<Department>): Promise<Department> => {
   try {
     const response = await api.put(`/departments/${id}`, departmentData);
+    invalidateApiCache("departments:");
     return response.data.data;
   } catch (error) {
     console.error(`Error updating department ${id}:`, error);
@@ -36,6 +41,7 @@ export const updateDepartment = async (id: string, departmentData: Partial<Depar
 export const deleteDepartment = async (id: string): Promise<void> => {
   try {
     await api.delete(`/departments/${id}`);
+    invalidateApiCache("departments:");
   } catch (error) {
     console.error(`Error deleting department ${id}:`, error);
     throw error;
@@ -45,6 +51,7 @@ export const deleteDepartment = async (id: string): Promise<void> => {
 export const bulkDeleteDepartments = async (ids: string[]): Promise<void> => {
   try {
     await api.post("/departments/bulk-delete", { ids });
+    invalidateApiCache("departments:");
   } catch (error) {
     console.error("Error bulk deleting departments:", error);
     throw error;

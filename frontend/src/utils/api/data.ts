@@ -3,13 +3,16 @@ import type { DashboardSummary, User } from "../../types";
 import type { Classroom } from "../../types/classroom";
 import type { ClassroomCakeSummary } from "../../types/classroomCakeSummary";
 import type { GradeLevel } from "../../types/gradelevel";
+import { getCachedOrFetch, invalidateApiCache } from "../apiCache";
 
 export const getClassrooms = async (page: number, itemsPerPage: number): Promise<Classroom[]> => {
   try {
-    const response = await api.get(`/classrooms`,{
-      params: { page, itemsPerPage },
+    return await getCachedOrFetch(`classrooms:${page}:${itemsPerPage}`, async () => {
+      const response = await api.get(`/classrooms`, {
+        params: { page, itemsPerPage },
+      });
+      return response.data.data;
     });
-    return response.data.data;
   } catch (error) {
     console.error("Error fetching classrooms:", error);
     throw error;
@@ -19,6 +22,7 @@ export const getClassrooms = async (page: number, itemsPerPage: number): Promise
 export const finalizeClassroom = async (classroomId: string) => {
   try {
     const response = await api.patch(`/classrooms/${classroomId}/finalize`);
+    invalidateApiCache("classrooms:");
     return response.data;
   } catch (error) {
     console.error("Error finalizing classroom:", error);
@@ -29,6 +33,7 @@ export const finalizeClassroom = async (classroomId: string) => {
 export const unfinalizeClassroom = async (classroomId: string) => {
   try {
     const response = await api.patch(`/classrooms/${classroomId}/unfinalize`);
+    invalidateApiCache("classrooms:");
     return response.data;
   } catch (error) {
     console.error("Error unfinalizing classroom:", error);
@@ -38,8 +43,10 @@ export const unfinalizeClassroom = async (classroomId: string) => {
 
 export const getYears = async (): Promise<GradeLevel[]> => {
   try {
-    const response = await api.get("/grade-levels");
-    return response.data.data;
+    return await getCachedOrFetch("grade-levels:all", async () => {
+      const response = await api.get("/grade-levels");
+      return response.data.data;
+    });
   } catch (error) {
     console.error("Error fetching years:", error);
     throw error;

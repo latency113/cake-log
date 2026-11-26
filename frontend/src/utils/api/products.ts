@@ -1,20 +1,23 @@
 import { api } from "../api";
 import type { Product } from "../../types";
 import axios from "axios";
+import { getCachedOrFetch, invalidateApiCache } from "../apiCache";
 
 export const getProducts = async (): Promise<Product[]> => {
   try {
-    const response = await api.get("/products");
-    if (!response.data) {
-      return [];
-    }
-    
-    const products = response.data.data || response.data;    
-    if (!Array.isArray(products)) {
-      return [];
-    }
-    
-    return products;
+    return await getCachedOrFetch("products:all", async () => {
+      const response = await api.get("/products");
+      if (!response.data) {
+        return [];
+      }
+
+      const products = response.data.data || response.data;
+      if (!Array.isArray(products)) {
+        return [];
+      }
+
+      return products;
+    });
   } catch (error) {
     console.error("Error fetching products:", error);
     if (axios.isAxiosError(error)) {
@@ -32,6 +35,7 @@ export const getProducts = async (): Promise<Product[]> => {
 export const createProduct = async (productData: Omit<Product, 'id'>): Promise<Product> => {
   try {
     const response = await api.post("/products", productData);
+    invalidateApiCache("products:");
     return response.data.data;
   } catch (error) {
     console.error("Error creating product:", error);
@@ -42,6 +46,7 @@ export const createProduct = async (productData: Omit<Product, 'id'>): Promise<P
 export const updateProduct = async (id: string, productData: Partial<Product>): Promise<Product> => {
   try {
     const response = await api.put(`/products/${id}`, productData);
+    invalidateApiCache("products:");
     return response.data.data;
   } catch (error) {
     console.error(`Error updating product ${id}:`, error);
@@ -52,6 +57,7 @@ export const updateProduct = async (id: string, productData: Partial<Product>): 
 export const deleteProduct = async (id: string): Promise<void> => {
   try {
     await api.delete(`/products/${id}`);
+    invalidateApiCache("products:");
   } catch (error) {
     console.error(`Error deleting product ${id}:`, error);
     throw error;

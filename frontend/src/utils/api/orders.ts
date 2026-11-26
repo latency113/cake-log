@@ -92,6 +92,65 @@ export const getAllOrders = async (page: number , itemsPerPage: number, userRole
   }
 };
 
+export interface OrdersPaginatedParams {
+  page: number;
+  itemsPerPage: number;
+  search?: string;
+  user_id?: string;
+  department_id?: string;
+  pickup_filter?: "today" | "this_week" | "this_month";
+}
+
+export const getOrdersPaginated = async (
+  params: OrdersPaginatedParams
+): Promise<{
+  data: Order[];
+  meta_data: {
+    page: number;
+    itemsPerPage: number;
+    total: number;
+    totalPages: number;
+    nextPage: boolean;
+    previousPage: boolean;
+  };
+}> => {
+  const [products, response] = await Promise.all([
+    getProducts(),
+    api.get("/orders", { params }),
+  ]);
+
+  const productMap = new Map<string, string>(
+    products.map((product) => [product.id!, product.name])
+  );
+
+  const responseData = response.data ?? {};
+  const rawOrders: any[] = Array.isArray(responseData)
+    ? responseData
+    : responseData.data || [];
+
+  const orders: Order[] = rawOrders.map((order: any) => ({
+    ...order,
+    orderItems: (order.order_items ?? []).map((item: any) => ({
+      ...item,
+      productName: productMap.get(item.product_id) || "Unknown Product",
+    })),
+    teamName: order.team?.name,
+    teamType: order.team?.team_type,
+  }));
+
+  return {
+    data: orders,
+    meta_data: responseData.meta_data || {
+      page: params.page,
+      itemsPerPage: params.itemsPerPage,
+      total: orders.length,
+      totalPages: 1,
+      nextPage: false,
+      previousPage: false,
+    },
+  };
+};
+
 export const getOrdersByClassroom = async (classroomId: string): Promise<Order[]> => {
   try {
     const products = await getProducts();

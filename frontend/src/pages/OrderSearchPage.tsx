@@ -2,21 +2,13 @@ import React, { useState, useEffect, useCallback } from "react";
 import OrdersTable from "../components/orders/OrdersTable";
 import OrderSearchActionBar from "../components/orders/OrderSearchActionBar";
 import OrdersPagination from "../components/orders/OrdersPagination";
-import { deleteOrder, getAllOrders } from "../utils/api/orders";
-import { getClassrooms } from "../utils/api/data";
-import { getProducts } from "../utils/api/products";
+import { deleteOrder, getOrdersPaginated } from "../utils/api/orders";
 import { getDepartments } from "../utils/api/departments";
-import { getTeams } from "../utils/api/teams";
 import { useAuth } from "@/contexts/AuthContext";
 import type {
-  Classroom,
   Department,
   Order,
-  OrderItem,
-  User,
-  Team,
 } from "@/types";
-import { getUsers } from "@/utils/api/users";
 import { showAlertError, showAlertSuccess } from "@/utils/alerts";
 import OrderDeleteConfirmModal from "@/components/orders/OrderDeleteConfirmModal";
 import OrderEditModal from "@/components/orders/OrderEditModal";
@@ -29,12 +21,12 @@ const OrderSearchPage: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate(); // Initialize navigate hook
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState<string>("");
   const [filterTerm, setFilterTerm] = useState<string>("all");
   const [departmentFilter, setDepartmentFilter] = useState<string>("all");
   const [showUserOrdersOnly, setShowUserOrdersOnly] = useState<boolean>(true);
-  const [orders, setOrders] = useState<Order[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<Order[]>([]);
-  const [paginatedOrders, setPaginatedOrders] = useState<Order[]>([]);
+  const [totalOrders, setTotalOrders] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [itemsPerPage, setItemsPerPage] = useState<number>(10);
@@ -48,162 +40,69 @@ const OrderSearchPage: React.FC = () => {
     useState(false);
   const [orderToDelete, setOrderToDelete] = useState<Order | null>(null);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm.trim());
+      setCurrentPage(1);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchTerm]);
+
+  useEffect(() => {
+    getDepartments()
+      .then((res) => setAllDepartments(res.data || []))
+      .catch((err) => console.error("Failed to fetch departments:", err));
+  }, []);
+
   const fetchOrdersAndEnrich = useCallback(async () => {
     try {
-      const [
-        fetchedOrders,
-        fetchedDepartments,
-        fetchedProducts,
-        fetchedClassrooms,
-        fetchedUsers,
-        fetchedTeams,
-      ] = await Promise.all([
-        getAllOrders(1, 9999),
-        getDepartments(),
-        getProducts(),
-        getClassrooms(1, 9999),
-        getUsers(1, 9999),
-        getTeams(),
-      ]);
-
-      setAllDepartments(fetchedDepartments.data);
-
-      const departmentMap = new Map<string, string>();
-      fetchedDepartments.data.forEach((department) => {
-        departmentMap.set(department.id, department.name);
-      });
-
-      const productMap = new Map<string, string>();
-      fetchedProducts.forEach((product) => {
-        productMap.set(product.id, product.name);
-      });
-
-      const classroomToDepartmentMap = new Map<string, string>(
-        fetchedClassrooms.map((classroom: Classroom) => [
-          classroom.id,
-          classroom.department_id,
-        ])
+      const departmentMap = new Map(
+        allDepartments.map((department) => [department.id, department.name])
       );
 
-      const usersMap = new Map<string, User>();
-      fetchedUsers.data.forEach((user: User) => {
-        usersMap.set(user.id, user);
+      const res = await getOrdersPaginated({
+        page: currentPage,
+        itemsPerPage,
+        ...(debouncedSearchTerm ? { search: debouncedSearchTerm } : {}),
+        ...(showUserOrdersOnly && user?.id ? { user_id: user.id } : {}),
+        ...(departmentFilter !== "all" ? { department_id: departmentFilter } : {}),
+        ...(filterTerm !== "all"
+          ? { pickup_filter: filterTerm as "today" | "this_week" | "this_month" }
+          : {}),
       });
 
-      const teamMap = new Map<string, Team>();
-      fetchedTeams.data.forEach((team) => {
-        teamMap.set(team.id, team);
-      });
-
-      const enrichedOrders = fetchedOrders.map((order) => {
-        let effectiveDepartmentId = order.department_id;
-        if (!effectiveDepartmentId && order.classroom_id) {
-          effectiveDepartmentId = classroomToDepartmentMap.get(
-            order.classroom_id
-          );
-        }
-
-        const enrichedOrderItems = order.order_items.map((item: OrderItem) => ({
-          ...item,
-          productName: productMap.get(item.product_id) || "Unknown Product",
-        }));
-
-        const team = order.team_id ? teamMap.get(order.team_id) : undefined;
-        const teamName = team ? team.name : undefined;
-        const teamType = team ? team.team_type : undefined;
-
+      const enrichedOrders = res.data.map((order) => {
+        const effectiveDepartmentId =
+          order.department_id || order.classroom?.department_id;
         return {
           ...order,
+          effectiveDepartmentId,
           departmentName: effectiveDepartmentId
-            ? departmentMap.get(effectiveDepartmentId)
-            : undefined,
-          effectiveDepartmentId: effectiveDepartmentId,
-          orderItems: enrichedOrderItems,
-          user: usersMap.get(order.user_id),
-          teamName: teamName,
-          teamType: teamType,
+            ? departmentMap.get(effectiveDepartmentId) || "N/A"
+            : "N/A",
         };
       });
 
-      setOrders(enrichedOrders);
       setFilteredOrders(enrichedOrders);
+      setTotalOrders(res.meta_data?.total ?? enrichedOrders.length);
     } catch (err) {
       setError("Failed to fetch data.");
       console.error(err);
-    } finally {
-      // setLoading(false);
     }
-  }, []);
+  }, [
+    currentPage,
+    itemsPerPage,
+    debouncedSearchTerm,
+    showUserOrdersOnly,
+    user?.id,
+    departmentFilter,
+    filterTerm,
+    allDepartments,
+  ]);
 
   useEffect(() => {
     fetchOrdersAndEnrich();
   }, [fetchOrdersAndEnrich]);
-
-  useEffect(() => {
-    let tempOrders = orders;
-
-    if (searchTerm) {
-      const lowercasedSearchTerm = searchTerm.toLowerCase();
-      tempOrders = tempOrders.filter(
-        (order) =>
-          order.customerName.toLowerCase().includes(lowercasedSearchTerm) ||
-          order.book_id.toString().includes(lowercasedSearchTerm) ||
-          order.number.toString().includes(lowercasedSearchTerm) ||
-          order.phone.includes(lowercasedSearchTerm)
-      );
-    }
-
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-    if (filterTerm === "today") {
-      tempOrders = tempOrders.filter(
-        (order) =>
-          new Date(order.pickup_date).toDateString() === today.toDateString()
-      );
-    } else if (filterTerm === "this_week") {
-      const firstDayOfWeek = new Date(
-        today.setDate(today.getDate() - today.getDay())
-      );
-      tempOrders = tempOrders.filter(
-        (order) => new Date(order.pickup_date) >= firstDayOfWeek
-      );
-    } else if (filterTerm === "this_month") {
-      tempOrders = tempOrders.filter(
-        (order) =>
-          new Date(order.pickup_date).getMonth() === now.getMonth() &&
-          new Date(order.pickup_date).getFullYear() === now.getFullYear()
-      );
-    }
-
-    if (departmentFilter !== "all") {
-      tempOrders = tempOrders.filter(
-        (order) => order.effectiveDepartmentId === departmentFilter
-      );
-    }
-
-    if (user && showUserOrdersOnly) {
-      tempOrders = tempOrders.filter((order) => order.user_id === user.id);
-    }
-
-    setFilteredOrders(tempOrders);
-    setCurrentPage(1);
-  }, [
-    searchTerm,
-    filterTerm,
-    departmentFilter,
-    orders,
-    user,
-    showUserOrdersOnly,
-  ]);
-
-  useEffect(() => {
-    const indexOfLastOrder = currentPage * itemsPerPage;
-    const indexOfFirstOrder = indexOfLastOrder - itemsPerPage;
-    setPaginatedOrders(
-      filteredOrders.slice(indexOfFirstOrder, indexOfLastOrder)
-    );
-  }, [currentPage, itemsPerPage, filteredOrders]);
 
   const handlePageChange = (pageNumber: number) => {
     setCurrentPage(pageNumber);
@@ -220,10 +119,12 @@ const OrderSearchPage: React.FC = () => {
 
   const handleFilterChange = (value: string) => {
     setFilterTerm(value);
+    setCurrentPage(1);
   };
 
   const handleDepartmentFilterChange = (departmentId: string) => {
     setDepartmentFilter(departmentId);
+    setCurrentPage(1);
   };
 
   const handleOrderRowClick = (order: Order) => {
@@ -271,7 +172,7 @@ const OrderSearchPage: React.FC = () => {
   };
 
   const handleDeleteOrder = (orderId: string) => {
-    const order = orders.find((o) => o.id === orderId);
+    const order = filteredOrders.find((o) => o.id === orderId);
     if (order) {
       if (order.classroom?.isOrderFinalized || order.book?.isClosed) {
         showAlertError({
@@ -357,12 +258,15 @@ const OrderSearchPage: React.FC = () => {
           onDepartmentFilterChange={handleDepartmentFilterChange}
           allDepartments={allDepartments}
           showUserOrdersOnly={showUserOrdersOnly}
-          onShowUserOrdersOnlyChange={setShowUserOrdersOnly}
+          onShowUserOrdersOnlyChange={(checked) => {
+            setShowUserOrdersOnly(checked);
+            setCurrentPage(1);
+          }}
           onShowClassroomSummary={handleShowClassroomSummaryPage} // Navigate to new page
         />
 
         <OrdersTable
-          orders={paginatedOrders}
+          orders={filteredOrders}
           onRowClick={handleOrderRowClick}
           showActions={true}
           onEditOrder={handleEditOrder}
@@ -371,7 +275,7 @@ const OrderSearchPage: React.FC = () => {
         />
 
         <OrdersPagination
-          totalOrders={filteredOrders.length}
+          totalOrders={totalOrders}
           itemsPerPage={itemsPerPage}
           currentPage={currentPage}
           onPageChange={handlePageChange}
