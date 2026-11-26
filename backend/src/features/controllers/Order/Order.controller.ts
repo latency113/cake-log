@@ -1,6 +1,7 @@
 import Elysia, { t } from "elysia";
 import { CreateOrderDto, OrderEditLogSchema, OrderSchema, OrderWithRelationsSchema, UpdateOrderDto } from "../../services/Order/Order.schema";
 import { OrderService } from "../../services/Order/Order.service";
+import { OrderSummaryService } from "../../services/Order/OrderSummary.service";
 import { auth } from "@/shared/middleware/auth";
 
 export namespace OrderController {
@@ -103,6 +104,29 @@ export namespace OrderController {
         tags: ["Orders"],
         isSignIn: true,
         hasRole: ["SUPERADMIN", "ADMIN", "OFFICER1", "OFFICER2"]
+      }
+    )
+    .get(
+      "/summary/dashboard",
+      async () => {
+        return await OrderSummaryService.getDashboardSummary();
+      },
+      {
+        tags: ["Orders"],
+        isSignIn: true,
+      }
+    )
+    .get(
+      "/summary/classrooms",
+      async ({ query }) => {
+        return await OrderSummaryService.getClassroomCakeSummaries(query.userId || undefined);
+      },
+      {
+        query: t.Object({
+          userId: t.Optional(t.String()),
+        }),
+        tags: ["Orders"],
+        isSignIn: true,
       }
     )
     .get(

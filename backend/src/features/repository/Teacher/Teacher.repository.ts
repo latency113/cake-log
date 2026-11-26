@@ -45,35 +45,41 @@ export namespace TeacherRepository {
       skip: options.skip,
     });
 
-    // Manually fetch teams for each classroom
-    const teachersWithTeams = await Promise.all(
-      teachers.map(async (teacher) => {
-        const classroomsWithTeams = await Promise.all(
-          (teacher.classroom || []).map(async (classroom) => {
-            const teams = await prisma.team.findMany({
-              where: {
-                classroom_ids: {
-                  has: classroom.id
-                }
-              },
-              select: {
-                id: true
-              }
-            });
-            return {
-              ...classroom,
-              teams,
-            };
-          })
-        );
-        return {
-          ...teacher,
-          classroom: classroomsWithTeams,
-        };
-      })
+    // Batch fetch teams for all classrooms in one query (avoids N*M queries)
+    const allClassroomIds = teachers.flatMap((t) =>
+      (t.classroom || []).map((c) => c.id)
     );
+    const allTeams =
+      allClassroomIds.length > 0
+        ? await prisma.team.findMany({
+            where: {
+              classroom_ids: {
+                hasSome: allClassroomIds,
+              },
+            },
+            select: {
+              id: true,
+              classroom_ids: true,
+            },
+          })
+        : [];
 
-    return teachersWithTeams;
+    const teamsByClassroomId = new Map<string, { id: string }[]>();
+    for (const team of allTeams) {
+      for (const cid of team.classroom_ids) {
+        const list = teamsByClassroomId.get(cid) || [];
+        list.push({ id: team.id });
+        teamsByClassroomId.set(cid, list);
+      }
+    }
+
+    return teachers.map((teacher) => ({
+      ...teacher,
+      classroom: (teacher.classroom || []).map((classroom) => ({
+        ...classroom,
+        teams: teamsByClassroomId.get(classroom.id) || [],
+      })),
+    }));
   }
 
   export async function findById(teacherId: string) {

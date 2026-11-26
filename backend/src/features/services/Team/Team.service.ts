@@ -120,29 +120,25 @@ export namespace TeamService {
 
   export async function recalculateTeamSales(teamId: string, tx?: prisma) {
     const client = tx || prisma;
-    console.log("recalculateTeamSales: Starting for teamId:", teamId);
-    const team = await client.team.findUnique({ where: { id: teamId } });
+    const team = await client.team.findUnique({
+      where: { id: teamId },
+      select: { id: true },
+    });
     if (!team) {
-      console.error("recalculateTeamSales: Team not found for teamId:", teamId);
       throw new Error("Team not found");
     }
-    console.log("recalculateTeamSales: Fetched team:", team);
 
-    const orders = await client.order.findMany({
-      where: { team_id: teamId },
-      include: { order_items: true },
+    const items = await client.orderItem.findMany({
+      where: { order: { team_id: teamId } },
+      select: { pound: true, quantity: true, subtotal: true },
     });
-    console.log("recalculateTeamSales: Fetched orders for team:", orders);
     let totalPounds = 0;
     let totalBaht = 0;
 
-    for (const order of orders) {
-      for (const item of order.order_items) {
-        totalPounds += item.pound * item.quantity;
-        totalBaht += item.subtotal;
-      }
+    for (const item of items) {
+      totalPounds += item.pound * item.quantity;
+      totalBaht += item.subtotal;
     }
-    console.log("recalculateTeamSales: Calculated totalPounds:", totalPounds, "totalBaht:", totalBaht);
 
     await client.team.update({
       where: { id: teamId },
@@ -151,6 +147,5 @@ export namespace TeamService {
         total_sales_baht: totalBaht,
       },
     });
-    console.log("recalculateTeamSales: Team sales updated for teamId:", teamId);
   }
 }

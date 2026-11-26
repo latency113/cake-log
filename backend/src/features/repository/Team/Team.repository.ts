@@ -45,43 +45,51 @@ export namespace TeamRepository {
       skip: options.skip,
     });
 
-    // Manually fetch related data
-    const teamsWithRelations = await Promise.all(
-      teams.map(async (team) => {
-        const classrooms = await prisma.classroom.findMany({
-          where: { id: { in: team.classroom_ids } },
-          include: {
-            department: true,
-            grade_level: true,
-          },
-          orderBy: {
-            name: 'asc',
-          },
-        });
-
-        // Extract unique departments and grade levels from classrooms
-        const departmentMap = new Map();
-        const gradeLevelMap = new Map();
-        
-        classrooms.forEach(classroom => {
-          if (classroom.department) {
-            departmentMap.set(classroom.department.id, classroom.department);
-          }
-          if (classroom.grade_level) {
-            gradeLevelMap.set(classroom.grade_level.id, classroom.grade_level);
-          }
-        });
-
-        return {
-          ...team,
-          classrooms,
-          departments: Array.from(departmentMap.values()),
-          gradeLevels: Array.from(gradeLevelMap.values()),
-        };
-      })
+    // Batch fetch all classrooms across teams in one query (avoids N+1 queries)
+    const allClassroomIds = Array.from(
+      new Set(teams.flatMap((team) => team.classroom_ids))
     );
+    const allClassrooms =
+      allClassroomIds.length > 0
+        ? await prisma.classroom.findMany({
+            where: { id: { in: allClassroomIds } },
+            include: {
+              department: true,
+              grade_level: true,
+            },
+            orderBy: {
+              name: "asc",
+            },
+          })
+        : [];
 
-    return teamsWithRelations;
+    const classroomById = new Map(allClassrooms.map((c) => [c.id, c]));
+
+    return teams.map((team) => {
+      const classrooms = team.classroom_ids
+        .map((id) => classroomById.get(id))
+        .filter((c): c is NonNullable<typeof c> => Boolean(c))
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      const departmentMap = new Map();
+      const gradeLevelMap = new Map();
+
+      classrooms.forEach((classroom) => {
+        if (classroom.department) {
+          departmentMap.set(classroom.department.id, classroom.department);
+        }
+        if (classroom.grade_level) {
+          gradeLevelMap.set(classroom.grade_level.id, classroom.grade_level);
+        }
+      });
+
+      return {
+        ...team,
+        classrooms,
+        departments: Array.from(departmentMap.values()),
+        gradeLevels: Array.from(gradeLevelMap.values()),
+      };
+    });
   }
 
   export async function findById(teamId: string) {
