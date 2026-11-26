@@ -89,17 +89,25 @@ export namespace OrderService {
       itemsPerPage?: number;
       search?: string;
       classroom_id?: string;
+      user_id?: string;
+      department_id?: string;
+      pickup_filter?: "today" | "this_week" | "this_month";
     } = {}
   ) {
     const page = options.page ?? 1;
     const itemsPerPage = options.itemsPerPage ?? 10;
-    const search = options.search;
-    const classroom_id = options.classroom_id;
+    const filter = {
+      search: options.search,
+      classroom_id: options.classroom_id,
+      user_id: options.user_id,
+      department_id: options.department_id,
+      pickup_filter: options.pickup_filter,
+    };
 
     const { skip, take } = getPaginationParams(page, itemsPerPage);
     const [orders, total] = await Promise.all([
-      OrderRepository.findAll({ skip, take, search, classroom_id }),
-      OrderRepository.countAll(search, classroom_id),
+      OrderRepository.findAll({ skip, take, ...filter }),
+      OrderRepository.countAll(filter),
     ]);
 
     return buildPaginatedResponse(orders, total, page, itemsPerPage);

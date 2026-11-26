@@ -31,7 +31,6 @@ export namespace UserRepository {
       where,
       omit: { password: true },
       include: {
-        orders: true,
         teacher: {
           include: {
             department: true,

@@ -48,32 +48,67 @@ export namespace OrderRepository {
     });
   }
 
-  export async function findAll(options: {
-    skip: number;
-    take: number;
+  export interface OrderFindAllFilter {
     search?: string;
     classroom_id?: string;
-  }) {
+    user_id?: string;
+    department_id?: string;
+    pickup_filter?: "today" | "this_week" | "this_month";
+  }
+
+  function buildOrderWhere(filter: OrderFindAllFilter) {
     const where: any = {};
 
-    if (options.search) {
+    if (filter.search) {
       where.OR = [
-        {
-          customerName: {
-            contains: options.search,
-          },
-        },
-        {
-          advisor: {
-            contains: options.search,
-          },
-        },
+        { customerName: { contains: filter.search, mode: "insensitive" } },
+        { advisor: { contains: filter.search, mode: "insensitive" } },
+        { number: { contains: filter.search, mode: "insensitive" } },
+        { phone: { contains: filter.search, mode: "insensitive" } },
+        { book: { bookNumber: { contains: filter.search, mode: "insensitive" } } },
       ];
     }
 
-    if (options.classroom_id) {
-      where.classroom_id = options.classroom_id;
+    if (filter.classroom_id) {
+      where.classroom_id = filter.classroom_id;
     }
+
+    if (filter.user_id) {
+      where.user_id = filter.user_id;
+    }
+
+    if (filter.department_id) {
+      where.classroom = { department_id: filter.department_id };
+    }
+
+    if (filter.pickup_filter) {
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      if (filter.pickup_filter === "today") {
+        const endOfToday = new Date(startOfToday);
+        endOfToday.setDate(endOfToday.getDate() + 1);
+        where.pickup_date = { gte: startOfToday, lt: endOfToday };
+      } else if (filter.pickup_filter === "this_week") {
+        const firstDayOfWeek = new Date(startOfToday);
+        firstDayOfWeek.setDate(firstDayOfWeek.getDate() - firstDayOfWeek.getDay());
+        where.pickup_date = { gte: firstDayOfWeek };
+      } else if (filter.pickup_filter === "this_month") {
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const startOfNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+        where.pickup_date = { gte: startOfMonth, lt: startOfNextMonth };
+      }
+    }
+
+    return where;
+  }
+
+  export async function findAll(
+    options: {
+      skip: number;
+      take: number;
+    } & OrderFindAllFilter
+  ) {
+    const where = buildOrderWhere(options);
 
     return prisma.order.findMany({
       where,
@@ -221,27 +256,8 @@ export namespace OrderRepository {
     });
   }
 
-  export async function countAll(search?: string, classroom_id?: string) {
-    const where: any = {};
-
-    if (search) {
-      where.OR = [
-        {
-          customerName: {
-            contains: search,
-          },
-        },
-        {
-          advisor: {
-            contains: search,
-          },
-        },
-      ];
-    }
-
-    if (classroom_id) {
-      where.classroom_id = classroom_id;
-    }
+  export async function countAll(filter: OrderFindAllFilter = {}) {
+    const where = buildOrderWhere(filter);
 
     return prisma.order.count({
       where,

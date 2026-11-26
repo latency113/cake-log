@@ -53,27 +53,31 @@ export namespace OrderController {
     )
     .get(
       "/",
-      async ({ query, set }) => {
+      async ({ query }) => {
         const page = query.page ? Number(query.page) : 1;
         const itemsPerPage = query.itemsPerPage
           ? Number(query.itemsPerPage)
           : 10;
-        const search = query.search;
-        const classroom_id = query.classroom_id;
+        const search = query.search || undefined;
+        const classroom_id = query.classroom_id || undefined;
+        const user_id = query.user_id || undefined;
+        const department_id = query.department_id || undefined;
+        const pickup_filter =
+          query.pickup_filter === "today" ||
+          query.pickup_filter === "this_week" ||
+          query.pickup_filter === "this_month"
+            ? query.pickup_filter
+            : undefined;
 
         const result = await OrderService.findAll({
           page,
           itemsPerPage,
           search,
           classroom_id,
+          user_id,
+          department_id,
+          pickup_filter,
         });
-
-        if (result.data.length === 0 && search !== undefined && classroom_id === undefined) {
-          set.status = "Not Found";
-          return {
-            message: "No order found matching your search query.",
-          };
-        }
 
         return result;
       },
@@ -83,6 +87,9 @@ export namespace OrderController {
           itemsPerPage: t.Optional(t.Numeric()),
           search: t.Optional(t.String()),
           classroom_id: t.Optional(t.String()),
+          user_id: t.Optional(t.String()),
+          department_id: t.Optional(t.String()),
+          pickup_filter: t.Optional(t.String()),
         }),
         response: {
           200: t.Object({
