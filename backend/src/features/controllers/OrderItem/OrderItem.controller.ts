@@ -12,9 +12,10 @@ export namespace OrderItemController {
     .use(auth)
     .post(
       "/",
-      async ({ body, set }) => {
+      async ({ body, set, user }) => {
         try {
-          const newOrderItem = await OrderItemService.create(body);
+          const editedById = (user as { sub?: string })?.sub;
+          const newOrderItem = await OrderItemService.create(body, editedById);
           set.status = 201;
           return { newOrderItem, message: "Order item has been created" };
         } catch (error) {
@@ -157,9 +158,10 @@ export namespace OrderItemController {
     )
     .put(
       "/:orderItemId",
-      async ({ params: { orderItemId }, body, set }) => {
+      async ({ params: { orderItemId }, body, set, user }) => {
         try {
-          const updatedOrderItem = await OrderItemService.update(orderItemId, body);
+          const editedById = (user as { sub?: string })?.sub;
+          const updatedOrderItem = await OrderItemService.update(orderItemId, body, editedById);
           return { updatedOrderItem, message: "Order item has been updated" };
         } catch (error) {
           if (error instanceof Error) {
@@ -200,9 +202,10 @@ export namespace OrderItemController {
     )
     .delete(
       "/:orderItemId",
-      async ({ params: { orderItemId }, set }) => {
+      async ({ params: { orderItemId }, set, user }) => {
         try {
-          await OrderItemService.remove(orderItemId);
+          const editedById = (user as { sub?: string })?.sub;
+          await OrderItemService.remove(orderItemId, editedById);
           return { message: "Order item has been deleted" };
         } catch (error) {
           if (error instanceof Error) {

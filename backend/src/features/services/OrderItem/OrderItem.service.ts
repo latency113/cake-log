@@ -1,11 +1,12 @@
 import { OrderItemRepository } from "@/features/repository/OrderItem/OrderItem.repository";
+import { OrderRepository } from "@/features/repository/Order/Order.repository";
 import { CreateOrderItemSchema, UpdateOrderItemSchema } from "./OrderItem.schema";
 import { getPaginationParams, buildPaginatedResponse } from "@/shared/utils/pagination";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { TeamService } from "@/features/services/Team/Team.service";
 
 export namespace OrderItemService {
-  export async function create(orderItem: CreateOrderItemSchema) {
+  export async function create(orderItem: CreateOrderItemSchema, editedById?: string) {
     if (orderItem.pound <= 0) {
       throw new Error('Pound must be greater than 0');
     }
@@ -20,6 +21,14 @@ export namespace OrderItemService {
       const newOrderItem = await OrderItemRepository.create(orderItem);
       if (newOrderItem.order.team_id) {
         await TeamService.recalculateTeamSales(newOrderItem.order.team_id);
+      }
+      // Log only when adding an item to an existing order (avoid logging initial creation items)
+      const orderAgeMs = Date.now() - new Date(newOrderItem.order.createdAt).getTime();
+      if (editedById && orderAgeMs > 5000) {
+        const label = `${newOrderItem.product.name} (${newOrderItem.pound} ปอนด์)`;
+        await OrderRepository.createEditLog(newOrderItem.order_id, editedById, {
+          [label]: { from: 0, to: newOrderItem.quantity },
+        });
       }
       return newOrderItem;
     } catch (error) {
@@ -66,7 +75,8 @@ export namespace OrderItemService {
 
   export async function update(
     orderItemId: string,
-    data: UpdateOrderItemSchema
+    data: UpdateOrderItemSchema,
+    editedById?: string
   ) {
     if (data.pound !== undefined && data.pound <= 0) {
       throw new Error('Pound must be greater than 0');
@@ -88,6 +98,25 @@ export namespace OrderItemService {
       if (updatedOrderItem.order.team_id) {
         await TeamService.recalculateTeamSales(updatedOrderItem.order.team_id);
       }
+      if (editedById) {
+        const oldLabel = `${existingOrderItem.product.name} (${existingOrderItem.pound} ปอนด์)`;
+        const newLabel = `${updatedOrderItem.product.name} (${updatedOrderItem.pound} ปอนด์)`;
+        const changes: Record<string, { from: unknown; to: unknown }> = {};
+        if (oldLabel === newLabel) {
+          if (existingOrderItem.quantity !== updatedOrderItem.quantity) {
+            changes[oldLabel] = {
+              from: existingOrderItem.quantity,
+              to: updatedOrderItem.quantity,
+            };
+          }
+        } else {
+          changes[oldLabel] = { from: existingOrderItem.quantity, to: 0 };
+          changes[newLabel] = { from: 0, to: updatedOrderItem.quantity };
+        }
+        if (Object.keys(changes).length > 0) {
+          await OrderRepository.createEditLog(updatedOrderItem.order_id, editedById, changes);
+        }
+      }
       return updatedOrderItem;
     } catch (error) {
       if (error instanceof PrismaClientKnownRequestError) {
@@ -99,7 +128,7 @@ export namespace OrderItemService {
     }
   }
 
-  export async function remove(orderItemId: string) {
+  export async function remove(orderItemId: string, editedById?: string) {
     const existingOrderItem = await OrderItemRepository.findById(orderItemId);
     if (!existingOrderItem) {
       throw new Error("Order item not found");
@@ -108,6 +137,13 @@ export namespace OrderItemService {
     const teamId = existingOrderItem.order.team_id;
 
     const removedOrderItem = await OrderItemRepository.remove(orderItemId);
+
+    if (editedById) {
+      const label = `${existingOrderItem.product.name} (${existingOrderItem.pound} ปอนด์)`;
+      await OrderRepository.createEditLog(existingOrderItem.order_id, editedById, {
+        [label]: { from: existingOrderItem.quantity, to: 0 },
+      });
+    }
 
     if (teamId) {
       await TeamService.recalculateTeamSales(teamId);
