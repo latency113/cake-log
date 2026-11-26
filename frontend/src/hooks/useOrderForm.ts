@@ -972,16 +972,20 @@ const useOrderForm = (
                 const existingOriginalItem = originalItemsByProductAndPound.get(key);
     
                 if (existingOriginalItem && existingOriginalItem.id) {
-                  // Item exists, so update it if quantity or other relevant fields changed
-                  // For simplicity, we'll always update if it exists, assuming some change
-                  await updateOrderItem(existingOriginalItem.id, {
-                    order_id: initialOrder.id!,
-                    product_id: currentItem.product_id,
-                    pound: currentItem.pound,
-                    quantity: currentItem.quantity,
-                    unitPrice: currentItem.unitPrice,
-                    subtotal: currentItem.subtotal,
-                  });
+                  // Only send PUT if quantity or unitPrice actually changed
+                  if (
+                    existingOriginalItem.quantity !== currentItem.quantity ||
+                    existingOriginalItem.unitPrice !== currentItem.unitPrice
+                  ) {
+                    await updateOrderItem(existingOriginalItem.id, {
+                      order_id: initialOrder.id!,
+                      product_id: currentItem.product_id,
+                      pound: currentItem.pound,
+                      quantity: currentItem.quantity,
+                      unitPrice: currentItem.unitPrice,
+                      subtotal: currentItem.subtotal,
+                    });
+                  }
                 } else {
                   // Item is new, so create it
                   const itemWithoutId = currentItem; // id is not needed for creation
