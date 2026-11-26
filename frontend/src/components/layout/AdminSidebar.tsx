@@ -17,6 +17,7 @@ import {
   UserCog,
   Settings,
   LogOut,
+  History,
   PanelLeftClose,
   PanelLeftOpen,
   type LucideIcon,
@@ -121,6 +122,24 @@ const AdminSidebar: React.FC = () => {
           },
         ]
       : []),
+    ...(loggedInUserRole === "admin"
+      ? [
+          {
+            title: "การจัดการคำสั่งซื้อ",
+            items: [
+              {
+                to: "/dashboard/order-logs",
+                label: "ประวัติแก้ไขออเดอร์",
+                icon: History,
+                iconBg:
+                  "bg-cyan-100 text-cyan-600 dark:bg-cyan-950/70 dark:text-cyan-400",
+                activeClass:
+                  "!bg-cyan-50/90 dark:!bg-cyan-950/40 !text-cyan-700 dark:!text-cyan-300 ring-1 ring-cyan-300 dark:ring-cyan-800",
+              },
+            ],
+          },
+        ]
+      : []),
     ...(loggedInUserRole === "superadmin"
       ? [
           {
@@ -143,6 +162,15 @@ const AdminSidebar: React.FC = () => {
                   "bg-fuchsia-100 text-fuchsia-600 dark:bg-fuchsia-950/70 dark:text-fuchsia-400",
                 activeClass:
                   "!bg-fuchsia-50/90 dark:!bg-fuchsia-950/40 !text-fuchsia-700 dark:!text-fuchsia-300 ring-1 ring-fuchsia-300 dark:ring-fuchsia-800",
+              },
+              {
+                to: "/dashboard/order-logs",
+                label: "ประวัติแก้ไขออเดอร์",
+                icon: History,
+                iconBg:
+                  "bg-cyan-100 text-cyan-600 dark:bg-cyan-950/70 dark:text-cyan-400",
+                activeClass:
+                  "!bg-cyan-50/90 dark:!bg-cyan-950/40 !text-cyan-700 dark:!text-cyan-300 ring-1 ring-cyan-300 dark:ring-cyan-800",
               },
             ],
           },

@@ -1,5 +1,5 @@
 import { api } from "../api";
-import type { Order } from "../../types/order";
+import type { Order, OrderEditLog } from "../../types/order";
 import type { OrderItem } from "../../types/orderItem"
 import { getProducts } from "./products";
 import { departments } from "../../data/department-data"; // Import departments
@@ -227,6 +227,39 @@ export const deleteAllOrders = async () => {
     console.error("Error deleting all orders:", error);
     throw error;
   }
+};
+
+export const getOrderEditLogs = async (orderId: string): Promise<OrderEditLog[]> => {
+  try {
+    const response = await api.get(`/orders/${orderId}/logs`);
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching edit logs for order ${orderId}:`, error);
+    return [];
+  }
+};
+
+export const getAllOrderEditLogs = async (
+  page: number = 1,
+  itemsPerPage: number = 20,
+  search?: string
+): Promise<{
+  data: OrderEditLog[];
+  meta_data: {
+    page: number;
+    itemsPerPage: number;
+    total: number;
+    totalPages: number;
+  };
+}> => {
+  const response = await api.get("/orders/logs", {
+    params: {
+      page,
+      itemsPerPage,
+      ...(search ? { search } : {}),
+    },
+  });
+  return response.data;
 };
 
 export const checkOrderExists = async (

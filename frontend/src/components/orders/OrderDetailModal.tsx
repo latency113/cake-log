@@ -15,6 +15,9 @@ import { getYears, getClassrooms, getProducts } from "../../utils/api";
 import { calculateCakeItemTotals } from "../../utils/calculations";
 import { getTeams } from "../../utils/api/teams";
 import { getDepartments } from "../../utils/api/departments";
+import { getOrderEditLogs } from "../../utils/api/orders";
+import type { OrderEditLog } from "../../types/order";
+import { ORDER_FIELD_LABELS, formatLogValue } from "../../utils/orderLogLabels";
 import PrintableOrderSummaryContent from "./PrintableOrderSummaryContent";
 
 import {
@@ -23,6 +26,7 @@ import {
   Edit,
   ChevronLeft,
   ChevronRight,
+  History,
 } from "lucide-react"; // Import Edit, ChevronLeft, ChevronRight icons
 
 const defaultProducts = [
@@ -158,6 +162,27 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 
   const [isSlidingOut, setIsSlidingOut] = useState(false);
   const [displayedOrder, setDisplayedOrder] = useState<Order | null>(null);
+  const [editLogs, setEditLogs] = useState<OrderEditLog[]>([]);
+  const [loadingLogs, setLoadingLogs] = useState(false);
+
+  useEffect(() => {
+    if (!displayedOrder?.id) {
+      setEditLogs([]);
+      return;
+    }
+    let cancelled = false;
+    setLoadingLogs(true);
+    getOrderEditLogs(displayedOrder.id)
+      .then((logs) => {
+        if (!cancelled) setEditLogs(logs);
+      })
+      .finally(() => {
+        if (!cancelled) setLoadingLogs(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [displayedOrder?.id]);
 
   const fetchData = useCallback(async () => {
     setLoadingData(true);
@@ -590,6 +615,63 @@ const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                 classroomsData={classroomsData}
               />
             )
+          )}
+
+          {/* Edit History Section */}
+          {displayedOrder && (
+            <div className="mt-6 border-t border-border pt-4">
+              <h3 className="text-sm font-semibold text-foreground flex items-center gap-2 mb-3">
+                <History className="w-4 h-4 text-muted-foreground" />
+                ประวัติการแก้ไข ({editLogs.length})
+              </h3>
+              {loadingLogs ? (
+                <p className="text-xs text-muted-foreground">กำลังโหลดประวัติ...</p>
+              ) : editLogs.length === 0 ? (
+                <p className="text-xs text-muted-foreground">ยังไม่มีประวัติการแก้ไข</p>
+              ) : (
+                <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                  {editLogs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="rounded-lg border border-border bg-muted/40 p-3 text-xs"
+                    >
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <span className="font-semibold text-foreground">
+                          {log.edited_by
+                            ? `${log.edited_by.firstname} ${log.edited_by.lastname}`
+                            : log.edited_by_id}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {new Date(log.createdAt).toLocaleString("th-TH", {
+                            year: "numeric",
+                            month: "short",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </span>
+                      </div>
+                      <ul className="space-y-1 text-muted-foreground">
+                        {Object.entries(log.changes || {}).map(([field, diff]) => (
+                          <li key={field}>
+                            <span className="font-medium text-foreground">
+                              {ORDER_FIELD_LABELS[field] || field}:
+                            </span>{" "}
+                            <span className="line-through opacity-70">
+                              {formatLogValue(field, diff?.from)}
+                            </span>{" "}
+                            →{" "}
+                            <span className="text-foreground font-medium">
+                              {formatLogValue(field, diff?.to)}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

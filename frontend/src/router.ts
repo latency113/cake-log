@@ -275,6 +275,12 @@ const orderBookRoute = createRoute({
   component: lazyRouteComponent(() => import("./pages/AdminDashboard/OrderBooks")),
 });
 
+const orderLogsRoute = createRoute({
+  getParentRoute: () => dashboardRoute,
+  path: "order-logs",
+  component: lazyRouteComponent(() => import("./pages/AdminDashboard/OrderLogsPage")),
+});
+
 const salesRecordsRoute = createRoute({
   getParentRoute: () => dashboardRoute,
   path: "sales-records",
@@ -363,6 +369,7 @@ const routeTree = rootRoute.addChildren([
     settingsRoute,
     classroomReportRoute,
     orderBookRoute,
+    orderLogsRoute,
   ]),
   officerOrdersRoute.addChildren([officerOrdersIndexRoute]),
   officerPrepareRoute,

@@ -73,3 +73,30 @@ export interface OrderFormState {
   student_member_names?: string[];
   user_id?: string;
 }
+
+export interface OrderEditLogChange {
+  from: unknown;
+  to: unknown;
+}
+
+export interface OrderEditLog {
+  id: string;
+  order_id: string;
+  edited_by_id: string;
+  changes: Record<string, OrderEditLogChange>;
+  createdAt: string;
+  edited_by?: {
+    id: string;
+    firstname: string;
+    lastname: string;
+  } | null;
+  order?: {
+    id: string;
+    number: string;
+    customerName: string;
+    book?: {
+      id: string;
+      bookNumber: string;
+    } | null;
+  } | null;
+}

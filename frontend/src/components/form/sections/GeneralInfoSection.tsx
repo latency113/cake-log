@@ -175,15 +175,9 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
     return ""; // Default to empty if no valid pickup_date
   };
 
-  // Initializer for selectedMonth
-  const getInitialMonth = (pickupDate: string | undefined): string => {
-    if (pickupDate) {
-      const date = new Date(pickupDate);
-      if (!isNaN(date.getTime())) {
-        return (date.getMonth() + 1).toString();
-      }
-    }
-    return "12"; // Default to December
+  // Initializer for selectedMonth (locked to December)
+  const getInitialMonth = (): string => {
+    return "12";
   };
 
   // Initializer for selectedYear
@@ -202,7 +196,7 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
     getInitialDay(formData.pickup_date)
   );
   const [selectedMonth, setSelectedMonth] = useState<string>(
-    getInitialMonth(formData.pickup_date)
+    getInitialMonth()
   );
   const [selectedYear, setSelectedYear] = useState<string>(
     getInitialYear(formData.pickup_date)
@@ -214,22 +208,16 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
       const date = new Date(formData.pickup_date);
       if (!isNaN(date.getTime())) {
         const d = date.getDate().toString();
-        const m = (date.getMonth() + 1).toString();
         const y = date.getFullYear().toString();
         setSelectedDay((prev) => (prev !== d ? d : prev));
-        setSelectedMonth((prev) => (prev !== m ? m : prev));
+        setSelectedMonth("12");
         setSelectedYear((prev) => (prev !== y ? y : prev));
       }
     }
   }, [formData.pickup_date]);
 
-  // Dynamic month options
-  const monthOptions = Array.from({ length: 12 }, (_, i) => {
-    const monthIndex = i + 1;
-    const date = new Date(currentYearAD, monthIndex - 1); // Use currentYearAD to create a date for label
-    const label = date.toLocaleString("th-TH", { month: "long" });
-    return { value: monthIndex.toString(), label };
-  });
+  // Month options (only December)
+  const monthOptions = [{ value: "12", label: "ธันวาคม" }];
 
   // Dynamic year options
   const getDynamicYearOptions = (currentSelectedYear: string) => {
@@ -297,7 +285,7 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
   };
 
   const handleMonthChange = (value: string) => {
-    setSelectedMonth(value);
+    setSelectedMonth(value === "12" ? value : "12");
   };
 
   const handleYearChange = (value: string) => {
@@ -901,16 +889,14 @@ const GeneralInfoSection: React.FC<GeneralInfoSectionProps> = ({
                   <SelectValue placeholder="เดือน" />
                 </SelectTrigger>
                 <SelectContent>
-                  {monthOptions
-                    .filter((month) => month.value === selectedMonth)
-                    .map((month) => (
-                      <SelectItem
-                        key={month.value}
-                        value={month.value.toString()}
-                      >
-                        {month.label}
-                      </SelectItem>
-                    ))}
+                  {monthOptions.map((month) => (
+                    <SelectItem
+                      key={month.value}
+                      value={month.value}
+                    >
+                      {month.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 

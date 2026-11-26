@@ -921,7 +921,7 @@ const useOrderForm = (
               id: formData.id ?? "",
               createdAt: formData.createdAt ?? "",
               updatedAt: formData.updatedAt ?? "",
-              user_id: user?.id || "", // Add user_id here
+              user_id: initialOrder?.user_id || user?.id || "", // Preserve original recorder on edit
               officer_prepare_id: initialOrder?.officer_prepare_id,
               officer_pickup_id: initialOrder?.officer_pickup_id,
             };
