@@ -270,4 +270,93 @@ export namespace OrderRepository {
   export async function deleteAll() {
     return prisma.order.deleteMany({});
   }
+
+  export async function createEditLog(
+    orderId: string,
+    editedById: string,
+    changes: Record<string, { from: unknown; to: unknown }>
+  ) {
+    return prisma.orderEditLog.create({
+      data: {
+        order_id: orderId,
+        edited_by_id: editedById,
+        changes: changes as object,
+      },
+      include: {
+        edited_by: {
+          select: {
+            id: true,
+            firstname: true,
+            lastname: true,
+          },
+        },
+      },
+    });
+  }
+
+  export async function findEditLogsByOrderId(orderId: string) {
+    return prisma.orderEditLog.findMany({
+      where: { order_id: orderId },
+      orderBy: { createdAt: "desc" },
+      include: {
+        edited_by: {
+          select: {
+            id: true,
+            firstname: true,
+            lastname: true,
+          },
+        },
+      },
+    });
+  }
+
+  export async function findAllEditLogs(
+    page: number = 1,
+    itemsPerPage: number = 20,
+    search?: string
+  ) {
+    const where: Record<string, unknown> = {};
+    if (search) {
+      where.OR = [
+        { order: { number: { contains: search, mode: "insensitive" } } },
+        { order: { customerName: { contains: search, mode: "insensitive" } } },
+        { edited_by: { firstname: { contains: search, mode: "insensitive" } } },
+        { edited_by: { lastname: { contains: search, mode: "insensitive" } } },
+      ];
+    }
+
+    const [data, total] = await Promise.all([
+      prisma.orderEditLog.findMany({
+        where,
+        skip: (page - 1) * itemsPerPage,
+        take: itemsPerPage,
+        orderBy: { createdAt: "desc" },
+        include: {
+          edited_by: {
+            select: {
+              id: true,
+              firstname: true,
+              lastname: true,
+            },
+          },
+          order: {
+            select: {
+              id: true,
+              number: true,
+              customerName: true,
+              book: {
+                select: {
+                  id: true,
+                  bookNumber: true,
+                },
+              },
+            },
+          },
+        },
+      }),
+      prisma.orderEditLog.count({ where }),
+    ]);
+
+    return { data, total };
+  }
 }

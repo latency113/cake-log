@@ -104,3 +104,22 @@ export const OrderWithRelationsSchema = t.Composite([
     user: t.Optional(t.Nullable(UserSmallSchema)),
   }),
 ]);
+
+export const OrderEditLogSchema = t.Object({
+  id: t.String(),
+  order_id: t.String(),
+  edited_by_id: t.String(),
+  changes: t.Any(),
+  createdAt: t.Date(),
+  edited_by: t.Optional(t.Nullable(UserSmallSchema)),
+  order: t.Optional(t.Nullable(t.Object({
+    id: t.String(),
+    number: t.String(),
+    customerName: t.String(),
+    book: t.Optional(t.Nullable(t.Object({
+      id: t.String(),
+      bookNumber: t.String(),
+    }))),
+  }))),
+});
+export type OrderEditLog = typeof OrderEditLogSchema.static;

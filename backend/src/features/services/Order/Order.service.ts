@@ -118,7 +118,8 @@ export namespace OrderService {
 
   export async function update(
     orderId: string,
-    data: UpdateOrderDto
+    data: UpdateOrderDto,
+    editedById?: string
   ) {
     if (data.totalPrice !== undefined && data.totalPrice < 0) {
       throw new Error("Total price cannot be negative.");
@@ -160,11 +161,51 @@ export namespace OrderService {
         throw new Error("Order not found");
       }
 
+      const trackedFields = [
+        "customerName",
+        "phone",
+        "advisor",
+        "deposit",
+        "totalPrice",
+        "pickup_date",
+        "picked_up_at",
+        "time_type",
+        "status",
+        "book_id",
+        "number",
+        "classroom_id",
+        "team_id",
+        "officer_prepare_id",
+        "officer_pickup_id",
+        "orderDate",
+      ] as const;
+
+      const normalizeVal = (val: unknown) => {
+        if (val === undefined) return undefined;
+        if (val === null) return null;
+        if (val instanceof Date) return val.toISOString();
+        return val;
+      };
+
+      const changes: Record<string, { from: unknown; to: unknown }> = {};
+      for (const field of trackedFields) {
+        const incoming = normalizeVal((data as Record<string, unknown>)[field]);
+        if (incoming === undefined) continue;
+        const current = normalizeVal((existingOrder as Record<string, unknown>)[field]);
+        if (current !== incoming) {
+          changes[field] = { from: current ?? null, to: incoming };
+        }
+      }
+
       const updatedData = {
         ...data,
       };
 
       const updatedOrder = await OrderRepository.update(orderId, updatedData);
+
+      if (editedById && Object.keys(changes).length > 0) {
+        await OrderRepository.createEditLog(orderId, editedById, changes);
+      }
 
       const oldTeamId = existingOrder.team_id;
       const newTeamId = updatedOrder.team_id;
@@ -278,5 +319,31 @@ export namespace OrderService {
 
       return { message: "All orders and their items deleted successfully" };
     });
+  }
+
+  export async function getEditLogsByOrderId(orderId: string) {
+    return OrderRepository.findEditLogsByOrderId(orderId);
+  }
+
+  export async function getAllEditLogs(
+    page: number = 1,
+    itemsPerPage: number = 20,
+    search?: string
+  ) {
+    const { data, total } = await OrderRepository.findAllEditLogs(
+      page,
+      itemsPerPage,
+      search
+    );
+    const totalPages = Math.ceil(total / itemsPerPage);
+    return {
+      data,
+      meta_data: {
+        page,
+        itemsPerPage,
+        total,
+        totalPages,
+      },
+    };
   }
 }

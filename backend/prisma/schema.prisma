@@ -105,9 +105,10 @@ model User {
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
   tokens      Token[]
-  orders      Order[]       @relation("UserOrders") // ผู้สั่ง
-  prepares    Order[]       @relation("OfficerPrepares") // ผู้เตรียม
-  pickups     Order[]       @relation("OfficerPickups") // ผู้ส่งมอบ
+  orders        Order[]        @relation("UserOrders") // ผู้สั่ง
+  prepares      Order[]        @relation("OfficerPrepares") // ผู้เตรียม
+  pickups       Order[]        @relation("OfficerPickups") // ผู้ส่งมอบ
+  orderEditLogs OrderEditLog[] @relation("OrderEditedBy")
 
   teacher_id String?
   teacher    Teacher? @relation(fields: [teacher_id], references: [id])
@@ -166,8 +167,9 @@ model Order {
   status       OrderStatus @default(pending)
   createdAt    DateTime    @default(now())
   updatedAt    DateTime    @updatedAt
-  order_items  OrderItem[]
-  book         OrderBook   @relation(fields: [book_id], references: [id])
+  order_items   OrderItem[]
+  edit_logs     OrderEditLog[]
+  book          OrderBook      @relation(fields: [book_id], references: [id])
   team         Team?       @relation(fields: [team_id], references: [id])
   classroom    Classroom?  @relation(fields: [classroom_id], references: [id])
 
@@ -192,6 +194,21 @@ model OrderItem {
 
   order              Order              @relation(fields: [order_id], references: [id])
   product            Product            @relation(fields: [product_id], references: [id])
+}
+
+model OrderEditLog {
+  id           String   @id @default(uuid())
+  order_id     String
+  edited_by_id String
+  changes      Json
+  createdAt    DateTime @default(now())
+
+  order     Order @relation(fields: [order_id], references: [id], onDelete: Cascade)
+  edited_by User  @relation("OrderEditedBy", fields: [edited_by_id], references: [id])
+
+  @@index([order_id])
+  @@index([edited_by_id])
+  @@index([createdAt])
 }
 
 model Teacher {

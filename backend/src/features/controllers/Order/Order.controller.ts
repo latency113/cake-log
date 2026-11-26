@@ -1,5 +1,5 @@
 import Elysia, { t } from "elysia";
-import { CreateOrderDto, OrderSchema, OrderWithRelationsSchema, UpdateOrderDto } from "../../services/Order/Order.schema";
+import { CreateOrderDto, OrderEditLogSchema, OrderSchema, OrderWithRelationsSchema, UpdateOrderDto } from "../../services/Order/Order.schema";
 import { OrderService } from "../../services/Order/Order.service";
 import { auth } from "@/shared/middleware/auth";
 
@@ -106,6 +106,52 @@ export namespace OrderController {
       }
     )
     .get(
+      "/logs",
+      async ({ query }) => {
+        const page = query.page ? Number(query.page) : 1;
+        const itemsPerPage = query.itemsPerPage ? Number(query.itemsPerPage) : 20;
+        const search = query.search || undefined;
+        return await OrderService.getAllEditLogs(page, itemsPerPage, search);
+      },
+      {
+        query: t.Object({
+          page: t.Optional(t.String()),
+          itemsPerPage: t.Optional(t.String()),
+          search: t.Optional(t.String()),
+        }),
+        response: {
+          200: t.Object({
+            data: t.Array(OrderEditLogSchema),
+            meta_data: t.Object({
+              page: t.Number(),
+              itemsPerPage: t.Number(),
+              total: t.Number(),
+              totalPages: t.Number(),
+            }),
+          }),
+        },
+        tags: ["Orders"],
+        isSignIn: true,
+        hasRole: ["SUPERADMIN", "ADMIN", "OFFICER1", "OFFICER2"],
+      }
+    )
+    .get(
+      "/:orderId/logs",
+      async ({ params: { orderId } }) => {
+        return await OrderService.getEditLogsByOrderId(orderId);
+      },
+      {
+        params: t.Object({
+          orderId: t.String(),
+        }),
+        response: {
+          200: t.Array(OrderEditLogSchema),
+        },
+        tags: ["Orders"],
+        isSignIn: true,
+      }
+    )
+    .get(
       "/:orderId",
       async ({ params: { orderId }, set }) => {
         try {
@@ -155,9 +201,11 @@ export namespace OrderController {
               set.status = 403;
               return "Forbidden";
             }
-            delete (body as { user_id?: string }).user_id;
           }
-          const updatedOrder = await OrderService.update(orderId, body);
+          // Preserve original recorder even when an admin/officer edits the order
+          delete (body as { user_id?: string }).user_id;
+          const editedById = (user as { sub?: string })?.sub;
+          const updatedOrder = await OrderService.update(orderId, body, editedById);
           return { updatedOrder, message: "Order has been updated" };
         } catch (error) {
           if (error instanceof Error) {
